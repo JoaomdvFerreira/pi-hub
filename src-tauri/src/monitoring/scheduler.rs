@@ -2,15 +2,18 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, Manager};
 
+use crate::domain::device::Device;
+use crate::domain::notification_rule::NotificationEvent;
 use crate::domain::settings::AppSettings;
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::error::ApplicationError;
 use crate::infrastructure::ssh::OpenSshExecutor;
 use crate::monitoring::concurrency::RefreshCoordinator;
 use crate::monitoring::container_diff::detect_container_changes;
-use crate::monitoring::notifications::evaluate_snapshot_transition;
+use crate::monitoring::notifications::{evaluate_snapshot_transition, NotificationService};
 use crate::monitoring::refresh::refresh_device_sync;
 use crate::monitoring::scheduling::is_due;
+use crate::platform::notifications::TauriNotificationService;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
@@ -130,11 +133,33 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         evaluate_snapshot_transition(&snapshot_repo, device_id, previous.as_ref(), &snapshot);
     if !notifications.is_empty() {
         let _ = app.emit("notification://ready", &notifications);
+        dispatch_notifications(app, &device, &notifications);
     }
 
     let _ = app.emit("monitoring://refresh-completed", device_id);
 
     Ok(snapshot)
+}
+
+/// Shows a native notification for each event, gated by both the global
+/// and the per-device `notificationsEnabled` preference (spec: "can be
+/// disabled globally or per device"). A settings-load failure defaults to
+/// enabled rather than silently suppressing notifications.
+fn dispatch_notifications(app: &AppHandle, device: &Device, events: &[NotificationEvent]) {
+    if !device.notifications_enabled {
+        return;
+    }
+    let global_enabled = settings_repository(app)
+        .map(|repo| repo.load().notifications_enabled)
+        .unwrap_or(true);
+    if !global_enabled {
+        return;
+    }
+
+    let service = TauriNotificationService::new(app, device.name.clone());
+    for event in events {
+        service.notify(event);
+    }
 }
 
 /// Refreshes every monitoring-enabled device concurrently (bounded by the

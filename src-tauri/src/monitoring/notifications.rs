@@ -5,10 +5,9 @@ use crate::domain::notification_rule::{
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::storage::snapshot_repository::SnapshotRepository;
 
-/// Dispatches a notification-ready event. Producing the *decision* that a
-/// transition is notification-worthy is this work unit's job; an actual
-/// implementation that shows a native Windows toast is M4's job.
-#[allow(dead_code)]
+/// Dispatches a notification-ready event as a native notification. See
+/// `platform::notifications::TauriNotificationService` for the concrete
+/// implementation used at runtime.
 pub trait NotificationService: Send + Sync {
     fn notify(&self, event: &NotificationEvent);
 }

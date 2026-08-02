@@ -26,6 +26,7 @@ pub fn run() {
                 .build(),
         )
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_notification::init())
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_app_settings,
             commands::settings::save_app_settings,
@@ -48,6 +49,15 @@ pub fn run() {
             log::info!("Pi-Hub starting up");
             platform::tray::build(app.handle())?;
             monitoring::scheduler::start(app.handle().clone());
+            // Desktop platforms (Windows in particular, our only target)
+            // grant this immediately with no user prompt; requesting it
+            // up front is still the cross-platform-correct thing to do,
+            // since other platforms this plugin supports do prompt.
+            if let Err(err) = tauri_plugin_notification::NotificationExt::notification(app)
+                .request_permission()
+            {
+                log::warn!("could not request notification permission: {err}");
+            }
             Ok(())
         })
         .on_window_event(|window, event| {

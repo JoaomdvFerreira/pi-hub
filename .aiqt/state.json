@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M004",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU017",
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -707,13 +707,13 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm run build"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-019",
           "DEP-020"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T19:14:01.463Z"
+        "updatedAt": "2026-08-02T19:22:10.465Z"
       },
       {
         "id": "WU018",
@@ -2116,12 +2116,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-016",
-    "workUnitId": "WU016",
+    "id": "PKT-017",
+    "workUnitId": "WU017",
     "milestoneId": "M004",
-    "createdAt": "2026-08-02T19:14:14.855Z",
+    "createdAt": "2026-08-02T19:22:10.465Z",
     "format": "markdown",
-    "contentHash": "sha256:03d8386209a80b2182f01da52f1bc092d3d71ca7d57949c3b85b2e55fb89bc3c",
+    "contentHash": "sha256:30f15ac11fb4d2b56ee6d2aaf8772dfbaee4575bfae79f83f2ea5c116fb1f8bc",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -2139,8 +2139,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T19:21:56.865Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T19:22:10.465Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
