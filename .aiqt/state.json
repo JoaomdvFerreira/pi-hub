@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M003",
-  "currentWorkUnitId": "WU011",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -33,7 +33,7 @@
         "id": "M003",
         "title": "M3 — Monitoring engine",
         "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU009",
           "WU010",
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "planned",
+        "status": "ready",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -477,13 +477,13 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-011",
           "DEP-012"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:13:08.577Z"
+        "updatedAt": "2026-08-02T18:35:25.703Z"
       },
       {
         "id": "WU012",
@@ -516,12 +516,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-013"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T18:35:25.703Z"
       },
       {
         "id": "WU013",
@@ -554,13 +554,13 @@
           "npm run build",
           "npm run lint"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-014",
           "DEP-015"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T18:35:25.703Z"
       },
       {
         "id": "WU014",
@@ -1685,6 +1685,100 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T18:12:47.855Z"
+    },
+    {
+      "id": "C011",
+      "workUnitId": "WU011",
+      "packetId": "PKT-011",
+      "summary": "Built the full refresh lifecycle: DeviceSnapshot domain struct, state.json persistence, a pure per-device refresh function that preserves last-known data on failure (stale marking), a RefreshCoordinator enforcing max-4-concurrent and one-active-refresh-per-device, a 5s background tick loop driving automatic refresh via managed Tauri state (no unsafe), refresh_device/refresh_all_devices/get_latest_snapshot commands, and the five backend events. 24 new Rust unit tests including a real #[tokio::test] proving the concurrency bound, 123 total passing. Live smoke test confirmed the automatic scheduler end-to-end via state.json, with no UI interaction needed.",
+      "completed": [
+        "domain/snapshot.rs: DeviceSnapshot with stale + lastSuccessfulRefresh fields; failed refreshes carry forward previous metrics/dockerAvailable/containers rather than clearing them.",
+        "storage/snapshot_repository.rs: JsonSnapshotRepository for state.json, same atomic-write/corrupted-file-quarantine pattern as config/device repositories; verified the app stays functional after state.json is deleted mid-session.",
+        "monitoring/refresh.rs: refresh_device_sync() -- pure, synchronous per-device refresh logic; a failed probe classifies status and stops (stale=true, prior data preserved); a successful probe collects metrics+Docker independently so a Docker failure becomes a warning, not a device failure.",
+        "monitoring/concurrency.rs: RefreshCoordinator (Semaphore for max-4-concurrent + in-progress set for one-per-device dedup), with a real #[tokio::test] proving the semaphore actually blocks a 3rd permit under max_concurrent=2 and releases correctly.",
+        "monitoring/container_diff.rs: detect_container_changes() -- structural diff powering container://status-changed; deliberately excludes notification-worthiness rules (WU012's job).",
+        "monitoring/scheduling.rs: is_due() comparing capturedAt against the device's own interval or the global default.",
+        "monitoring/scheduler.rs: refresh_one/refresh_all + a 5s background tick loop started from setup(); looks up RefreshCoordinator via Tauri's managed state (app.state::<T>()) rather than passing borrowed references into spawned tasks, avoiding any unsafe/raw-pointer lifetime workaround. Emits monitoring://refresh-started/-completed, device://snapshot-updated, device://status-changed (only on actual change), container://status-changed (only when non-empty).",
+        "commands/monitoring.rs: refresh_device/refresh_all_devices (async, SSH work runs off the async runtime's blocking pool) / get_latest_snapshot.",
+        "infrastructure/ssh/error.rs: added SshError::code() mapping to the spec error taxonomy, replacing an ad hoc Debug-string-split.",
+        "error.rs: ApplicationError now derives Clone/PartialEq/Deserialize so it round-trips through persisted state.json.",
+        "Added tokio (rt/sync/time/macros) as a direct dependency.",
+        "src/types/snapshot.ts + src/lib/tauri/monitoring.ts: TypeScript mirror types and command wrappers.",
+        "24 new Rust unit tests, 123 total passing. Verified cargo test, cargo build (no warnings), npm run build.",
+        "Live smoke test: seeded a device pointing at a closed local port directly into devices.json, launched the app with zero UI interaction, and confirmed via state.json that the background tick loop detected it was due, ran a real ssh.exe probe (genuine ConnectionRefused), classified it Offline, and persisted a snapshot with stale=true -- proving the automatic-refresh path end-to-end without real Pi hardware."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/domain/snapshot.rs",
+        "src-tauri/src/storage/mod.rs",
+        "src-tauri/src/storage/snapshot_repository.rs",
+        "src-tauri/src/monitoring/mod.rs",
+        "src-tauri/src/monitoring/refresh.rs",
+        "src-tauri/src/monitoring/concurrency.rs",
+        "src-tauri/src/monitoring/container_diff.rs",
+        "src-tauri/src/monitoring/scheduling.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/commands/monitoring.rs",
+        "src-tauri/src/error.rs",
+        "src-tauri/src/infrastructure/ssh/error.rs",
+        "src-tauri/src/lib.rs",
+        "src/types/snapshot.ts",
+        "src/lib/tauri/monitoring.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "123/123 unit tests passed (24 new), including a real tokio concurrency test."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings, despite adding tokio as a new direct dependency."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "New TypeScript types/wrappers compile cleanly."
+        },
+        {
+          "command": "live smoke test via npm run tauri dev",
+          "result": "passed",
+          "summary": "Automatic background scheduler confirmed end-to-end via state.json contents; no UI click-through needed since this WU has no UI surface."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "A failing/offline device does not stop the scheduler or block other devices' refreshes",
+          "result": "passed",
+          "evidence": "refresh_all spawns one task per device and swallows individual failures when collecting results (\"if let Ok(Ok(snapshot))\"); tick() spawns each due device's refresh independently. failed_probe_marks_stale_and_carries_forward_previous_data and friends confirm a single device's failure produces a valid (Offline/stale) snapshot rather than propagating an error that would abort other work."
+        },
+        {
+          "criterion": "Manual refresh and automatic refresh both work without freezing the UI",
+          "result": "passed",
+          "evidence": "refresh_device/refresh_all_devices are async Tauri commands that run the blocking SSH work via spawn_blocking; the automatic path uses the same refresh_one() function via a background tokio task started at setup(), independently confirmed live via the state.json smoke test."
+        },
+        {
+          "criterion": "Stale snapshots remain visible with an explicit stale marker and last-refresh timestamp after a failed refresh",
+          "result": "passed",
+          "evidence": "DeviceSnapshot.stale + capturedAt are always populated; failed_probe_marks_stale_and_carries_forward_previous_data test and the live smoke test's actual state.json output (stale: true, capturedAt populated) both confirm this."
+        },
+        {
+          "criterion": "Deleting state.json does not prevent the app from starting",
+          "result": "passed",
+          "evidence": "app_remains_functional_after_state_json_is_deleted test explicitly deletes the file mid-session and confirms subsequent reads/writes still work; load_all() unconditionally recovers to an empty map on a missing file."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T18:35:25.703Z"
     }
   ],
   "lastAgentPacket": {
@@ -1711,8 +1805,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T18:13:08.577Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T18:35:25.703Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -2011,6 +2105,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T18:12:47.855Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C011",
+      "current": {
+        "observationId": "sha256:38b377451b9ef56288eea3b0f40a992fcffdfd383d42481cf5533fd213bd5337",
+        "checkpointId": "C011",
+        "workUnitId": "WU011",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T18:35:25.703Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T18:35:25.703Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:38b377451b9ef56288eea3b0f40a992fcffdfd383d42481cf5533fd213bd5337",
+          "checkpointId": "C011",
+          "workUnitId": "WU011",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T18:35:25.703Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T18:35:25.703Z"
         }
       ]
     }
