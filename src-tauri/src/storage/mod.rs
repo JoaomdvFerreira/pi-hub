@@ -1,5 +1,6 @@
 pub mod atomic;
 pub mod config_repository;
+pub mod device_repository;
 
 use std::fmt;
 

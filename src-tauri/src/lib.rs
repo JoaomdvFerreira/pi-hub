@@ -28,7 +28,9 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_app_settings,
-            commands::settings::save_app_settings
+            commands::settings::save_app_settings,
+            commands::devices::get_devices,
+            commands::devices::get_device
         ])
         .setup(|app| {
             log::info!("Pi-Hub starting up");
