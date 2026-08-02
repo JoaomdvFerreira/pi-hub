@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M002",
-  "currentWorkUnitId": "WU005",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -247,12 +247,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-004"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:17:41.744Z"
+        "updatedAt": "2026-08-02T17:22:55.525Z"
       },
       {
         "id": "WU006",
@@ -284,13 +284,13 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-005",
           "DEP-006"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T17:22:55.525Z"
       },
       {
         "id": "WU007",
@@ -1220,6 +1220,79 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T17:01:27.300Z"
+    },
+    {
+      "id": "C005",
+      "workUnitId": "WU005",
+      "packetId": "PKT-005",
+      "summary": "Implemented the Device/DeviceService/DeviceType domain models with input validation (host/port/username/name), and a JsonDeviceRepository persisting devices.json with the same atomic-write and corrupted-file-quarantine pattern established for config.json in WU003. Individual invalid devices are dropped (with a warning) on load rather than failing the whole file. Added get_devices/get_device Tauri commands and TypeScript mirror types/wrappers. 18 new Rust unit tests, 31 total passing.",
+      "completed": [
+        "domain/device.rs: Device/DeviceService structs matching the architecture spec's domain model; DeviceType serializes as kebab-case.",
+        "Device::validate(): non-empty name; host must be a valid IPv4/IPv6 address or well-formed hostname with shell metacharacters/whitespace rejected; ssh_port must be non-zero; ssh_username must be a POSIX-style lowercase identifier.",
+        "storage/device_repository.rs: DeviceRepository trait + JsonDeviceRepository. load_all() never fails (missing -> empty list; corrupted -> quarantined + empty list; individual invalid devices dropped with a warning, valid ones kept). save_all() writes the {schemaVersion, devices} envelope atomically.",
+        "commands/devices.rs: get_devices / get_device Tauri commands, registered in lib.rs.",
+        "src/types/device.ts + src/lib/tauri/devices.ts: TypeScript mirror types and typed wrappers.",
+        "Marked save_all()/DEVICES_SCHEMA_VERSION #[allow(dead_code)] since they're exercised by tests but not yet called from a command -- create/update/delete land in WU006.",
+        "18 new Rust unit tests (13 domain validation + kebab-case serialization, 5 repository including malformed-JSON recovery and mixed-validity file handling).",
+        "Verified cargo test (31/31), cargo build, npm run build, and npm run lint all pass."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/device.rs",
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/storage/device_repository.rs",
+        "src-tauri/src/storage/mod.rs",
+        "src-tauri/src/commands/devices.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/lib.rs",
+        "src/types/device.ts",
+        "src/lib/tauri/devices.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "31/31 unit tests passed (18 new)."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings after adding targeted #[allow(dead_code)] on the not-yet-wired save path."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "tsc + vite build succeeded with the new device types/wrapper included."
+        },
+        {
+          "command": "npm run lint",
+          "result": "passed",
+          "summary": "0 errors, same 2 pre-existing HMR-granularity warnings as WU004."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Devices persist across an application restart",
+          "result": "passed",
+          "evidence": "save_then_load_round_trips repository test: save_all() then load_all() returns the identical device list."
+        },
+        {
+          "criterion": "devices.json includes schemaVersion and validates on load",
+          "result": "passed",
+          "evidence": "DevicesFile wraps { schemaVersion, devices }; malformed JSON is quarantined and recovered to an empty list rather than crashing (load_recovers_from_malformed_json test)."
+        },
+        {
+          "criterion": "Rust unit tests cover domain validation rules (host, port, username format)",
+          "result": "passed",
+          "evidence": "13 domain::device tests cover valid/invalid host (empty, shell metacharacters, malformed label, IPv4, IPv6), port (zero, max), username (uppercase, digit-first, shell metacharacters), and empty name."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T17:22:55.525Z"
     }
   ],
   "lastAgentPacket": {
@@ -1246,8 +1319,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T17:17:41.744Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T17:22:55.525Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -1366,6 +1439,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T17:01:27.300Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C005",
+      "current": {
+        "observationId": "sha256:1ce597d4c7522c0240e2a30958e77c1aab506151db1c584f50b372c0d4780065",
+        "checkpointId": "C005",
+        "workUnitId": "WU005",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T17:22:55.525Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T17:22:55.525Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:1ce597d4c7522c0240e2a30958e77c1aab506151db1c584f50b372c0d4780065",
+          "checkpointId": "C005",
+          "workUnitId": "WU005",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T17:22:55.525Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T17:22:55.525Z"
         }
       ]
     }
