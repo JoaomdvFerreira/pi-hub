@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M002",
-  "currentWorkUnitId": "WU007",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -33,7 +33,7 @@
         "id": "M003",
         "title": "M3 — Monitoring engine",
         "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
-        "status": "planned",
+        "status": "ready",
         "workUnitIds": [
           "WU009",
           "WU010",
@@ -324,12 +324,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-007"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:28:21.679Z"
+        "updatedAt": "2026-08-02T17:36:48.100Z"
       },
       {
         "id": "WU008",
@@ -361,12 +361,12 @@
           "npm run build",
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-008"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T17:36:48.100Z"
       },
       {
         "id": "WU009",
@@ -398,12 +398,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-009"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T17:36:48.100Z"
       },
       {
         "id": "WU010",
@@ -436,12 +436,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-010"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T17:36:48.100Z"
       },
       {
         "id": "WU011",
@@ -1369,6 +1369,82 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T17:28:08.609Z"
+    },
+    {
+      "id": "C007",
+      "workUnitId": "WU007",
+      "packetId": "PKT-007",
+      "summary": "Implemented the SSH adapter: a RemoteExecutor trait backed by OpenSshExecutor (controlled process execution of Windows OpenSSH, BatchMode=yes, ConnectTimeout, args passed separately never string-interpolated), a hard-timeout-enforcing process primitive verified against real OS processes, an SshError classification enum mapping onto DeviceConnectionStatus, the RemoteOperation catalogue (Probe wired up now; SystemIdentity/SystemMetrics/DockerContainers reserved for M3), and a FakeRemoteExecutor test double covering all five required simulation scenarios. 30 new Rust unit tests, 64 total passing; also manually cross-checked the classification heuristics against this machine's real ssh.exe output.",
+      "completed": [
+        "domain/connection_status.rs: DeviceConnectionStatus enum matching spec section 9.3.",
+        "infrastructure/ssh/process.rs: run_with_timeout() -- SSH-agnostic hard-timeout enforcement via try_wait() polling + kill on deadline, unit-tested against real cmd/ping processes (not just mocked).",
+        "infrastructure/ssh/operation.rs: RemoteOperation catalogue (Probe, SystemIdentity, SystemMetrics, DockerContainers); only Probe has a command body now.",
+        "infrastructure/ssh/error.rs: SshError (DnsResolutionError/ConnectionRefused/ConnectionTimeout/AuthenticationError/HostKeyError/RemoteCommandError/RemoteCommandTimeout/Spawn) + to_connection_status() mapping; HostKeyError always maps to HostKeyError, never auto-resolved.",
+        "infrastructure/ssh/openssh.rs: OpenSshExecutor building `ssh -o BatchMode=yes -o ConnectTimeout=<n> -p <port> <user>@<host> <command>` with every arg passed separately; classify_outcome() interprets exit code 255 + stderr text into the right SshError.",
+        "infrastructure/ssh/executor.rs: RemoteExecutor trait, RemoteExecutionResult/SshTarget types, default probe() method.",
+        "infrastructure/ssh/fake.rs (test-only): FakeRemoteExecutor with online/offline/timeout/authentication_error/host_key_error constructors for this and future (M3) tests.",
+        "Module marked #[allow(dead_code, unused_imports)] since nothing calls into it yet -- WU008 wires up the connection-test command.",
+        "Manually ran real ssh.exe against a nonexistent host and a closed port on this machine to confirm the DNS-resolution and connection-refused stderr patterns match classify_outcome's assumptions before committing.",
+        "Verified cargo test (64/64, 30 new), cargo build (no warnings), and npm run build all pass."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/connection_status.rs",
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/infrastructure/mod.rs",
+        "src-tauri/src/infrastructure/ssh/mod.rs",
+        "src-tauri/src/infrastructure/ssh/process.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/infrastructure/ssh/error.rs",
+        "src-tauri/src/infrastructure/ssh/executor.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/infrastructure/ssh/fake.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "64/64 unit tests passed (30 new)."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Unaffected by this backend-only work unit; still succeeds."
+        },
+        {
+          "command": "manual: ssh.exe against a nonexistent host and a closed local port",
+          "result": "passed",
+          "summary": "Confirmed exit code 255 with stderr text matching classify_outcome's DNS-resolution and connection-refused detection exactly."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "A fake RemoteExecutor can be substituted in tests to simulate online, offline, timeout, authentication failure, and host-key failure",
+          "result": "passed",
+          "evidence": "FakeRemoteExecutor::online/offline/timeout/authentication_error/host_key_error, each with a passing test asserting probe() returns the expected Ok/Err."
+        },
+        {
+          "criterion": "Host-key errors are never auto-resolved or bypassed",
+          "result": "passed",
+          "evidence": "host_key_error_never_maps_to_a_resolved_status test; classify_outcome only ever produces SshError::HostKeyError for host-key stderr patterns, and there is no code path anywhere in this module that clears, retries past, or silently accepts a host-key failure."
+        },
+        {
+          "criterion": "Every remote execution enforces a hard timeout",
+          "result": "passed",
+          "evidence": "enforces_a_hard_timeout_and_kills_the_process test spawns a real ~1s ping loop with a 300ms timeout and asserts the process is killed and timed_out=true -- this is the mechanism OpenSshExecutor::execute always routes through, not a mocked assertion."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T17:36:48.100Z"
     }
   ],
   "lastAgentPacket": {
@@ -1395,8 +1471,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T17:28:21.679Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T17:36:48.100Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -1575,6 +1651,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T17:28:08.609Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C007",
+      "current": {
+        "observationId": "sha256:6a879a8216743b9ee7d90f83007a07bcf13592346e70f45916846df02c57decd",
+        "checkpointId": "C007",
+        "workUnitId": "WU007",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T17:36:48.100Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T17:36:48.100Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:6a879a8216743b9ee7d90f83007a07bcf13592346e70f45916846df02c57decd",
+          "checkpointId": "C007",
+          "workUnitId": "WU007",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T17:36:48.100Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T17:36:48.100Z"
         }
       ]
     }
