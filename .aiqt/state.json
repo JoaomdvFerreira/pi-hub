@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M003",
-  "currentWorkUnitId": "WU010",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -33,7 +33,7 @@
         "id": "M003",
         "title": "M3 — Monitoring engine",
         "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU009",
           "WU010",
@@ -436,12 +436,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-010"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:05:24.819Z"
+        "updatedAt": "2026-08-02T18:12:47.855Z"
       },
       {
         "id": "WU011",
@@ -477,13 +477,13 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-011",
           "DEP-012"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T18:12:47.855Z"
       },
       {
         "id": "WU012",
@@ -1613,6 +1613,78 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T18:05:07.486Z"
+    },
+    {
+      "id": "C010",
+      "workUnitId": "WU010",
+      "packetId": "PKT-010",
+      "summary": "Implemented Docker availability detection and read-only container listing. The remote script always exits 0 when Docker isn't installed (reported via a PIHUB_DOCKER_AVAILABLE marker, never a command failure); when Docker is available, docker ps's own exit code/stderr propagate naturally, which required enriching SshError::RemoteCommandError with stderr so a permission-denied failure can be distinguished from any other command error. Both Unavailable and PermissionDenied are normal Ok outcomes at the collect_docker_containers layer, never surfaced as SshError. 17 new Rust unit tests, 99 total passing.",
+      "completed": [
+        "infrastructure/ssh/operation.rs: DOCKER_CONTAINERS_COMMAND -- checks `command -v docker`, prints PIHUB_DOCKER_AVAILABLE=0/1, then runs `docker ps -a --no-trunc --format '{{json .}}'` as the script's final command so its exit status/stderr propagate through the existing error path.",
+        "infrastructure/ssh/error.rs: enriched SshError::RemoteCommandError with stderr (was exit_code only); updated Display impl and existing WU007 tests.",
+        "domain/docker_container.rs: DockerContainerState/DockerHealthStatus/DockerPortBinding/DockerContainerSummary matching spec section 9.5.",
+        "infrastructure/parsers/docker.rs: parse_docker_containers() parses docker ps JSON lines independently (malformed lines warn and are skipped, valid ones kept); state strings map to DockerContainerState with unrecognized -> Unknown; health is derived from the Status text since docker ps has no dedicated health field; ports parsed from Docker's host->container/protocol string format, tolerating unpublished ports and multiple bindings.",
+        "collect_docker_containers(): runs the fixed operation and classifies into DockerCollectionResult::{Available, Unavailable, PermissionDenied} -- the latter two are normal Ok outcomes, never SshError.",
+        "Marked the new domain/parser code #[allow(dead_code)] since nothing calls it yet -- the M3 scheduler wires it up -- following the WU007/WU009 precedent.",
+        "17 new Rust unit tests: well-formed/malformed/empty docker ps payloads, port parsing edge cases, health/state derivation, the availability marker, and collect_docker_containers integration via FakeRemoteExecutor across all five outcome types.",
+        "Verified cargo test (99/99), cargo build (no warnings), and npm run build all pass.",
+        "Syntax-checked the remote script with both `sh -n` and `dash -n`."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/domain/docker_container.rs",
+        "src-tauri/src/infrastructure/parsers/mod.rs",
+        "src-tauri/src/infrastructure/parsers/docker.rs",
+        "src-tauri/src/infrastructure/ssh/error.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "99/99 unit tests passed (17 new)."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Unaffected by this backend-only work unit; still succeeds."
+        },
+        {
+          "command": "manual: sh -n and dash -n against the remote script",
+          "result": "passed",
+          "summary": "Both shells accept the script's syntax."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "A device with Docker unavailable still reports online with valid system metrics",
+          "result": "passed",
+          "evidence": "DockerCollectionResult::Unavailable is a normal Ok return from collect_docker_containers, never an error; collect_reports_unavailable_when_docker_is_not_installed test. System metrics collection (WU009) is entirely independent of Docker collection, so nothing here can fail it."
+        },
+        {
+          "criterion": "A Docker permission error is classified as DockerPermissionError and does not fail the whole device refresh",
+          "result": "passed",
+          "evidence": "collect_classifies_permission_denied_without_failing test: a RemoteCommandError with 'permission denied' in stderr maps to Ok(DockerCollectionResult::PermissionDenied), not an Err that would propagate as a device-level failure."
+        },
+        {
+          "criterion": "Rust unit tests cover well-formed, malformed, and empty docker ps output",
+          "result": "passed",
+          "evidence": "parses_a_well_formed_line, malformed_lines_produce_warnings_without_discarding_valid_entries, and empty_payload_yields_no_containers_or_warnings tests."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T18:12:47.855Z"
     }
   ],
   "lastAgentPacket": {
@@ -1639,8 +1711,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T18:05:24.819Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T18:12:47.855Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -1909,6 +1981,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T18:05:07.486Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C010",
+      "current": {
+        "observationId": "sha256:a0d2761b10ea9e328c22d3bc6f739d92eaeb2bc817b7837598959cd4bf573daa",
+        "checkpointId": "C010",
+        "workUnitId": "WU010",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T18:12:47.855Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T18:12:47.855Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a0d2761b10ea9e328c22d3bc6f739d92eaeb2bc817b7837598959cd4bf573daa",
+          "checkpointId": "C010",
+          "workUnitId": "WU010",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T18:12:47.855Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T18:12:47.855Z"
         }
       ]
     }
