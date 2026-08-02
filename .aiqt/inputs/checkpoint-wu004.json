@@ -1,0 +1,60 @@
+{
+  "summary": "Built the real React app shell (dark-theme design tokens, 64px icon nav rail, lightweight internal router across Dashboard/Services/Settings/device-detail/device-settings) matching the Pi Control design reference. Set up Tailwind CSS v4 + shadcn/ui (radix base) per this work unit's declared component-system preference, replaced shadcn's default palette with tokens matching the design mockup, removed the create-tauri-app demo content, and added an ESLint flat config since none existed. Verified with npm run build, npm run lint, cargo build, and a live smoke test that screenshotted the running app and clicked through all three nav destinations.",
+  "completed": [
+    "Installed and configured Tailwind CSS v4 (@tailwindcss/vite) and shadcn/ui (radix base, Nova preset), adding the @/* path alias in vite.config.ts and tsconfig.json.",
+    "Replaced shadcn's default light/grayscale CSS variables in src/globals.css with a dark-only palette matching the Pi Control design reference (background/card/popover/border/muted/primary colors, a sidebar token group for the nav rail) plus custom --status-healthy/--status-warning/--status-offline/--status-neutral tokens for later use.",
+    "Set the font stack to 'Segoe UI Variable' matching the design, and removed the unused @fontsource-variable/geist dependency shadcn's init pulled in.",
+    "src/app/router.tsx: context-based router covering dashboard, device, deviceSettings, services, globalSettings screens.",
+    "src/components/layout/NavRail.tsx: Dashboard/Services/Settings icon buttons with active-state highlighting; intentionally dropped the design mockup's in-app tray flyout button since a real native system tray already exists (WU002).",
+    "src/components/layout/EmptyState.tsx + one placeholder screen per route under src/features/{dashboard,services,settings,devices}/.",
+    "Rewrote src/App.tsx to mount RouterProvider + AppShell; removed the create-tauri-app demo (greet UI, App.css, react.svg) and the now-unused greet Tauri command from lib.rs.",
+    "Added eslint.config.js (flat config: typescript-eslint + react-hooks + react-refresh) and an npm run lint script, since neither existed yet but this work unit's validation commands require it.",
+    "Verified npm run build and npm run lint pass, and cargo build still succeeds.",
+    "Live smoke test via npm run tauri dev: screenshotted the running app on Dashboard (matches the design's dark theme, nav rail, and empty-state styling), then simulated clicks on the Services and Settings nav icons and re-screenshotted, confirming both screens render and the active-nav highlight moves correctly."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "vite.config.ts",
+    "tsconfig.json",
+    "package.json",
+    "package-lock.json",
+    "components.json",
+    "eslint.config.js",
+    "src/globals.css",
+    "src/lib/utils.ts",
+    "src/components/ui/button.tsx",
+    "src/app/router.tsx",
+    "src/app/AppShell.tsx",
+    "src/components/layout/NavRail.tsx",
+    "src/components/layout/EmptyState.tsx",
+    "src/features/dashboard/DashboardScreen.tsx",
+    "src/features/services/ServicesScreen.tsx",
+    "src/features/settings/GlobalSettingsScreen.tsx",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/features/devices/DeviceSettingsScreen.tsx",
+    "src/App.tsx",
+    "src/main.tsx",
+    "index.html",
+    "src-tauri/src/lib.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "npm run build", "result": "passed", "summary": "tsc + vite build succeeded." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 2 warnings (react-refresh HMR-granularity notices on router.tsx and the shadcn-generated button.tsx, not correctness issues)." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Backend still compiles cleanly after removing the unused greet command." },
+    { "command": "npm run tauri dev (live smoke test)", "result": "passed", "summary": "Screenshotted the running app on Dashboard, then Services and Settings after simulated nav clicks; visuals match the design reference and navigation/active-state highlighting work." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Nav rail navigates between Dashboard, Services, and Settings placeholders", "result": "passed", "evidence": "Live screenshots before/after simulated clicks on each of the three nav icons show the correct screen and active highlight for each." },
+    { "criterion": "Visual style (colors, spacing, typography) matches the Pi Control Claude Design reference", "result": "passed", "evidence": "Screenshots show the dark background/card colors, nav rail styling, and blue accent matching docs/design/Pi Control.dc.html; tokens were transcribed directly from that file's inline styles." },
+    { "criterion": "No arbitrary command execution is exposed to the frontend from this shell", "result": "passed", "evidence": "This work unit added no new Tauri commands or invoke() calls; the shell is presentation-only, and the demo greet command was removed rather than left in place." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 15/100 (low). Rationale: purely frontend/presentational change with no new backend commands, no persistence changes, no SSH surface; the riskiest part (getting Tailwind v4 + shadcn's CSS-variable theming wired correctly) was directly verified with live screenshots rather than relying on the build passing alone.",
+    "This project declares a shadcn/ui component-system preference per the AIQT work-unit packet's Component System Guidance; that wasn't part of the original architecture notes I captured (which only mentioned 'optional Radix UI primitives'), so I've now effectively locked in shadcn/ui + Tailwind v4 as the actual frontend component system going forward -- later UI work units (M4) should keep using shadcn primitives/wrappers rather than hand-rolled ones.",
+    "The design mockup's per-container 'Update' action and its in-app tray flyout were both deliberately excluded, per this work unit's stated out-of-scope and because a real system tray already exists, respectively."
+  ]
+}
