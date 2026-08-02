@@ -1,0 +1,41 @@
+{
+  "summary": "Implemented device and container status-transition detection with restart-safe deduplication. Three pure rule functions (device online<->offline/auth/hostkey, container running->exited/stopped/restarting, container ->unhealthy) each require a genuine previous observation, so first-discovery never notifies. Deduplication (deviceId+resourceId+previousState+currentState) is persisted in the same state.json read-modify-write cycle as snapshots, specifically to avoid two independent repositories clobbering each other's writes to one file. Wired into the scheduler as a new notification://ready event. 29 new Rust unit tests, 152 total passing.",
+  "completed": [
+    "domain/notification_rule.rs: device_transition_event/container_state_transition_event/container_health_transition_event, each a pure function matching spec 15.1/15.2's exact transition list -- not a general 'any change' rule.",
+    "First-discovery suppression: previous:None never notifies for any of the three rules (extended the same principle to container health, which spec only states explicitly for state).",
+    "NotificationEvent::dedup_key() builds the spec 15.3 key (deviceId+resourceId+previousState+currentState).",
+    "storage/snapshot_repository.rs: extended (not duplicated into a second repository) to also persist notified-transitions in state.json, sharing one read-modify-write cycle with snapshot upserts so the two concerns can't clobber each other -- directly tested.",
+    "monitoring/notifications.rs: NotificationService trait (no implementation yet -- dispatch is M4) and evaluate_snapshot_transition(), which runs all three rules and filters/records against the dedup store, so repeated evaluation of the same snapshot pair (including across a simulated restart) only ever notifies once.",
+    "monitoring/scheduler.rs: wired evaluate_snapshot_transition into do_refresh(), emitting notification://ready with the Vec<NotificationEvent> when non-empty.",
+    "29 new Rust unit tests: 20 for the pure transition rules (every spec-listed and explicitly-excluded transition, first-discovery suppression, dedup-key construction), 9 for dedup/evaluation (repeat-evaluation dedup, restart-survival, state.json non-clobbering, the explicit already-stopped-on-first-discovery acceptance case).",
+    "Verified cargo test (152/152), cargo build (no warnings), npm run build all pass."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/domain/mod.rs",
+    "src-tauri/src/domain/notification_rule.rs",
+    "src-tauri/src/monitoring/mod.rs",
+    "src-tauri/src/monitoring/notifications.rs",
+    "src-tauri/src/monitoring/scheduler.rs",
+    "src-tauri/src/storage/snapshot_repository.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "152/152 unit tests passed (29 new)." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected by this backend-only work unit; still succeeds." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Repeated refreshes with an unchanged state never produce duplicate notification events", "result": "passed", "evidence": "repeated_refreshes_with_an_unchanged_state_never_notify (rule level, previous==current never matches any transition pattern) and repeated_evaluation_of_the_same_transition_is_deduplicated + dedup_survives_a_simulated_restart (dedup-store level, guards even a literal duplicate evaluation of the identical transition, surviving a restart)." },
+    { "criterion": "A container already stopped at first discovery does not trigger a notification", "result": "passed", "evidence": "container_first_discovery_already_stopped_does_not_notify (rule level) and container_already_stopped_on_first_discovery_does_not_notify (evaluation level, via evaluate_snapshot_transition with previous:None)." },
+    { "criterion": "Rust unit tests cover each transition rule and the dedup key", "result": "passed", "evidence": "20 tests exercise every spec-listed device/container/health transition plus explicitly-excluded ones (e.g. online->Timeout doesn't notify, Running->Running doesn't notify); dedup_key_combines_all_four_components and dedup_key_includes_resource_id_so_different_containers_never_collide test the key construction directly." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 20/100 (low). Rationale: purely additive, well-isolated domain logic with no SSH/network/UI surface; the one real data-integrity risk (two independent repositories writing the same state.json and clobbering each other) was identified during design and avoided by extending the existing SnapshotRepository rather than adding a second one, with a dedicated test proving both concerns survive concurrent-in-sequence writes intact.",
+    "notification://ready is a new backend event with no listener yet (the frontend has no notification UI until M4); this is expected and matches the work unit's explicit scope (dispatch and settings UI are both M4).",
+    "M3 (Monitoring engine) is now complete: WU009-WU012 all done. Next up is M4 (Desktop experience)."
+  ]
+}
