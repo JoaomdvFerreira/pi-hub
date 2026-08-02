@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M003",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU012",
   "workGraph": {
     "milestones": [
       {
@@ -33,7 +33,7 @@
         "id": "M003",
         "title": "M3 — Monitoring engine",
         "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU009",
           "WU010",
@@ -516,12 +516,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-013"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:35:25.703Z"
+        "updatedAt": "2026-08-02T18:36:11.842Z"
       },
       {
         "id": "WU013",
@@ -1782,12 +1782,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-011",
-    "workUnitId": "WU011",
+    "id": "PKT-012",
+    "workUnitId": "WU012",
     "milestoneId": "M003",
-    "createdAt": "2026-08-02T18:13:08.577Z",
+    "createdAt": "2026-08-02T18:36:11.842Z",
     "format": "markdown",
-    "contentHash": "sha256:fa48167646dd06abc01d7eadd9c0b8ab60f5268eaf05b610789b5895e038d663",
+    "contentHash": "sha256:a6d8515f6a3bfc63c23f53fb7d0ffdaa1e06bb8fc27e905e7bada3f7f2311952",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1805,8 +1805,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T18:35:25.703Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T18:36:11.842Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

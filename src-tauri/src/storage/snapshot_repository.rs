@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
 
@@ -10,21 +10,39 @@ use crate::storage::StorageError;
 
 pub const STATE_SCHEMA_VERSION: u32 = 1;
 
-/// Persists the last-known snapshot per device to state.json. This is
-/// explicitly non-authoritative runtime data (spec section 10.2): the app
-/// must remain fully functional if this file is missing or deleted, so
-/// every read recovers to an empty map rather than failing.
+/// Persists the last-known snapshot per device, and the set of already-
+/// notified transition dedup keys, to state.json. This is explicitly
+/// non-authoritative runtime data (spec section 10.2): the app must
+/// remain fully functional if this file is missing or deleted, so every
+/// read recovers to an empty state rather than failing.
+///
+/// Both concerns share one repository (and one file, read-modify-written
+/// as a single unit) rather than two independent ones, specifically so a
+/// snapshot write can never clobber a dedup-key write or vice versa.
 pub trait SnapshotRepository: Send + Sync {
+    // Kept for API completeness (e.g. a future "all last-known snapshots"
+    // dashboard query) and exercised directly by tests; no production
+    // caller needs the whole map yet since refresh/tick work per-device.
+    #[allow(dead_code)]
     fn load_all(&self) -> HashMap<String, DeviceSnapshot>;
     fn get(&self, device_id: &str) -> Option<DeviceSnapshot>;
     fn upsert(&self, snapshot: &DeviceSnapshot) -> Result<(), StorageError>;
+
+    /// Whether a notification dedup key has already been recorded (spec
+    /// section 15.3: `deviceId + resourceId + previousState +
+    /// currentState`), persisted so dedup survives an app restart.
+    fn has_notified(&self, dedup_key: &str) -> bool;
+    fn mark_notified(&self, dedup_key: &str) -> Result<(), StorageError>;
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct StateFile {
     schema_version: u32,
+    #[serde(default)]
     snapshots: HashMap<String, DeviceSnapshot>,
+    #[serde(default)]
+    notified_transitions: HashSet<String>,
 }
 
 pub struct JsonSnapshotRepository {
@@ -44,43 +62,63 @@ impl JsonSnapshotRepository {
             log::warn!("failed to quarantine corrupted state.json: {err}");
         }
     }
-}
 
-impl SnapshotRepository for JsonSnapshotRepository {
-    fn load_all(&self) -> HashMap<String, DeviceSnapshot> {
+    fn load_state(&self) -> StateFile {
         let bytes = match fs::read(&self.state_path) {
             Ok(bytes) => bytes,
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return HashMap::new(),
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return StateFile::default(),
             Err(err) => {
-                log::warn!("failed to read state.json ({err}), continuing with no last-known snapshots");
-                return HashMap::new();
+                log::warn!(
+                    "failed to read state.json ({err}), continuing with no last-known state"
+                );
+                return StateFile::default();
             }
         };
 
         match serde_json::from_slice::<StateFile>(&bytes) {
-            Ok(file) => file.snapshots,
+            Ok(file) => file,
             Err(err) => {
-                log::warn!("state.json is corrupted ({err}), continuing with no last-known snapshots");
+                log::warn!("state.json is corrupted ({err}), continuing with no last-known state");
                 self.quarantine_corrupt_file();
-                HashMap::new()
+                StateFile::default()
             }
         }
     }
 
+    fn save_state(&self, state: &StateFile) -> Result<(), StorageError> {
+        let bytes = serde_json::to_vec_pretty(state)?;
+        write_atomic(&self.state_path, &bytes)?;
+        Ok(())
+    }
+}
+
+impl SnapshotRepository for JsonSnapshotRepository {
+    fn load_all(&self) -> HashMap<String, DeviceSnapshot> {
+        self.load_state().snapshots
+    }
+
     fn get(&self, device_id: &str) -> Option<DeviceSnapshot> {
-        self.load_all().remove(device_id)
+        self.load_state().snapshots.remove(device_id)
     }
 
     fn upsert(&self, snapshot: &DeviceSnapshot) -> Result<(), StorageError> {
-        let mut snapshots = self.load_all();
-        snapshots.insert(snapshot.device_id.clone(), snapshot.clone());
-        let file = StateFile {
-            schema_version: STATE_SCHEMA_VERSION,
-            snapshots,
-        };
-        let bytes = serde_json::to_vec_pretty(&file)?;
-        write_atomic(&self.state_path, &bytes)?;
-        Ok(())
+        let mut state = self.load_state();
+        state.schema_version = STATE_SCHEMA_VERSION;
+        state
+            .snapshots
+            .insert(snapshot.device_id.clone(), snapshot.clone());
+        self.save_state(&state)
+    }
+
+    fn has_notified(&self, dedup_key: &str) -> bool {
+        self.load_state().notified_transitions.contains(dedup_key)
+    }
+
+    fn mark_notified(&self, dedup_key: &str) -> Result<(), StorageError> {
+        let mut state = self.load_state();
+        state.schema_version = STATE_SCHEMA_VERSION;
+        state.notified_transitions.insert(dedup_key.to_string());
+        self.save_state(&state)
     }
 }
 
@@ -162,5 +200,44 @@ mod tests {
         assert!(repo.load_all().is_empty());
         assert!(!state_path.exists());
         assert!(dir.path().join("state.json.corrupt").exists());
+    }
+
+    #[test]
+    fn mark_notified_then_has_notified_round_trips() {
+        let dir = tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+
+        assert!(!repo.has_notified("pi5|pi5|online|offline"));
+        repo.mark_notified("pi5|pi5|online|offline").unwrap();
+        assert!(repo.has_notified("pi5|pi5|online|offline"));
+        assert!(!repo.has_notified("pi5|pi5|offline|online"));
+    }
+
+    #[test]
+    fn snapshot_upsert_and_notification_dedup_do_not_clobber_each_other() {
+        let dir = tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+
+        repo.upsert(&sample_snapshot("pi5")).unwrap();
+        repo.mark_notified("pi5|pi5|online|offline").unwrap();
+        repo.upsert(&sample_snapshot("pi2")).unwrap();
+        repo.mark_notified("pi2|pi2|online|offline").unwrap();
+
+        assert_eq!(repo.load_all().len(), 2);
+        assert!(repo.has_notified("pi5|pi5|online|offline"));
+        assert!(repo.has_notified("pi2|pi2|online|offline"));
+    }
+
+    #[test]
+    fn dedup_state_survives_being_loaded_fresh_simulating_a_restart() {
+        let dir = tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        repo.mark_notified("pi5|pi5|online|offline").unwrap();
+        drop(repo);
+
+        // A brand new repository instance pointed at the same directory
+        // simulates the app restarting.
+        let repo_after_restart = JsonSnapshotRepository::new(dir.path());
+        assert!(repo_after_restart.has_notified("pi5|pi5|online|offline"));
     }
 }

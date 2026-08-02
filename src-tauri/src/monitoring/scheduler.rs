@@ -8,6 +8,7 @@ use crate::error::ApplicationError;
 use crate::infrastructure::ssh::OpenSshExecutor;
 use crate::monitoring::concurrency::RefreshCoordinator;
 use crate::monitoring::container_diff::detect_container_changes;
+use crate::monitoring::notifications::evaluate_snapshot_transition;
 use crate::monitoring::refresh::refresh_device_sync;
 use crate::monitoring::scheduling::is_due;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
@@ -123,6 +124,12 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     );
     if !container_changes.is_empty() {
         let _ = app.emit("container://status-changed", (device_id, &container_changes));
+    }
+
+    let notifications =
+        evaluate_snapshot_transition(&snapshot_repo, device_id, previous.as_ref(), &snapshot);
+    if !notifications.is_empty() {
+        let _ = app.emit("notification://ready", &notifications);
     }
 
     let _ = app.emit("monitoring://refresh-completed", device_id);
