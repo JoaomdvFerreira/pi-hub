@@ -1,5 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { Device, DeviceInput } from "../../types/device";
+import type {
+  ConnectionTestResult,
+  Device,
+  DeviceInput,
+  TestConnectionInput,
+} from "../../types/device";
 
 export function getDevices(): Promise<Device[]> {
   return invoke<Device[]>("get_devices");
@@ -19,4 +24,10 @@ export function updateDevice(id: string, input: DeviceInput): Promise<Device> {
 
 export function deleteDevice(id: string): Promise<void> {
   return invoke<void>("delete_device", { id });
+}
+
+export function testDeviceConnection(
+  input: TestConnectionInput,
+): Promise<ConnectionTestResult> {
+  return invoke<ConnectionTestResult>("test_device_connection", { input });
 }

@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M002",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU008",
   "workGraph": {
     "milestones": [
       {
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -361,12 +361,12 @@
           "npm run build",
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-008"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:36:48.100Z"
+        "updatedAt": "2026-08-02T17:37:02.534Z"
       },
       {
         "id": "WU009",
@@ -1448,12 +1448,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-007",
-    "workUnitId": "WU007",
+    "id": "PKT-008",
+    "workUnitId": "WU008",
     "milestoneId": "M002",
-    "createdAt": "2026-08-02T17:28:21.679Z",
+    "createdAt": "2026-08-02T17:37:02.534Z",
     "format": "markdown",
-    "contentHash": "sha256:443cb32dd33e18d8e3e09ce0a8205e79c0bf616c4e933fbaf8558bbf357a5ee5",
+    "contentHash": "sha256:c2d95212a0d6e38d363698a2b789695e2351d192b54c0a39e58c33798a33388c",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1461,18 +1461,20 @@
       "constraints",
       "acceptance",
       "validation",
+      "designGuidance",
+      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": false,
+      "includesDesignGuidance": true,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": false,
+      "includesComponentSystemGuidance": true,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T17:36:48.100Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T17:37:02.534Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

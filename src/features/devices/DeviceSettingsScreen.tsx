@@ -1,32 +1,69 @@
-import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DeviceForm } from "@/features/devices/DeviceForm";
 import { useRouter } from "@/app/router";
+import { getDevice } from "@/lib/tauri/devices";
+import type { Device } from "@/types/device";
 
 interface DeviceSettingsScreenProps {
   deviceId: string;
 }
 
 export function DeviceSettingsScreen({ deviceId }: DeviceSettingsScreenProps) {
-  const { goDevice } = useRouter();
+  const { goDashboard } = useRouter();
+  const [device, setDevice] = useState<Device | null | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Fetch-on-mount: no data-fetching library is in scope for the MVP yet,
+    // so the lint rule's suggested alternative (a query library) doesn't
+    // apply here.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDevice(undefined);
+    getDevice(deviceId).then((result) => {
+      if (!cancelled) {
+        setDevice(result);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [deviceId]);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2.5">
-        <button
+        <Button
           type="button"
-          onClick={() => goDevice(deviceId)}
-          aria-label="Back to device"
-          className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-border text-foreground transition-colors hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          variant="outline"
+          size="icon"
+          onClick={goDashboard}
+          aria-label="Back to dashboard"
         >
-          <ArrowLeft className="h-[15px] w-[15px]" strokeWidth={2.3} />
-        </button>
+          <ArrowLeft />
+        </Button>
         <h1 className="text-lg font-semibold text-foreground">
-          Settings &middot; Device {deviceId}
+          {device ? `Settings · ${device.name}` : "Device settings"}
         </h1>
       </div>
-      <div className="max-w-xl rounded-lg border border-border bg-card p-6 text-sm text-muted-foreground">
-        Device configuration, notification toggles, and registered services
-        will appear here once the device registry exists.
-      </div>
+
+      {device === undefined ? (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Loader2 className="animate-spin" /> Loading…
+        </div>
+      ) : device === null ? (
+        <p className="text-sm text-muted-foreground">
+          This device no longer exists.
+        </p>
+      ) : (
+        <DeviceForm
+          mode="edit"
+          device={device}
+          onSaved={goDashboard}
+          onCancel={goDashboard}
+        />
+      )}
     </div>
   );
 }

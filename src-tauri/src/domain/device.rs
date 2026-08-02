@@ -82,7 +82,7 @@ fn validate_service_url(raw_url: &str) -> Result<(), DeviceValidationError> {
     }
 }
 
-fn validate_ssh_port(port: u16) -> Result<(), DeviceValidationError> {
+pub(crate) fn validate_ssh_port(port: u16) -> Result<(), DeviceValidationError> {
     if port == 0 {
         return Err(DeviceValidationError(
             "sshPort must be between 1 and 65535".into(),
@@ -91,7 +91,7 @@ fn validate_ssh_port(port: u16) -> Result<(), DeviceValidationError> {
     Ok(())
 }
 
-fn validate_ssh_username(username: &str) -> Result<(), DeviceValidationError> {
+pub(crate) fn validate_ssh_username(username: &str) -> Result<(), DeviceValidationError> {
     let valid = !username.is_empty()
         && username.len() <= 32
         && username
@@ -112,7 +112,7 @@ fn validate_ssh_username(username: &str) -> Result<(), DeviceValidationError> {
 
 const FORBIDDEN_HOST_CHARS: &str = "\"'`$&|;<>(){}\\!*?~#";
 
-fn validate_host(host: &str) -> Result<(), DeviceValidationError> {
+pub(crate) fn validate_host(host: &str) -> Result<(), DeviceValidationError> {
     if host.trim().is_empty() {
         return Err(DeviceValidationError("host must not be empty".into()));
     }

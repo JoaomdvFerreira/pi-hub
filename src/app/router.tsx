@@ -2,6 +2,7 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 
 export type Screen =
   | { name: "dashboard" }
+  | { name: "addDevice" }
   | { name: "device"; deviceId: string }
   | { name: "deviceSettings"; deviceId: string }
   | { name: "services"; deviceId?: string }
@@ -10,6 +11,7 @@ export type Screen =
 interface RouterContextValue {
   screen: Screen;
   goDashboard: () => void;
+  goAddDevice: () => void;
   goServices: (deviceId?: string) => void;
   goGlobalSettings: () => void;
   goDevice: (deviceId: string) => void;
@@ -24,6 +26,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
   const value: RouterContextValue = {
     screen,
     goDashboard: () => setScreen({ name: "dashboard" }),
+    goAddDevice: () => setScreen({ name: "addDevice" }),
     goServices: (deviceId) => setScreen({ name: "services", deviceId }),
     goGlobalSettings: () => setScreen({ name: "globalSettings" }),
     goDevice: (deviceId) => setScreen({ name: "device", deviceId }),

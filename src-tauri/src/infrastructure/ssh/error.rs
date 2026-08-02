@@ -30,6 +30,54 @@ impl SshError {
             SshError::Spawn(_) => DeviceConnectionStatus::Unknown,
         }
     }
+
+    /// A short remediation hint safe to show directly in the UI. Never
+    /// suggests bypassing host-key checking or supplying a password.
+    pub fn remediation(&self) -> &'static str {
+        match self {
+            SshError::DnsResolutionError => {
+                "The hostname could not be resolved. Check the hostname and your Tailscale connection."
+            }
+            SshError::ConnectionRefused => {
+                "The device refused the connection. Check that it is powered on and the SSH port is correct."
+            }
+            SshError::ConnectionTimeout => {
+                "The connection timed out. Check that the device is reachable over Tailscale or the local network."
+            }
+            SshError::AuthenticationError => {
+                "Authentication failed. Confirm your SSH public key is authorized on the device and loaded in ssh-agent."
+            }
+            SshError::HostKeyError => {
+                "The device's SSH host key could not be verified, or has changed. Verify it manually with ssh, then try again."
+            }
+            SshError::RemoteCommandError { .. } => {
+                "The device connected but the remote command failed. Check the SSH user's permissions."
+            }
+            SshError::RemoteCommandTimeout => {
+                "The remote command did not finish in time. The device may be overloaded or unreachable."
+            }
+            SshError::Spawn(_) => {
+                "Could not launch the SSH client. Confirm the Windows OpenSSH client is installed."
+            }
+        }
+    }
+}
+
+impl std::fmt::Display for SshError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SshError::Spawn(reason) => write!(f, "could not launch ssh: {reason}"),
+            SshError::DnsResolutionError => write!(f, "DNS resolution failed"),
+            SshError::ConnectionRefused => write!(f, "connection refused"),
+            SshError::ConnectionTimeout => write!(f, "connection timed out"),
+            SshError::AuthenticationError => write!(f, "authentication failed"),
+            SshError::HostKeyError => write!(f, "host key verification failed"),
+            SshError::RemoteCommandError { exit_code } => {
+                write!(f, "remote command failed (exit code {exit_code:?})")
+            }
+            SshError::RemoteCommandTimeout => write!(f, "remote command timed out"),
+        }
+    }
 }
 
 #[cfg(test)]

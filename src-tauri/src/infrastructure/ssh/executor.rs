@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use super::error::SshError;
-use super::operation::PROBE_COMMAND;
+use super::operation::RemoteOperation;
 
 #[derive(Debug, Clone)]
 pub struct SshTarget {
@@ -38,6 +38,9 @@ pub trait RemoteExecutor: Send + Sync {
         target: &SshTarget,
         timeout: Duration,
     ) -> Result<RemoteExecutionResult, SshError> {
-        self.execute(target, PROBE_COMMAND, timeout)
+        let command = RemoteOperation::Probe
+            .command()
+            .expect("RemoteOperation::Probe always has a command");
+        self.execute(target, command, timeout)
     }
 }

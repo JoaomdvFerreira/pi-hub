@@ -1,9 +1,32 @@
+use std::time::Duration;
+
+use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::application::device_service::{self, DeviceInput, DeviceServiceError};
-use crate::domain::device::Device;
+use crate::domain::connection_status::DeviceConnectionStatus;
+use crate::domain::device::{validate_host, validate_ssh_port, validate_ssh_username, Device};
 use crate::error::ApplicationError;
+use crate::infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, SshTarget};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
+
+/// Matches spec section 24.3's SSH connection timeout default.
+const SSH_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestConnectionInput {
+    pub host: String,
+    pub ssh_port: u16,
+    pub ssh_username: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ConnectionTestResult {
+    pub status: DeviceConnectionStatus,
+    pub message: Option<String>,
+}
 
 fn repository(app: &AppHandle) -> Result<JsonDeviceRepository, ApplicationError> {
     let config_dir = app
@@ -71,4 +94,59 @@ pub fn update_device(
 pub fn delete_device(app: AppHandle, id: String) -> Result<(), ApplicationError> {
     let repo = repository(&app)?;
     device_service::delete_device(&repo, &id).map_err(to_application_error)
+}
+
+/// Tests SSH connectivity to a host/port/username combination without
+/// requiring the device to already be registered, so the "Test Connection"
+/// action works while adding or editing a device. Never requests or stores
+/// a password; relies entirely on the Windows OpenSSH client's own key/
+/// ssh-agent configuration (BatchMode=yes never prompts).
+#[tauri::command]
+pub async fn test_device_connection(
+    input: TestConnectionInput,
+) -> Result<ConnectionTestResult, ApplicationError> {
+    validate_host(&input.host).map_err(|err| ApplicationError {
+        code: "ValidationError".into(),
+        message: err.0,
+        remediation: Some("Correct the highlighted field and try again.".into()),
+        retryable: true,
+    })?;
+    validate_ssh_port(input.ssh_port).map_err(|err| ApplicationError {
+        code: "ValidationError".into(),
+        message: err.0,
+        remediation: Some("Correct the highlighted field and try again.".into()),
+        retryable: true,
+    })?;
+    validate_ssh_username(&input.ssh_username).map_err(|err| ApplicationError {
+        code: "ValidationError".into(),
+        message: err.0,
+        remediation: Some("Correct the highlighted field and try again.".into()),
+        retryable: true,
+    })?;
+
+    tauri::async_runtime::spawn_blocking(move || {
+        let target = SshTarget {
+            host: input.host,
+            port: input.ssh_port,
+            username: input.ssh_username,
+        };
+        let executor = OpenSshExecutor::default();
+        match executor.probe(&target, SSH_CONNECT_TIMEOUT) {
+            Ok(_) => ConnectionTestResult {
+                status: DeviceConnectionStatus::Online,
+                message: None,
+            },
+            Err(err) => ConnectionTestResult {
+                status: err.to_connection_status(),
+                message: Some(err.remediation().to_string()),
+            },
+        }
+    })
+    .await
+    .map_err(|_| ApplicationError {
+        code: "PlatformIntegrationError".into(),
+        message: "the connection test did not complete".into(),
+        remediation: Some("Try again.".into()),
+        retryable: true,
+    })
 }

@@ -43,3 +43,24 @@ export interface DeviceInput {
   notificationsEnabled: boolean;
   services: DeviceService[];
 }
+
+export type DeviceConnectionStatus =
+  | "unknown"
+  | "checking"
+  | "online"
+  | "offline"
+  | "timeout"
+  | "authentication_error"
+  | "host_key_error"
+  | "command_error";
+
+export interface TestConnectionInput {
+  host: string;
+  sshPort: number;
+  sshUsername: string;
+}
+
+export interface ConnectionTestResult {
+  status: DeviceConnectionStatus;
+  message?: string;
+}

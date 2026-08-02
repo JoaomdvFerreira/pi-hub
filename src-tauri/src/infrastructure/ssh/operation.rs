@@ -4,10 +4,13 @@
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RemoteOperation {
     Probe,
-    /// Reserved for the M3 monitoring work units, which pair the command
-    /// body with the parser that consumes its output.
+    // Reserved for the M3 monitoring work units, which pair the command
+    // body with the parser that consumes its output; not constructed yet.
+    #[allow(dead_code)]
     SystemIdentity,
+    #[allow(dead_code)]
     SystemMetrics,
+    #[allow(dead_code)]
     DockerContainers,
 }
 
