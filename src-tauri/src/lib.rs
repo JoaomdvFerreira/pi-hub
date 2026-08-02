@@ -34,11 +34,18 @@ pub fn run() {
             commands::devices::create_device,
             commands::devices::update_device,
             commands::devices::delete_device,
-            commands::devices::test_device_connection
+            commands::devices::test_device_connection,
+            commands::monitoring::refresh_device,
+            commands::monitoring::refresh_all_devices,
+            commands::monitoring::get_latest_snapshot
         ])
+        .manage(monitoring::concurrency::RefreshCoordinator::new(
+            monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
+        ))
         .setup(|app| {
             log::info!("Pi-Hub starting up");
             platform::tray::build(app.handle())?;
+            monitoring::scheduler::start(app.handle().clone());
             Ok(())
         })
         .on_window_event(|window, event| {

@@ -19,6 +19,22 @@ pub enum SshError {
 }
 
 impl SshError {
+    /// A stable machine-readable code matching the error taxonomy in
+    /// docs/pi-hub-technical-architecture-specification.md section 22.1,
+    /// suitable for `ApplicationError.code`.
+    pub fn code(&self) -> &'static str {
+        match self {
+            SshError::DnsResolutionError => "DnsResolutionError",
+            SshError::ConnectionRefused => "ConnectionRefused",
+            SshError::ConnectionTimeout => "ConnectionTimeout",
+            SshError::AuthenticationError => "AuthenticationError",
+            SshError::HostKeyError => "HostKeyError",
+            SshError::RemoteCommandError { .. } => "RemoteCommandError",
+            SshError::RemoteCommandTimeout => "RemoteCommandTimeout",
+            SshError::Spawn(_) => "PlatformIntegrationError",
+        }
+    }
+
     pub fn to_connection_status(&self) -> DeviceConnectionStatus {
         match self {
             SshError::DnsResolutionError | SshError::ConnectionRefused => {
@@ -95,6 +111,21 @@ mod tests {
         assert_eq!(
             SshError::HostKeyError.to_connection_status(),
             DeviceConnectionStatus::HostKeyError
+        );
+    }
+
+    #[test]
+    fn code_matches_the_spec_error_taxonomy() {
+        assert_eq!(SshError::DnsResolutionError.code(), "DnsResolutionError");
+        assert_eq!(SshError::HostKeyError.code(), "HostKeyError");
+        assert_eq!(SshError::AuthenticationError.code(), "AuthenticationError");
+        assert_eq!(
+            SshError::RemoteCommandError {
+                exit_code: Some(1),
+                stderr: String::new()
+            }
+            .code(),
+            "RemoteCommandError"
         );
     }
 
