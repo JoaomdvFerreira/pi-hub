@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M003",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU009",
   "workGraph": {
     "milestones": [
       {
@@ -33,7 +33,7 @@
         "id": "M003",
         "title": "M3 — Monitoring engine",
         "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU009",
           "WU010",
@@ -398,12 +398,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-009"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:36:48.100Z"
+        "updatedAt": "2026-08-02T17:57:00.418Z"
       },
       {
         "id": "WU010",
@@ -1545,12 +1545,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-008",
-    "workUnitId": "WU008",
-    "milestoneId": "M002",
-    "createdAt": "2026-08-02T17:37:02.534Z",
+    "id": "PKT-009",
+    "workUnitId": "WU009",
+    "milestoneId": "M003",
+    "createdAt": "2026-08-02T17:57:00.418Z",
     "format": "markdown",
-    "contentHash": "sha256:c2d95212a0d6e38d363698a2b789695e2351d192b54c0a39e58c33798a33388c",
+    "contentHash": "sha256:6b60e9c39c1d263e41e2726c2153804081a9c3448f214e778df4d249b42d8549",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1558,20 +1558,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T17:56:00.831Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T17:57:00.418Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
