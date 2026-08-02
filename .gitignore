@@ -20,6 +20,9 @@ tauri-dev-err.log
 # Claude Code local harness state
 .claude/
 
+# AIQT generated export documents (regenerable via `aiqt export all`)
+.aiqt/exports/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
