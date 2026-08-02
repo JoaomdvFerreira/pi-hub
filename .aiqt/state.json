@@ -1,6 +1,6 @@
 {
   "version": "0.5.0",
-  "projectStatus": "planned",
+  "projectStatus": "in_progress",
   "currentMilestoneId": "M001",
   "currentWorkUnitId": null,
   "workGraph": {
@@ -92,10 +92,10 @@
           "npm run build",
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T15:50:44.744Z"
       },
       {
         "id": "WU002",
@@ -129,12 +129,12 @@
         "validationCommands": [
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-001"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T15:50:44.744Z"
       },
       {
         "id": "WU003",
@@ -168,12 +168,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-002"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T15:50:44.744Z"
       },
       {
         "id": "WU004",
@@ -208,12 +208,12 @@
           "npm run build",
           "npm run lint"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-003"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T15:50:44.744Z"
       },
       {
         "id": "WU005",
@@ -901,8 +901,158 @@
       }
     ]
   },
-  "checkpoints": [],
-  "lastAgentPacket": null,
+  "checkpoints": [
+    {
+      "id": "C001",
+      "workUnitId": "WU001",
+      "packetId": "PKT-001",
+      "summary": "Scaffolded the Pi-Hub Tauri 2 + React + TypeScript project, renamed the generated template to pi-hub, laid out the layered backend/frontend folder structure from the technical architecture spec, and verified both the frontend build and the Rust backend build (and a live tauri dev launch showing a window titled \"Pi-Hub\").",
+      "completed": [
+        "Initialized the Tauri 2 project via create-tauri-app with the react-ts template.",
+        "Renamed the generated template from tauri-app to pi-hub across package.json, Cargo.toml, and tauri.conf.json; set window title to Pi-Hub at 1280x820 (min 960x640).",
+        "Created src-tauri/src/{commands,application,domain,infrastructure,monitoring,platform,storage}/ placeholder modules plus error.rs/state.rs stubs, wired into lib.rs.",
+        "Created src/{app,components/{ui,layout},features/{dashboard,devices,containers,services,settings},lib/{tauri,formatting,validation},stores,types}/ placeholder frontend folders.",
+        "Wrote README.md with prerequisites, dev/build commands, project layout, and AIQT usage pointers.",
+        "Installed the Rust toolchain (rustup via winget) on the target machine since it was missing, and confirmed MSVC build tools were already present via Visual Studio.",
+        "Verified npm run build and cargo build --manifest-path src-tauri/Cargo.toml both succeed.",
+        "Verified npm run tauri dev launches a live window titled \"Pi-Hub\" (process pi-hub.exe observed running), then cleanly terminated the dev processes."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "package.json",
+        "src-tauri/Cargo.toml",
+        "src-tauri/tauri.conf.json",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/main.rs",
+        "src-tauri/src/error.rs",
+        "src-tauri/src/state.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/application/mod.rs",
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/infrastructure/mod.rs",
+        "src-tauri/src/monitoring/mod.rs",
+        "src-tauri/src/platform/mod.rs",
+        "src-tauri/src/storage/mod.rs",
+        "src/app/.gitkeep",
+        "src/components/ui/.gitkeep",
+        "src/components/layout/.gitkeep",
+        "src/features/dashboard/.gitkeep",
+        "src/features/devices/.gitkeep",
+        "src/features/containers/.gitkeep",
+        "src/features/services/.gitkeep",
+        "src/features/settings/.gitkeep",
+        "src/lib/tauri/.gitkeep",
+        "src/lib/formatting/.gitkeep",
+        "src/lib/validation/.gitkeep",
+        "src/stores/.gitkeep",
+        "src/types/.gitkeep",
+        "README.md",
+        ".gitignore",
+        "docs/pi-hub-functional-specification.md",
+        "docs/pi-hub-technical-architecture-specification.md",
+        "docs/design/Pi Control.dc.html",
+        "docs/design/support.js"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "tsc + vite build succeeded, produced dist/ bundle."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Rust backend compiled cleanly (2 expected dead_code warnings on placeholder ApplicationError/AppState, silenced with #[allow(dead_code)])."
+        },
+        {
+          "command": "npm run tauri dev",
+          "result": "passed",
+          "summary": "Live smoke test: window titled \"Pi-Hub\" opened and pi-hub.exe process was confirmed running, then terminated."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "`npm run tauri dev` launches a blank window on Windows",
+          "result": "passed",
+          "evidence": "pi-hub.exe process observed running with MainWindowTitle \"Pi-Hub\"."
+        },
+        {
+          "criterion": "Repository layout matches the structure documented in docs/pi-hub-technical-architecture-specification.md section 27",
+          "result": "passed",
+          "evidence": "src-tauri/src and src folders created matching the documented layered structure."
+        },
+        {
+          "criterion": "cargo build and npm run build both succeed",
+          "result": "passed",
+          "evidence": "Both commands run and completed with exit success; output captured in this session."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T15:50:44.744Z"
+    }
+  ],
+  "lastAgentPacket": {
+    "id": "PKT-001",
+    "workUnitId": "WU001",
+    "milestoneId": "M001",
+    "createdAt": "2026-08-02T15:50:39.527Z",
+    "format": "markdown",
+    "contentHash": "sha256:a88a6d0992eeb88f7cdfddd43948c1e58dad26d4adaad372850fb87de9200a1d",
+    "sourceCommand": "aiqt next",
+    "renderedSections": [
+      "scope",
+      "context",
+      "constraints",
+      "acceptance",
+      "validation",
+      "designGuidance",
+      "componentSystemGuidance",
+      "sourceControlExpectations"
+    ],
+    "guidanceFlags": {
+      "includesDesignGuidance": true,
+      "includesWorkingDirectoryDiscipline": false,
+      "includesComponentSystemGuidance": true,
+      "includesRecoveryGuidance": false,
+      "includesSourceControlGuidance": true
+    }
+  },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T15:26:16.573Z"
+  "lastUpdatedAt": "2026-08-02T15:50:44.744Z",
+  "checkpointEvidenceAdvisories": [
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C001",
+      "current": {
+        "observationId": "sha256:4574a22944c9e3c5f41cf79d78ba7917877ec9add6c9c9c9f9e6d36e70530377",
+        "checkpointId": "C001",
+        "workUnitId": "WU001",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T15:50:44.744Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T15:50:44.744Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:4574a22944c9e3c5f41cf79d78ba7917877ec9add6c9c9c9f9e6d36e70530377",
+          "checkpointId": "C001",
+          "workUnitId": "WU001",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T15:50:44.744Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T15:50:44.744Z"
+        }
+      ]
+    }
+  ]
 }
