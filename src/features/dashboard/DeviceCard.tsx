@@ -1,8 +1,9 @@
-import type { MouseEvent } from "react";
+import { useState, type MouseEvent } from "react";
 import { Grid2x2, Loader2, RefreshCw, TerminalSquare, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { openDeviceTerminal } from "@/lib/tauri/devices";
 import { formatUptime } from "@/lib/formatting/uptime";
 import { formatRelativeTime } from "@/lib/formatting/relativeTime";
 import { diskPercent, memoryPercent } from "@/lib/formatting/deviceMetrics";
@@ -74,9 +75,24 @@ export function DeviceCard({
   const metrics = snapshot?.metrics;
   const mem = metrics ? memoryPercent(metrics) : undefined;
   const disk = metrics ? diskPercent(metrics) : undefined;
+  const [openingTerminal, setOpeningTerminal] = useState(false);
+  const [terminalError, setTerminalError] = useState<string | null>(null);
 
   function stopPropagation(event: MouseEvent) {
     event.stopPropagation();
+  }
+
+  async function handleOpenTerminal(event: MouseEvent) {
+    stopPropagation(event);
+    setOpeningTerminal(true);
+    setTerminalError(null);
+    try {
+      await openDeviceTerminal(device.id);
+    } catch {
+      setTerminalError("Could not open a terminal for this device.");
+    } finally {
+      setOpeningTerminal(false);
+    }
   }
 
   return (
@@ -197,11 +213,11 @@ export function DeviceCard({
         <Button
           variant="outline"
           size="sm"
-          disabled
-          title="Terminal launching is not wired up yet"
-          onClick={stopPropagation}
+          disabled={openingTerminal}
+          title="Open an SSH session in Windows Terminal"
+          onClick={handleOpenTerminal}
         >
-          <TerminalSquare /> Terminal
+          {openingTerminal ? <Loader2 className="animate-spin" /> : <TerminalSquare />} Terminal
         </Button>
         <Button
           variant="outline"
@@ -232,6 +248,7 @@ export function DeviceCard({
           )}
         </Button>
       </div>
+      {terminalError ? <p className="text-[11px] text-destructive">{terminalError}</p> : null}
     </div>
   );
 }

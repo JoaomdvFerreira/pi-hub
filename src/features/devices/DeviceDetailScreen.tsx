@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/app/router";
-import { getDevice, openDeviceService } from "@/lib/tauri/devices";
+import { getDevice, openDeviceService, openDeviceTerminal } from "@/lib/tauri/devices";
 import { refreshDevice } from "@/lib/tauri/monitoring";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
 import { useDeviceActivity } from "@/stores/useDeviceActivity";
@@ -27,6 +27,11 @@ import {
   formatPorts,
 } from "@/lib/formatting/containerStatus";
 import type { Device } from "@/types/device";
+import type { ApplicationError } from "@/types/settings";
+
+function isApplicationError(err: unknown): err is ApplicationError {
+  return typeof err === "object" && err !== null && "code" in err && "message" in err;
+}
 
 interface DeviceDetailScreenProps {
   deviceId: string;
@@ -63,6 +68,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [openingServiceId, setOpeningServiceId] = useState<string | null>(null);
   const [serviceOpenError, setServiceOpenError] = useState<string | null>(null);
+  const [openingTerminal, setOpeningTerminal] = useState(false);
+  const [terminalError, setTerminalError] = useState<string | null>(null);
 
   const deviceIds = useMemo(() => [deviceId], [deviceId]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -93,6 +100,20 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
       setServiceOpenError("Could not open this service. Check that a default browser is configured.");
     } finally {
       setOpeningServiceId(null);
+    }
+  }
+
+  async function handleOpenTerminal() {
+    setOpeningTerminal(true);
+    setTerminalError(null);
+    try {
+      await openDeviceTerminal(deviceId);
+    } catch (err) {
+      setTerminalError(
+        isApplicationError(err) ? err.message : "Could not open a terminal for this device.",
+      );
+    } finally {
+      setOpeningTerminal(false);
     }
   }
 
@@ -159,8 +180,13 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           </span>
         ) : null}
         <div className="flex-1" />
-        <Button disabled title="Terminal launching is not wired up yet">
-          <TerminalSquare /> Open Terminal
+        <Button
+          disabled={openingTerminal}
+          title="Open an SSH session in Windows Terminal"
+          onClick={handleOpenTerminal}
+        >
+          {openingTerminal ? <Loader2 className="animate-spin" /> : <TerminalSquare />}
+          Open Terminal
         </Button>
         <Button
           variant="outline"
@@ -182,6 +208,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           <Settings />
         </Button>
       </div>
+
+      {terminalError ? <p className="text-sm text-destructive">{terminalError}</p> : null}
 
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.3fr_1fr]">
         <div className="flex flex-col gap-3.5">

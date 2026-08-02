@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M004",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU016",
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -670,12 +670,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-018"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:57:45.353Z"
+        "updatedAt": "2026-08-02T19:14:14.855Z"
       },
       {
         "id": "WU017",
@@ -2044,12 +2044,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-015",
-    "workUnitId": "WU015",
+    "id": "PKT-016",
+    "workUnitId": "WU016",
     "milestoneId": "M004",
-    "createdAt": "2026-08-02T19:04:16.175Z",
+    "createdAt": "2026-08-02T19:14:14.855Z",
     "format": "markdown",
-    "contentHash": "sha256:4cd33a1685ff2db1a24a4ce14c0900d3b79cffb96b1fcee26b9061a1fdafdd74",
+    "contentHash": "sha256:03d8386209a80b2182f01da52f1bc092d3d71ca7d57949c3b85b2e55fb89bc3c",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -2057,20 +2057,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T19:14:01.463Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T19:14:14.855Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

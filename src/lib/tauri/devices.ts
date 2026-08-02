@@ -35,3 +35,7 @@ export function testDeviceConnection(
 export function openDeviceService(deviceId: string, serviceId: string): Promise<void> {
   return invoke<void>("open_device_service", { deviceId, serviceId });
 }
+
+export function openDeviceTerminal(deviceId: string): Promise<void> {
+  return invoke<void>("open_device_terminal", { deviceId });
+}

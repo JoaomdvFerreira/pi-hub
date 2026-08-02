@@ -10,6 +10,7 @@ use crate::domain::device::{
 };
 use crate::error::ApplicationError;
 use crate::infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, SshTarget};
+use crate::platform::tray;
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 
 /// Matches spec section 24.3's SSH connection timeout default.
@@ -79,7 +80,9 @@ pub fn get_device(app: AppHandle, id: String) -> Result<Option<Device>, Applicat
 #[tauri::command]
 pub fn create_device(app: AppHandle, input: DeviceInput) -> Result<Device, ApplicationError> {
     let repo = repository(&app)?;
-    device_service::create_device(&repo, input).map_err(to_application_error)
+    let device = device_service::create_device(&repo, input).map_err(to_application_error)?;
+    tray::rebuild_device_menu(&app);
+    Ok(device)
 }
 
 #[tauri::command]
@@ -89,13 +92,17 @@ pub fn update_device(
     input: DeviceInput,
 ) -> Result<Device, ApplicationError> {
     let repo = repository(&app)?;
-    device_service::update_device(&repo, &id, input).map_err(to_application_error)
+    let device = device_service::update_device(&repo, &id, input).map_err(to_application_error)?;
+    tray::rebuild_device_menu(&app);
+    Ok(device)
 }
 
 #[tauri::command]
 pub fn delete_device(app: AppHandle, id: String) -> Result<(), ApplicationError> {
     let repo = repository(&app)?;
-    device_service::delete_device(&repo, &id).map_err(to_application_error)
+    device_service::delete_device(&repo, &id).map_err(to_application_error)?;
+    tray::rebuild_device_menu(&app);
+    Ok(())
 }
 
 /// Opens a device's registered service URL in the system default browser.
