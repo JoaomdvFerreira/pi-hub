@@ -2,14 +2,14 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M001",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU002",
   "workGraph": {
     "milestones": [
       {
         "id": "M001",
         "title": "M1 — Desktop foundation",
         "objective": "Stand up the Tauri 2 + React + TypeScript shell with system tray, window lifecycle, local settings persistence, logging, and the base app layout matching the Pi Control design reference.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU001",
           "WU002",
@@ -129,12 +129,12 @@
         "validationCommands": [
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-001"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:50:44.744Z"
+        "updatedAt": "2026-08-02T16:00:09.270Z"
       },
       {
         "id": "WU003",
@@ -996,12 +996,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-001",
-    "workUnitId": "WU001",
+    "id": "PKT-002",
+    "workUnitId": "WU002",
     "milestoneId": "M001",
-    "createdAt": "2026-08-02T15:50:39.527Z",
+    "createdAt": "2026-08-02T16:00:09.270Z",
     "format": "markdown",
-    "contentHash": "sha256:a88a6d0992eeb88f7cdfddd43948c1e58dad26d4adaad372850fb87de9200a1d",
+    "contentHash": "sha256:983b849623ea468658227971b7575b5da57fc5faa2a3ec24def13eee40e800eb",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1009,20 +1009,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T15:50:44.744Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T16:00:09.270Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
