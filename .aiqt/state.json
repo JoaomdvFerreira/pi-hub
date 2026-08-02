@@ -1,0 +1,908 @@
+{
+  "version": "0.5.0",
+  "projectStatus": "planned",
+  "currentMilestoneId": "M001",
+  "currentWorkUnitId": null,
+  "workGraph": {
+    "milestones": [
+      {
+        "id": "M001",
+        "title": "M1 — Desktop foundation",
+        "objective": "Stand up the Tauri 2 + React + TypeScript shell with system tray, window lifecycle, local settings persistence, logging, and the base app layout matching the Pi Control design reference.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU001",
+          "WU002",
+          "WU003",
+          "WU004"
+        ]
+      },
+      {
+        "id": "M002",
+        "title": "M2 — Device registry and SSH connectivity",
+        "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
+        "status": "planned",
+        "workUnitIds": [
+          "WU005",
+          "WU006",
+          "WU007",
+          "WU008"
+        ]
+      },
+      {
+        "id": "M003",
+        "title": "M3 — Monitoring engine",
+        "objective": "Collect system metrics and Docker container status per device over SSH, build immutable snapshots, and run a bounded-concurrency scheduler with manual and automatic refresh and partial-failure isolation.",
+        "status": "planned",
+        "workUnitIds": [
+          "WU009",
+          "WU010",
+          "WU011",
+          "WU012"
+        ]
+      },
+      {
+        "id": "M004",
+        "title": "M4 — Desktop experience",
+        "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
+        "status": "planned",
+        "workUnitIds": [
+          "WU013",
+          "WU014",
+          "WU015",
+          "WU016",
+          "WU017",
+          "WU018"
+        ]
+      }
+    ],
+    "workUnits": [
+      {
+        "id": "WU001",
+        "milestoneId": "M001",
+        "title": "Scaffold Tauri 2 + React + TypeScript project",
+        "objective": "Create the pi-hub Tauri 2 application with a React/TypeScript/Vite frontend and Rust backend matching the suggested repository structure.",
+        "scope": [
+          "Initialize Tauri 2 project with React + TypeScript + Vite template",
+          "Set up src-tauri/src layered folders: commands, application, domain, infrastructure, monitoring, platform, storage",
+          "Set up frontend src folders: app, components, features, lib, stores, types",
+          "Base window configuration (size, title) and tauri.conf.json capabilities scaffolding",
+          "Add root README describing how to run the app in dev mode"
+        ],
+        "outOfScope": [
+          "Do not implement tray, device logic, or SSH yet"
+        ],
+        "acceptanceCriteria": [
+          "`npm run tauri dev` launches a blank window on Windows",
+          "Repository layout matches the structure documented in docs/pi-hub-technical-architecture-specification.md section 27",
+          "cargo build and npm run build both succeed"
+        ],
+        "agentContextRefs": [
+          "project.objective",
+          "context.technologyPreferences",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/",
+          "src/",
+          "package.json",
+          "tsconfig.json"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "cargo build --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU002",
+        "milestoneId": "M001",
+        "title": "System tray and window lifecycle",
+        "objective": "Add the Windows system tray icon and menu, and make closing the main window minimize to tray instead of quitting.",
+        "scope": [
+          "Tray icon creation on startup",
+          "Tray menu: Open Pi-Hub, Refresh All (stub), Exit",
+          "Close button minimizes to tray; Exit terminates the app",
+          "Restore/focus main window from tray"
+        ],
+        "outOfScope": [
+          "Per-device tray shortcuts (added once devices exist in M2/M4)",
+          "Dynamic tray icon status variants"
+        ],
+        "acceptanceCriteria": [
+          "Tray icon appears in the Windows notification area on launch",
+          "Closing the main window keeps the process running in the tray",
+          "Exit from the tray menu terminates the application"
+        ],
+        "agentContextRefs": [
+          "requirements",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/",
+          "src-tauri/src/main.rs",
+          "src-tauri/tauri.conf.json"
+        ],
+        "validationCommands": [
+          "cargo build --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-001"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU003",
+        "milestoneId": "M001",
+        "title": "Local settings persistence and logging foundation",
+        "objective": "Implement versioned JSON storage for config.json with atomic writes plus a rotating local log, and expose get_app_settings/save_app_settings commands.",
+        "scope": [
+          "Storage adapter: serialize to temp file, flush, atomic replace, preserve previous file on failure",
+          "config.json schema with schemaVersion, refreshIntervalSeconds, startWithWindows, minimizeToTray, notificationsEnabled, theme",
+          "get_app_settings / save_app_settings Tauri commands with typed frontend wrappers",
+          "Rotating log file under the app data directory with error/warn/info/debug levels, default info",
+          "Recovery behavior when config.json is missing or corrupted"
+        ],
+        "outOfScope": [
+          "devices.json and state.json (M2/M3)"
+        ],
+        "acceptanceCriteria": [
+          "Settings changes survive an application restart",
+          "A corrupted config.json does not crash the app; it recovers to defaults and logs a warning",
+          "No secrets or private-key content ever appear in logs"
+        ],
+        "agentContextRefs": [
+          "context.constraints",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/storage/",
+          "src-tauri/src/commands/settings.rs",
+          "src/lib/tauri/"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-002"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU004",
+        "milestoneId": "M001",
+        "title": "App shell and navigation matching the Pi Control design",
+        "objective": "Build the base React layout (dark theme, 64px icon nav rail, main content area) and lightweight internal routing across Dashboard/Services/Settings, following the Pi Control Claude Design reference.",
+        "scope": [
+          "Design tokens (CSS variables) for the dark theme: background/panel/border/text colors, status colors (healthy/warning/offline)",
+          "Nav rail component with Dashboard/Services/Settings icon buttons and active-state highlighting",
+          "Lightweight internal router/state for switching between dashboard, device detail, services, device settings, and global settings screens",
+          "Empty-state placeholder content for each screen (real content comes in M4)"
+        ],
+        "outOfScope": [
+          "Real device data, metrics, or Docker data",
+          "The per-container 'Update' action shown in the design mockup (Phase 2 scope — do not wire any backend command for it)"
+        ],
+        "acceptanceCriteria": [
+          "Nav rail navigates between Dashboard, Services, and Settings placeholders",
+          "Visual style (colors, spacing, typography) matches the Pi Control Claude Design reference",
+          "No arbitrary command execution is exposed to the frontend from this shell"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "context.nonGoals"
+        ],
+        "suggestedFiles": [
+          "src/app/",
+          "src/components/layout/",
+          "src/components/ui/"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-003"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU005",
+        "milestoneId": "M002",
+        "title": "Device domain model and devices.json repository",
+        "objective": "Define the Device and DeviceService domain models in Rust and TypeScript, and persist them in a versioned devices.json with atomic writes.",
+        "scope": [
+          "Rust Device/DeviceService/DeviceType structs with serde",
+          "TypeScript mirror types in src/types",
+          "DeviceRepository trait + JSON file implementation reusing the storage adapter from M1",
+          "get_devices / get_device Tauri commands"
+        ],
+        "outOfScope": [
+          "SSH connectivity",
+          "UI forms"
+        ],
+        "acceptanceCriteria": [
+          "Devices persist across an application restart",
+          "devices.json includes schemaVersion and validates on load",
+          "Rust unit tests cover domain validation rules (host, port, username format)"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/device.rs",
+          "src-tauri/src/storage/",
+          "src/types/device.ts"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-004"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU006",
+        "milestoneId": "M002",
+        "title": "Device CRUD commands and validation",
+        "objective": "Implement create_device / update_device / delete_device commands with strict input validation for host, port, username, and service URLs.",
+        "scope": [
+          "Validation for hostname/IPv4/IPv6/MagicDNS, SSH port range, Linux username, and http/https-only service URLs",
+          "create_device / update_device / delete_device Tauri commands wired to the device repository",
+          "Frontend-safe ApplicationError model (code, message, remediation, retryable)"
+        ],
+        "outOfScope": [
+          "SSH connectivity test itself (next work unit)"
+        ],
+        "acceptanceCriteria": [
+          "Invalid host/port/username/service URL values are rejected with a clear ApplicationError",
+          "Shell metacharacters in any field are rejected",
+          "Rust unit tests cover valid and invalid input cases"
+        ],
+        "agentContextRefs": [
+          "context.constraints",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/devices.rs",
+          "src-tauri/src/application/",
+          "src-tauri/src/error.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-005",
+          "DEP-006"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU007",
+        "milestoneId": "M002",
+        "title": "SSH adapter and remote command catalogue",
+        "objective": "Implement controlled process execution of the Windows OpenSSH client with a fixed RemoteOperation catalogue (Probe, SystemIdentity, SystemMetrics, DockerContainers) and hard timeouts.",
+        "scope": [
+          "RemoteExecutor trait + Windows OpenSSH process-based implementation using BatchMode=yes and ConnectTimeout",
+          "RemoteExecutionResult struct (exit_code, stdout, stderr, duration_ms, timed_out)",
+          "Connectivity probe using `printf 'PIHUB_OK'`",
+          "Error classification: DnsResolutionError, ConnectionTimeout, ConnectionRefused, AuthenticationError, HostKeyError, RemoteCommandError, RemoteCommandTimeout",
+          "Arguments passed as separate process args, never string-interpolated"
+        ],
+        "outOfScope": [
+          "Metrics/Docker parsing (M3)"
+        ],
+        "acceptanceCriteria": [
+          "A fake RemoteExecutor can be substituted in tests to simulate online, offline, timeout, authentication failure, and host-key failure",
+          "Host-key errors are never auto-resolved or bypassed",
+          "Every remote execution enforces a hard timeout"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "context.constraints",
+          "risks"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/ssh/",
+          "src-tauri/src/domain/connection_status.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-007"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU008",
+        "milestoneId": "M002",
+        "title": "Connection testing command and device forms UI",
+        "objective": "Wire test_device_connection into the backend/frontend and build the add/edit/delete device forms styled per the Pi Control device-settings screen.",
+        "scope": [
+          "test_device_connection Tauri command using the SSH adapter's probe operation",
+          "Add/Edit/Delete device forms (name, hostname, SSH user, port, description, device type, refresh interval, monitoring/notifications toggles)",
+          "Connection status feedback in the UI (online/offline/authentication_error/host_key_error/timeout/unknown)"
+        ],
+        "outOfScope": [
+          "System metrics or Docker data display (M3/M4)"
+        ],
+        "acceptanceCriteria": [
+          "Raspberry Pi 2 and Raspberry Pi 5 can be registered, edited, and deleted end-to-end through the UI",
+          "Connection test results distinguish authentication failure from host-key failure in the UI",
+          "No SSH password is ever requested or stored"
+        ],
+        "agentContextRefs": [
+          "requirements",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/devices.rs",
+          "src/features/devices/"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-008"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU009",
+        "milestoneId": "M003",
+        "title": "Remote system metrics collection and parsing",
+        "objective": "Collect CPU, memory, disk, temperature, uptime, load average, model, OS, kernel, and architecture in one SSH session using a stable key-value payload, and parse it defensively.",
+        "scope": [
+          "SystemMetrics remote operation reading /proc/stat (CPU delta), /proc/meminfo, /sys/class/thermal/thermal_zone0/temp, root filesystem disk usage, uname-derived identity fields",
+          "PIHUB_* key-value parser: ignore unknown fields, reject invalid numeric values, preserve valid fields, return partial warnings",
+          "SystemMetrics domain struct with optional fields for anything that may be unavailable"
+        ],
+        "outOfScope": [
+          "Docker collection",
+          "Scheduling"
+        ],
+        "acceptanceCriteria": [
+          "Missing/optional fields (e.g. temperature) never fail the whole metrics collection",
+          "Malformed key-value lines produce warnings without discarding valid fields",
+          "Rust unit tests cover well-formed, partially-malformed, and empty payloads"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "context.businessRules"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/parsers/metrics.rs",
+          "src-tauri/src/domain/system_metrics.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-009"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU010",
+        "milestoneId": "M003",
+        "title": "Docker discovery and container parsing",
+        "objective": "Detect Docker availability and list containers read-only via `docker ps -a --no-trunc --format '{{json .}}'`, parsing each line independently.",
+        "scope": [
+          "Docker availability check via `command -v docker`",
+          "Container listing command and JSON-lines parser producing DockerContainerSummary (name, image, state, statusText, health, ports)",
+          "Malformed lines create warnings without discarding valid entries",
+          "dockerAvailable=false path when Docker is missing or the SSH user lacks permission, without marking the device offline"
+        ],
+        "outOfScope": [
+          "Any container start/stop/restart/exec (explicitly out of MVP scope)"
+        ],
+        "acceptanceCriteria": [
+          "A device with Docker unavailable still reports online with valid system metrics",
+          "A Docker permission error is classified as DockerPermissionError and does not fail the whole device refresh",
+          "Rust unit tests cover well-formed, malformed, and empty docker ps output"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "context.nonGoals",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/parsers/docker.rs",
+          "src-tauri/src/domain/docker_container.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-010"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU011",
+        "milestoneId": "M003",
+        "title": "Monitoring scheduler, snapshots, and bounded concurrency",
+        "objective": "Build the refresh lifecycle: probe, collect metrics, collect Docker data, assemble an immutable DeviceSnapshot, and run it on a scheduler with bounded concurrency and manual/automatic refresh.",
+        "scope": [
+          "DeviceSnapshot domain struct (connectionStatus, capturedAt, durationMs, metrics, dockerAvailable, containers, warnings, error)",
+          "Scheduler with configurable interval (default 60s, 15-3600s range), max 4 concurrent refreshes, one active refresh per device",
+          "refresh_device / refresh_all_devices / get_latest_snapshot Tauri commands",
+          "Backend events: device://snapshot-updated, device://status-changed, container://status-changed, monitoring://refresh-started, monitoring://refresh-completed",
+          "state.json persistence of last-known snapshots (non-authoritative; app must work if deleted)"
+        ],
+        "outOfScope": [
+          "Notification dispatch itself (next work unit)"
+        ],
+        "acceptanceCriteria": [
+          "A failing/offline device does not stop the scheduler or block other devices' refreshes",
+          "Manual refresh and automatic refresh both work without freezing the UI",
+          "Stale snapshots remain visible with an explicit stale marker and last-refresh timestamp after a failed refresh",
+          "Deleting state.json does not prevent the app from starting"
+        ],
+        "agentContextRefs": [
+          "context.businessRules",
+          "context.architectureNotes",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/",
+          "src-tauri/src/domain/snapshot.rs",
+          "src-tauri/src/commands/monitoring.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-011",
+          "DEP-012"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU012",
+        "milestoneId": "M003",
+        "title": "Status-transition detection and notification decisions",
+        "objective": "Compare consecutive snapshots to detect device and container state transitions and decide when a notification should fire, with deduplication persisted across restarts.",
+        "scope": [
+          "Device transition rules: online<->offline, online->authentication_error, online->host_key_error",
+          "Container transition rules: running->exited/stopped/restarting/unhealthy (skip containers already stopped when first discovered)",
+          "Deduplication key: deviceId + resourceId + previousState + currentState, persisted in state.json",
+          "NotificationService trait producing notification-ready events (actual OS notification dispatch happens in M4)"
+        ],
+        "outOfScope": [
+          "Native Windows toast dispatch (M4)",
+          "Notification settings UI (M4)"
+        ],
+        "acceptanceCriteria": [
+          "Repeated refreshes with an unchanged state never produce duplicate notification events",
+          "A container already stopped at first discovery does not trigger a notification",
+          "Rust unit tests cover each transition rule and the dedup key"
+        ],
+        "agentContextRefs": [
+          "context.businessRules",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/notifications.rs",
+          "src-tauri/src/domain/notification_rule.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-013"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU013",
+        "milestoneId": "M004",
+        "title": "Dashboard screen",
+        "objective": "Implement the dashboard device-card grid wired to live snapshot events, matching the Pi Control design reference.",
+        "scope": [
+          "Device card: status dot with pulse animation, name, model badge, hostname, offline banner, CPU/MEM/DISK/TEMP mini bars with color thresholds, uptime, container count, last refresh",
+          "Refresh All button and per-card Refresh button wired to refresh_all_devices / refresh_device",
+          "Terminal and Services quick actions per card",
+          "Loading, empty, and stale-data states"
+        ],
+        "outOfScope": [
+          "The per-container 'Update' action from the design mockup (Phase 2 — not in MVP command boundary)"
+        ],
+        "acceptanceCriteria": [
+          "Dashboard shows every registered device with live status and metrics from device://snapshot-updated events",
+          "Stale data is visibly marked and includes a refresh timestamp",
+          "Refreshing all devices does not block the UI"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src/features/dashboard/",
+          "src/stores/"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-014",
+          "DEP-015"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU014",
+        "milestoneId": "M004",
+        "title": "Device detail screen",
+        "objective": "Implement the device detail view: general information, system metrics, recent activity, Docker container table, and registered services, matching the design reference.",
+        "scope": [
+          "General information panel (hostname, IP, model, SSH user)",
+          "System metrics panel with CPU/MEM/DISK/TEMP bars and uptime/container/last-refresh summary line",
+          "Docker container table (name, status, image, uptime, health, port) with empty/offline states",
+          "Registered services list for the device",
+          "Recent activity feed sourced from notification/transition history"
+        ],
+        "outOfScope": [
+          "The per-container 'Update' action (Phase 2)"
+        ],
+        "acceptanceCriteria": [
+          "Device detail view reflects the latest snapshot for the selected device",
+          "A Docker permission or unavailability error shows a clear message without hiding valid system metrics",
+          "Navigating back returns to the dashboard preserving its state"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src/features/devices/",
+          "src/features/containers/"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-016"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU015",
+        "milestoneId": "M004",
+        "title": "Services grid and settings screens",
+        "objective": "Implement the global services grid (with device filter), per-device settings panel, and global settings panel matching the design reference.",
+        "scope": [
+          "Services grid: tiles with icon/name/URL, device filter chip, empty state",
+          "Device settings: name/hostname/SSH user/description/refresh interval form, notification toggles, registered services list",
+          "Global settings: theme (dark/light/system), start-with-Windows toggle, default refresh interval, global notification toggle, About panel"
+        ],
+        "outOfScope": [
+          "Backend theme persistence beyond what M1's settings storage already provides"
+        ],
+        "acceptanceCriteria": [
+          "Selecting a service opens it in the default browser via open_device_service, restricted to http/https",
+          "Device and global settings changes persist via save_app_settings / update_device and survive a restart",
+          "Settings screens visually match the Pi Control design reference"
+        ],
+        "agentContextRefs": [
+          "requirements",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src/features/services/",
+          "src/features/settings/"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-017"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU016",
+        "milestoneId": "M004",
+        "title": "Terminal launcher, service launcher, and tray shortcuts",
+        "objective": "Implement open_device_terminal (Windows Terminal via wt.exe ssh) and open_device_service (default browser), and add per-device shortcuts to the tray menu.",
+        "scope": [
+          "open_device_terminal command launching wt.exe ssh <user>@<host> (or -p <port>) with arguments passed separately",
+          "open_device_service command validating and opening http/https URLs in the default browser",
+          "Tray menu extended with per-device Open Terminal / Open Service shortcuts",
+          "Terminal-launch failure handling and remediation messaging"
+        ],
+        "outOfScope": [
+          "Embedded terminal UI (explicitly out of MVP scope)"
+        ],
+        "acceptanceCriteria": [
+          "SSH terminal sessions open in Windows Terminal for both Raspberry Pis",
+          "Home Assistant and Personal Finance services open in the default browser",
+          "No command string is ever built via interpolation; all arguments are passed separately to the process API"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "context.constraints",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/terminal.rs",
+          "src-tauri/src/platform/browser.rs",
+          "src-tauri/src/commands/launch.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-018"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU017",
+        "milestoneId": "M004",
+        "title": "Windows notification dispatch and notification settings",
+        "objective": "Dispatch native Windows notifications from the M3 notification decisions, with global and per-device enable/disable controls wired into settings.",
+        "scope": [
+          "Native notification dispatch via the Tauri notification plugin for device/container transitions and repeated auth/host-key failures",
+          "Global notification toggle and per-device notification toggle wired to settings",
+          "End-to-end wiring from monitoring::notifications decisions to the platform dispatch"
+        ],
+        "outOfScope": [
+          "Per-event-type notification controls (future scope per spec)"
+        ],
+        "acceptanceCriteria": [
+          "A device going offline then online produces exactly one offline and one online notification, not a stream of duplicates",
+          "Disabling notifications globally or for a specific device suppresses dispatch accordingly",
+          "MVP acceptance criteria 12 (deduplicated transition notifications) is demonstrably met"
+        ],
+        "agentContextRefs": [
+          "context.businessRules",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/notifications.rs",
+          "src/features/notifications/"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-019",
+          "DEP-020"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      },
+      {
+        "id": "WU018",
+        "milestoneId": "M004",
+        "title": "Windows autostart preference",
+        "objective": "Wire the official Tauri autostart plugin to the start-with-Windows setting, default disabled.",
+        "scope": [
+          "set_autostart / get_autostart_status Tauri commands using the Tauri autostart plugin",
+          "Global settings toggle wired to autostart, default disabled until explicitly enabled"
+        ],
+        "outOfScope": [
+          "Custom startup-folder manipulation"
+        ],
+        "acceptanceCriteria": [
+          "Enabling the setting registers Pi-Hub to launch minimized at Windows sign-in",
+          "Disabling it removes the registration",
+          "Default state after first install is disabled"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes",
+          "requirements"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/autostart.rs",
+          "src-tauri/src/commands/settings.rs"
+        ],
+        "validationCommands": [
+          "cargo build --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-021"
+        ],
+        "createdAt": "2026-08-02T15:26:16.573Z",
+        "updatedAt": "2026-08-02T15:26:16.573Z"
+      }
+    ],
+    "dependencies": [
+      {
+        "id": "DEP-001",
+        "fromId": "WU001",
+        "toId": "WU002",
+        "type": "blocks",
+        "reason": "Tray integration needs the running Tauri shell."
+      },
+      {
+        "id": "DEP-002",
+        "fromId": "WU001",
+        "toId": "WU003",
+        "type": "blocks",
+        "reason": "Settings storage lives in the scaffolded backend."
+      },
+      {
+        "id": "DEP-003",
+        "fromId": "WU001",
+        "toId": "WU004",
+        "type": "blocks",
+        "reason": "The app shell is built on the scaffolded frontend."
+      },
+      {
+        "id": "DEP-004",
+        "fromId": "WU003",
+        "toId": "WU005",
+        "type": "blocks",
+        "reason": "Device persistence reuses the atomic-write storage adapter built for settings."
+      },
+      {
+        "id": "DEP-005",
+        "fromId": "WU004",
+        "toId": "WU006",
+        "type": "blocks",
+        "reason": "Device forms are placed inside the app shell and its screens."
+      },
+      {
+        "id": "DEP-006",
+        "fromId": "WU005",
+        "toId": "WU006",
+        "type": "blocks",
+        "reason": "CRUD commands operate on the device domain model and repository."
+      },
+      {
+        "id": "DEP-007",
+        "fromId": "WU006",
+        "toId": "WU007",
+        "type": "blocks",
+        "reason": "The SSH adapter connects to devices that must already be a validated domain concept."
+      },
+      {
+        "id": "DEP-008",
+        "fromId": "WU007",
+        "toId": "WU008",
+        "type": "blocks",
+        "reason": "Connection testing UI calls the SSH adapter's probe operation."
+      },
+      {
+        "id": "DEP-009",
+        "fromId": "WU007",
+        "toId": "WU009",
+        "type": "blocks",
+        "reason": "Metrics collection runs over the SSH adapter's remote command execution."
+      },
+      {
+        "id": "DEP-010",
+        "fromId": "WU007",
+        "toId": "WU010",
+        "type": "blocks",
+        "reason": "Docker discovery runs over the SSH adapter's remote command execution."
+      },
+      {
+        "id": "DEP-011",
+        "fromId": "WU009",
+        "toId": "WU011",
+        "type": "blocks",
+        "reason": "Snapshots assemble metrics collection results."
+      },
+      {
+        "id": "DEP-012",
+        "fromId": "WU010",
+        "toId": "WU011",
+        "type": "blocks",
+        "reason": "Snapshots assemble Docker collection results."
+      },
+      {
+        "id": "DEP-013",
+        "fromId": "WU011",
+        "toId": "WU012",
+        "type": "blocks",
+        "reason": "Transition detection compares consecutive scheduler-produced snapshots."
+      },
+      {
+        "id": "DEP-014",
+        "fromId": "WU008",
+        "toId": "WU013",
+        "type": "blocks",
+        "reason": "The dashboard lists devices already registered through the M2 UI."
+      },
+      {
+        "id": "DEP-015",
+        "fromId": "WU011",
+        "toId": "WU013",
+        "type": "blocks",
+        "reason": "The dashboard renders live snapshot data and events."
+      },
+      {
+        "id": "DEP-016",
+        "fromId": "WU013",
+        "toId": "WU014",
+        "type": "blocks",
+        "reason": "Device detail is opened from a dashboard card."
+      },
+      {
+        "id": "DEP-017",
+        "fromId": "WU014",
+        "toId": "WU015",
+        "type": "blocks",
+        "reason": "Device settings are opened from the device detail view."
+      },
+      {
+        "id": "DEP-018",
+        "fromId": "WU013",
+        "toId": "WU016",
+        "type": "blocks",
+        "reason": "Terminal/service launch buttons live on the dashboard and detail views."
+      },
+      {
+        "id": "DEP-019",
+        "fromId": "WU012",
+        "toId": "WU017",
+        "type": "blocks",
+        "reason": "Dispatch consumes the backend's notification decisions."
+      },
+      {
+        "id": "DEP-020",
+        "fromId": "WU015",
+        "toId": "WU017",
+        "type": "blocks",
+        "reason": "Notification toggles live in the settings screens."
+      },
+      {
+        "id": "DEP-021",
+        "fromId": "WU015",
+        "toId": "WU018",
+        "type": "blocks",
+        "reason": "Autostart toggle lives in global settings."
+      }
+    ]
+  },
+  "checkpoints": [],
+  "lastAgentPacket": null,
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T15:26:16.573Z"
+}

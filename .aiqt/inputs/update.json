@@ -1,0 +1,146 @@
+{
+  "project": {
+    "objective": "Build Pi-Hub, a lightweight Windows 11 system-tray desktop app (Tauri 2 + React + TypeScript + Rust) that gives a single place to monitor and quickly access personal self-hosted infrastructure (Raspberry Pi devices, future Linux servers) over Tailscale/SSH, without replacing SSH or exposing Docker over TCP.",
+    "targetUsers": [
+      "Single technical user managing personal home-lab infrastructure (Raspberry Pi devices, Docker containers, Home Assistant, future Linux servers) over a private Tailscale network."
+    ],
+    "preferredAgent": "claude"
+  },
+  "context": {
+    "constraints": [
+      "Must not store SSH passwords or private-key contents.",
+      "Must not expose the Docker daemon over TCP or talk to docker.sock remotely.",
+      "No arbitrary/unrestricted remote command execution interface from the frontend.",
+      "SSH host-key checking must remain enabled; host-key errors require manual user resolution, never auto-accepted.",
+      "All remote data collection must go through SSH using Windows OpenSSH client with BatchMode=yes.",
+      "A failed/offline device must not block or affect monitoring of other devices.",
+      "A Docker failure on a device must not mark the whole device offline.",
+      "Frontend must only call a closed set of typed Tauri commands (get_devices, create_device, refresh_device, open_device_terminal, open_device_service, etc.) - no generic shell exec exposed to JS.",
+      "Local persistence uses versioned JSON files with atomic writes (temp file + flush + replace); app must survive a corrupted or deleted state.json.",
+      "Startup must present a usable main window within 3 seconds; idle resource usage must stay minimal.",
+      "MVP Docker scope is read-only listing only - no start/stop/restart/exec/logs/compose editing."
+    ],
+    "nonGoals": [
+      "Embedded terminal (uses Windows Terminal via wt.exe ssh instead).",
+      "Remote file manager.",
+      "Docker container creation, removal, start, stop, restart in the MVP.",
+      "Remote OS updates, device reboot/shutdown.",
+      "Tailscale administration.",
+      "Mobile app, web app, multi-user support.",
+      "Historical monitoring / long-term charts.",
+      "Plugin system, remote Pi-Hub agent, automatic updater."
+    ],
+    "technologyPreferences": [
+      "Tauri 2 desktop shell with Rust backend and React + TypeScript + Vite frontend.",
+      "Tokio async runtime, Serde serialization, structured error types in Rust.",
+      "Windows OpenSSH client via controlled process execution (no embedded SSH library).",
+      "Versioned local JSON files for persistence (config.json, devices.json, state.json); SQLite deferred to a future phase.",
+      "CSS variables / design tokens for theming; optional Radix UI primitives and Lucide icons.",
+      "React context + small reducer/store for device snapshots; component-local state for forms/dialogs."
+    ],
+    "businessRules": [
+      "Notify on device transitions: online<->offline, online->authentication_error, online->host_key_error; never repeat notification for an unchanged state.",
+      "Notify when a previously running container transitions to exited/stopped/restarting/unhealthy; do not notify for containers already stopped when first discovered.",
+      "Deduplicate notifications using deviceId+resourceId+previousState+currentState, persisted across restarts.",
+      "Global default refresh interval is 60 seconds (range 15-3600s); max 4 concurrent device refreshes; one active refresh per device at a time.",
+      "SSH connection timeout 5s, remote metrics timeout 10s, Docker collection timeout 10s, full device refresh timeout 20s.",
+      "Service URLs restricted to http/https schemes only."
+    ],
+    "architectureNotes": [
+      "Layered Rust backend: commands/ (Tauri entry points) -> application/ (use-case coordination) -> domain/ (models/rules) -> infrastructure/ (SSH exec, storage, parsers) -> monitoring/ (scheduler, concurrency, notification decisions) -> platform/ (Windows Terminal, browser, notifications, autostart).",
+      "Remote metrics collected as a stable key-value payload (PIHUB_* fields) in one SSH session rather than parsing human-readable command output; CPU usage from /proc/stat delta, memory from /proc/meminfo, temperature from /sys/class/thermal/thermal_zone0/temp, disk from root filesystem.",
+      "Docker discovery via `command -v docker` then `docker ps -a --no-trunc --format '{{json .}}'`, each line parsed independently with malformed lines producing warnings, not failures.",
+      "Backend events: device://snapshot-updated, device://status-changed, container://status-changed, monitoring://refresh-started, monitoring://refresh-completed.",
+      "Terminal launch via wt.exe ssh <user>@<host> (or -p <port>) with arguments passed separately to the process API, never string-interpolated.",
+      "UI/UX reference: a Claude Design prototype 'Pi Control desktop application' (claude.ai/design project 46fe9acd-2966-4b5d-a865-567b92dd5af1, file 'Pi Control.dc.html') defines the target look and screen flow: dark theme, 64px icon nav rail (Dashboard/Services/Settings/Tray toggle), Dashboard with device cards (status dot, CPU/MEM/DISK/TEMP mini bars, uptime, container count, Terminal/Services/Refresh actions), Device Details (general info, system metrics, recent activity, Docker container table, services), global Services grid with device filter chip, per-device and global Settings panels (notification toggles, refresh interval, theme, autostart), a Terminal modal (SSH connecting animation), and a tray flyout menu (Open Dashboard, Refresh All, per-device terminal shortcuts, Quit). This mockup also shows an inline per-container 'Update' action (git pull + ./update.sh) - that is Phase 2 (Docker administration) scope per the functional spec and must NOT be wired to a real backend command in the MVP; keep it either omitted or purely disabled/decorative until Phase 2. Local reference copy saved at docs/design/Pi Control.dc.html and docs/design/support.js.",
+      "Frontend structure: src/{app,components/{ui,layout},features/{dashboard,devices,containers,services,settings},lib/{tauri,formatting,validation},stores,types}. Backend structure: src-tauri/src/{commands,application,domain,infrastructure/{ssh,parsers,storage},monitoring,platform,error.rs,state.rs,main.rs}."
+    ]
+  },
+  "requirements": [
+    {
+      "title": "Desktop foundation and system tray",
+      "description": "Tauri 2 shell with React/TypeScript frontend, main window lifecycle, system tray icon and menu, close-to-tray behavior, local settings persistence, logging foundation, optional Windows autostart.",
+      "priority": "high",
+      "type": "functional",
+      "acceptanceCriteria": [
+        "Application starts on Windows 11 and shows a usable main window within 3 seconds.",
+        "Tray icon exists and closing the main window minimizes to tray instead of quitting.",
+        "Exit from the tray menu terminates the application.",
+        "Settings survive an application restart."
+      ],
+      "status": "draft"
+    },
+    {
+      "title": "Device registry and SSH connectivity",
+      "description": "Device domain model, CRUD flows (add/edit/delete), validation, SSH adapter using Windows OpenSSH, connectivity probe, timeout/authentication/host-key error classification.",
+      "priority": "high",
+      "type": "functional",
+      "acceptanceCriteria": [
+        "Raspberry Pi 2 (Home Assistant) and Raspberry Pi 5 (Personal Finance) can be registered and configured independently.",
+        "Connection can be tested and returns one of: online, offline, authentication_error, host_key_error, timeout, command_error, unknown.",
+        "No SSH password or private key is ever requested, stored, or logged.",
+        "Device configuration survives an application restart via versioned JSON persistence with atomic writes."
+      ],
+      "status": "draft"
+    },
+    {
+      "title": "Monitoring engine (metrics + Docker)",
+      "description": "System metrics collection (CPU, memory, disk, temperature, uptime, load average, OS/kernel/arch), Docker container discovery and parsing, immutable device snapshots, bounded-concurrency scheduler, manual and automatic refresh, partial-failure handling.",
+      "priority": "high",
+      "type": "functional",
+      "acceptanceCriteria": [
+        "CPU, memory, disk, temperature and uptime display for every online device when available; missing metrics do not fail the whole refresh.",
+        "Docker containers list without exposing the Docker daemon over TCP; Docker unavailability leaves the device online with dockerAvailable=false.",
+        "A failure or timeout on one device does not stop the scheduler or affect other devices.",
+        "Automatic refresh (default 60s, 15-3600s range, max 4 concurrent) never blocks the UI; manual refresh is available per-device and for all devices.",
+        "Stale data remains visible after a failed refresh but is clearly marked stale with a refresh timestamp."
+      ],
+      "status": "draft"
+    },
+    {
+      "title": "Desktop experience: dashboard, device details, services, settings",
+      "description": "Final dashboard with device cards, device detail view, service launcher (opens in default browser), Windows Terminal launcher, notifications (deduplicated), autostart preference, and settings screens, implemented to match the 'Pi Control' Claude Design reference (dark theme, nav rail, device cards, detail/services/settings layouts, terminal modal, tray flyout).",
+      "priority": "high",
+      "type": "functional",
+      "acceptanceCriteria": [
+        "Dashboard shows every registered device as a card with status, CPU/mem/disk/temp, uptime, running-container count and last refresh time, matching the reference design's visual language.",
+        "SSH terminal sessions open in Windows Terminal for both Raspberry Pis via wt.exe with arguments passed separately (no string interpolation).",
+        "Registered web services (Home Assistant, Personal Finance app) open in the default browser; only http/https URLs are accepted.",
+        "Device and container status-transition notifications are deduplicated and can be disabled globally or per device.",
+        "Loading, empty, stale, and error states are all represented in the UI."
+      ],
+      "status": "draft"
+    }
+  ],
+  "decisions": [
+    { "decision": "Use Tauri 2 instead of Electron", "reason": "Small resident tray app benefits from a native Rust backend, built-in tray/autostart support, and avoids bundling a full Node.js runtime." },
+    { "decision": "Agentless remote monitoring over SSH", "reason": "No Pi-Hub agent installed on managed devices; standard SSH + /proc + /sys reads and docker CLI are sufficient and keep onboarding of new Linux devices simple." },
+    { "decision": "Windows OpenSSH client via process execution instead of an embedded SSH library", "reason": "Reuses existing keys, ssh-agent, and host-key verification the user already has configured; avoids reimplementing credential handling." },
+    { "decision": "Versioned local JSON persistence for the MVP", "reason": "Small data volume, no historical telemetry yet, easy to back up/inspect; SQLite deferred until historical metrics or audit history are needed." },
+    { "decision": "Read-only Docker monitoring in the MVP", "reason": "Reduces destructive-action risk and authorization complexity; validates monitoring value before Phase 2 administration (start/stop/restart/update) is added." },
+    { "decision": "Predefined remote command catalogue only", "reason": "Prevents arbitrary command execution from the frontend, keeps parsing reliable and testable, and creates an explicit security boundary." }
+  ],
+  "risks": [
+    { "title": "SSH key not configured on the user's machine", "description": "Connection attempts fail with authentication errors.", "mitigation": "Surface clear connection diagnostics and remediation guidance; do not attempt to prompt for or store a password." },
+    { "title": "Host key changes after a device reinstall", "description": "SSH connection is rejected by host-key mismatch.", "mitigation": "Report host_key_error explicitly and require manual user verification; never auto-run ssh-keygen -R." },
+    { "title": "SSH user lacks Docker permission on a device", "description": "Docker listing fails even though the device itself is reachable.", "mitigation": "Treat as a partial success: device stays online, dockerAvailable=false, remediation message shown." },
+    { "title": "Command injection via device/service fields", "description": "Hostnames, usernames, ports, or service URLs could be crafted to break out of intended process arguments.", "mitigation": "Fixed backend command catalogue, strict input validation, arguments passed as separate process args, never string-interpolated." },
+    { "title": "Design reference includes out-of-scope container 'Update' action", "description": "The Claude Design mockup shows a per-container Update button that pulls from GitHub and runs ./update.sh - this is Phase 2 (Docker administration) scope, not MVP.", "mitigation": "Implement the MVP UI without wiring that action to a real backend command; keep it out of the M1-M4 command boundary." }
+  ],
+  "assumptions": [
+    { "statement": "The user's Windows machine already has Windows OpenSSH client, Windows Terminal, and Tailscale installed and authenticated." },
+    { "statement": "SSH keys and any passphrase are already configured via ssh-agent so background monitoring can run with BatchMode=yes without prompting." },
+    { "statement": "Raspberry Pi 2 and Raspberry Pi 5 are reachable over Tailscale MagicDNS hostnames or IPs and have Docker CLI installed." }
+  ],
+  "openQuestions": [],
+  "quality": {
+    "acceptanceCriteriaRequired": true,
+    "validationRequiredBeforeDone": true,
+    "preferredValidationCommands": [
+      "cargo test",
+      "cargo clippy",
+      "npm run build",
+      "npm run lint"
+    ]
+  }
+}

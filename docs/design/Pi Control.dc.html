@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    @font-face { font-family: 'Segoe UI Variable'; src: local('Segoe UI'); }
+    @keyframes pulseDot { 0%,100%{ opacity:1 } 50%{ opacity:0.45 } }
+    @keyframes spin { from{ transform:rotate(0deg) } to{ transform:rotate(360deg) } }
+    @keyframes blinkCursor { 0%,49%{ opacity:1 } 50%,100%{ opacity:0 } }
+    body { margin:0; background:#0b0b0c; font-family:'Segoe UI Variable','Segoe UI',system-ui,-apple-system,sans-serif; }
+    ::-webkit-scrollbar { width:10px; height:10px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.14); border-radius:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+  </style>
+</helmet>
+
+<div style="width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;box-sizing:border-box;background:radial-gradient(circle at 30% 20%, #17181a 0%, #0b0b0c 60%)">
+  <div style="width:1240px;height:780px;background:#202020;border-radius:10px;box-shadow:0 24px 60px rgba(0,0,0,0.55),0 2px 0 rgba(255,255,255,0.03) inset;display:flex;overflow:hidden;border:1px solid rgba(255,255,255,0.06);position:relative">
+
+    <!-- NAV RAIL -->
+    <div style="width:64px;flex-shrink:0;background:#181818;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;align-items:center;padding:14px 0;box-sizing:border-box">
+      <div style="width:32px;height:32px;border-radius:8px;background:#2f8ee0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;margin-bottom:18px">π</div>
+
+      <button onClick="{{ goDashboard }}" title="Dashboard" style="width:40px;height:40px;border:none;border-radius:8px;background:{{ navBg.dashboard }};color:{{ navColor.dashboard }};display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:6px" style-hover="background:rgba(255,255,255,0.08)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
+      </button>
+
+      <button onClick="{{ goServicesGlobal }}" title="Services" style="width:40px;height:40px;border:none;border-radius:8px;background:{{ navBg.services }};color:{{ navColor.services }};display:flex;align-items:center;justify-content:center;cursor:pointer;margin-bottom:6px" style-hover="background:rgba(255,255,255,0.08)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"></path></svg>
+      </button>
+
+      <button onClick="{{ goGlobalSettings }}" title="Settings" style="width:40px;height:40px;border:none;border-radius:8px;background:{{ navBg.settings }};color:{{ navColor.settings }};display:flex;align-items:center;justify-content:center;cursor:pointer" style-hover="background:rgba(255,255,255,0.08)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 0 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 0 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"></path></svg>
+      </button>
+
+      <div style="flex:1"></div>
+
+      <button onClick="{{ toggleTray }}" title="Tray menu" style="width:40px;height:40px;border:none;border-radius:8px;background:{{ trayBtnBg }};color:#9a9a9a;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative" style-hover="background:rgba(255,255,255,0.08)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"></rect><path d="M8 7V5a4 4 0 0 1 8 0v2"></path></svg>
+        <sc-if value="{{ hasAttentionBadge }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#ff5f56;border:2px solid #181818"></div>
+        </sc-if>
+      </button>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div style="flex:1;min-width:0;overflow-y:auto;padding:22px 26px;box-sizing:border-box;position:relative">
+
+      <!-- DASHBOARD -->
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px">
+          <div>
+            <div style="font-size:20px;font-weight:600;color:#f5f5f5">Dashboard</div>
+            <div style="font-size:13px;color:#9a9a9a;margin-top:3px">{{ summaryText }}</div>
+          </div>
+          <button onClick="{{ refreshAll }}" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:transparent;color:#e6e6e6;border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="{{ refreshAllSpinStyle }}"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+            Refresh All
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(370px,1fr));gap:14px">
+          <sc-for list="{{ devices }}" as="device" hint-placeholder-count="5">
+            <div onClick="{{ device.onOpenCard }}" style="background:#272727;border:1px solid {{ device.cardBorder }};border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .15s,background .15s" style-hover="background:#2c2c2c;border-color:rgba(255,255,255,0.18)">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                  <div style="width:8px;height:8px;border-radius:50%;background:{{ device.dotColor }};flex-shrink:0;animation:{{ device.dotAnim }}"></div>
+                  <div style="font-size:15px;font-weight:600;color:#f2f2f2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ device.name }}</div>
+                </div>
+                <div style="font-size:11px;color:#a8a8a8;background:#333333;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-left:8px">{{ device.model }}</div>
+              </div>
+              <div style="font-size:12px;color:#8a8a8a;font-family:'Cascadia Code',Consolas,monospace;margin-top:-6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ device.hostname }}</div>
+
+              <sc-if value="{{ device.isOffline }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:6px;padding:8px 0;color:#ff8a84;font-size:12px;font-weight:600">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0 1 19 12.55M5 12.55a10.94 10.94 0 0 1 5.17-2.39M10.71 5.05A16 16 0 0 1 22.58 9M1.42 9a15.91 15.91 0 0 1 4.7-2.88M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                  Offline &middot; last seen {{ device.lastRefresh }}
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ device.showMetrics }}" hint-placeholder-val="{{ true }}">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+                  <div>
+                    <div style="font-size:10px;color:#828282;font-weight:700;letter-spacing:.04em">CPU</div>
+                    <div style="font-size:15px;font-weight:600;color:{{ device.cpuColor }};margin-top:1px">{{ device.cpu }}%</div>
+                    <div style="height:4px;border-radius:2px;background:#3a3a3a;margin-top:5px"><div style="height:4px;border-radius:2px;background:{{ device.cpuColor }};width:{{ device.cpuWidth }}"></div></div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:#828282;font-weight:700;letter-spacing:.04em">MEM</div>
+                    <div style="font-size:15px;font-weight:600;color:{{ device.memColor }};margin-top:1px">{{ device.mem }}%</div>
+                    <div style="height:4px;border-radius:2px;background:#3a3a3a;margin-top:5px"><div style="height:4px;border-radius:2px;background:{{ device.memColor }};width:{{ device.memWidth }}"></div></div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:#828282;font-weight:700;letter-spacing:.04em">DISK</div>
+                    <div style="font-size:15px;font-weight:600;color:{{ device.diskColor }};margin-top:1px">{{ device.disk }}%</div>
+                    <div style="height:4px;border-radius:2px;background:#3a3a3a;margin-top:5px"><div style="height:4px;border-radius:2px;background:{{ device.diskColor }};width:{{ device.diskWidth }}"></div></div>
+                  </div>
+                  <div>
+                    <div style="font-size:10px;color:#828282;font-weight:700;letter-spacing:.04em">TEMP</div>
+                    <div style="font-size:15px;font-weight:600;color:{{ device.tempColor }};margin-top:1px">{{ device.temp }}&deg;C</div>
+                    <div style="height:4px;border-radius:2px;background:#3a3a3a;margin-top:5px"><div style="height:4px;border-radius:2px;background:{{ device.tempColor }};width:{{ device.tempWidth }}"></div></div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <sc-if value="{{ device.hasNote }}" hint-placeholder-val="{{ false }}">
+                <div style="font-size:12px;color:#ffb454;background:rgba(255,180,84,0.1);padding:6px 8px;border-radius:5px">{{ device.note }}</div>
+              </sc-if>
+
+              <div style="display:flex;align-items:center;gap:12px;font-size:11.5px;color:#8a8a8a;margin-top:2px">
+                <span>Up {{ device.uptime }}</span>
+                <span>&middot;</span>
+                <span>{{ device.containersRunning }}/{{ device.containersTotal }} containers</span>
+                <span>&middot;</span>
+                <span>{{ device.lastRefresh }}</span>
+              </div>
+
+              <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+                <button onClick="{{ device.onOpenTerminal }}" disabled="{{ device.isOffline }}" style="display:flex;align-items:center;gap:5px;padding:6px 11px;background:transparent;color:{{ device.terminalTextColor }};border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                  Terminal
+                </button>
+                <button onClick="{{ device.onOpenServices }}" style="display:flex;align-items:center;gap:5px;padding:6px 11px;background:transparent;color:#dcdcdc;border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>
+                  Services
+                </button>
+                <div style="flex:1"></div>
+                <button onClick="{{ device.onRefresh }}" title="Refresh" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:transparent;color:#9a9a9a;border:1px solid rgba(255,255,255,0.14);border-radius:6px;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="{{ device.spinStyle }}"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+                </button>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- DEVICE DETAILS -->
+      <sc-if value="{{ isDevice }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <button onClick="{{ goDashboard }}" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;color:#c8c8c8;border:1px solid rgba(255,255,255,0.14);border-radius:6px;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style="width:9px;height:9px;border-radius:50%;background:{{ selectedDevice.dotColor }}"></div>
+          <div style="font-size:19px;font-weight:600;color:#f5f5f5">{{ selectedDevice.name }}</div>
+          <div style="font-size:11px;font-weight:600;color:{{ selectedDevice.dotColor }};background:{{ selectedDevice.statusChipBg }};padding:3px 9px;border-radius:20px">{{ selectedDevice.statusLabel }}</div>
+          <div style="flex:1"></div>
+          <button onClick="{{ selectedDevice.onOpenTerminal }}" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:#2f8ee0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#4aa3f0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            Open Terminal
+          </button>
+          <button onClick="{{ selectedDevice.onRefresh }}" title="Refresh" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;color:#c8c8c8;border:1px solid rgba(255,255,255,0.14);border-radius:6px;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="{{ selectedDevice.spinStyle }}"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+          </button>
+          <button onClick="{{ openSelectedDeviceSettings }}" title="Settings" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;color:#c8c8c8;border:1px solid rgba(255,255,255,0.14);border-radius:6px;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 0 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 0 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 0 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 0 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"></path></svg>
+          </button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:14px">
+          <div style="display:flex;flex-direction:column;gap:14px">
+            <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">GENERAL INFORMATION</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 16px">
+                <div><div style="font-size:11px;color:#828282">Hostname</div><div style="font-size:13px;color:#e6e6e6;font-family:Consolas,monospace;margin-top:2px">{{ selectedDevice.hostname }}</div></div>
+                <div><div style="font-size:11px;color:#828282">IP address</div><div style="font-size:13px;color:#e6e6e6;font-family:Consolas,monospace;margin-top:2px">{{ selectedDevice.ip }}</div></div>
+                <div><div style="font-size:11px;color:#828282">Model</div><div style="font-size:13px;color:#e6e6e6;margin-top:2px">{{ selectedDevice.model }}</div></div>
+                <div><div style="font-size:11px;color:#828282">SSH user</div><div style="font-size:13px;color:#e6e6e6;margin-top:2px">pi</div></div>
+              </div>
+            </div>
+
+            <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px">
+              <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:12px">SYSTEM METRICS</div>
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+                <div>
+                  <div style="font-size:11px;color:#828282;font-weight:700">CPU</div>
+                  <div style="font-size:22px;font-weight:600;color:{{ selectedDevice.cpuColor }};margin-top:2px">{{ selectedDevice.cpu }}%</div>
+                  <div style="height:5px;border-radius:3px;background:#3a3a3a;margin-top:8px"><div style="height:5px;border-radius:3px;background:{{ selectedDevice.cpuColor }};width:{{ selectedDevice.cpuWidth }}"></div></div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:#828282;font-weight:700">MEMORY</div>
+                  <div style="font-size:22px;font-weight:600;color:{{ selectedDevice.memColor }};margin-top:2px">{{ selectedDevice.mem }}%</div>
+                  <div style="height:5px;border-radius:3px;background:#3a3a3a;margin-top:8px"><div style="height:5px;border-radius:3px;background:{{ selectedDevice.memColor }};width:{{ selectedDevice.memWidth }}"></div></div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:#828282;font-weight:700">DISK</div>
+                  <div style="font-size:22px;font-weight:600;color:{{ selectedDevice.diskColor }};margin-top:2px">{{ selectedDevice.disk }}%</div>
+                  <div style="height:5px;border-radius:3px;background:#3a3a3a;margin-top:8px"><div style="height:5px;border-radius:3px;background:{{ selectedDevice.diskColor }};width:{{ selectedDevice.diskWidth }}"></div></div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:#828282;font-weight:700">TEMP</div>
+                  <div style="font-size:22px;font-weight:600;color:{{ selectedDevice.tempColor }};margin-top:2px">{{ selectedDevice.temp }}&deg;C</div>
+                  <div style="height:5px;border-radius:3px;background:#3a3a3a;margin-top:8px"><div style="height:5px;border-radius:3px;background:{{ selectedDevice.tempColor }};width:{{ selectedDevice.tempWidth }}"></div></div>
+                </div>
+              </div>
+              <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;color:#9a9a9a">
+                <span>Uptime: <b style="color:#e6e6e6;font-weight:600">{{ selectedDevice.uptime }}</b></span>
+                <span>Containers: <b style="color:#e6e6e6;font-weight:600">{{ selectedDevice.containersRunning }}/{{ selectedDevice.containersTotal }}</b></span>
+                <span>Last refresh: <b style="color:#e6e6e6;font-weight:600">{{ selectedDevice.lastRefresh }}</b></span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px;display:flex;flex-direction:column;max-height:340px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">RECENT ACTIVITY</div>
+            <div style="overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ selectedActivity }}" as="item" hint-placeholder-count="3">
+                <div style="display:flex;gap:8px">
+                  <div style="width:7px;height:7px;border-radius:50%;background:{{ item.color }};margin-top:5px;flex-shrink:0"></div>
+                  <div>
+                    <div style="font-size:12.5px;color:#dcdcdc;line-height:1.4">{{ item.text }}</div>
+                    <div style="font-size:11px;color:#7a7a7a;margin-top:1px">{{ item.time }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px;margin-top:14px">
+          <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">DOCKER CONTAINERS</div>
+          <sc-if value="{{ selectedHasContainers }}" hint-placeholder-val="{{ true }}">
+            <div style="display:grid;grid-template-columns:1.3fr 0.8fr 1.6fr 0.8fr 0.8fr 0.5fr 0.7fr;padding:0 8px 8px;font-size:11px;font-weight:700;color:#828282;letter-spacing:.03em;border-bottom:1px solid rgba(255,255,255,0.08)">
+              <div>NAME</div><div>STATUS</div><div>IMAGE</div><div>UPTIME</div><div>HEALTH</div><div>PORT</div><div>SYNC</div>
+            </div>
+            <sc-for list="{{ selectedContainers }}" as="c" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:1.3fr 0.8fr 1.6fr 0.8fr 0.8fr 0.5fr 0.7fr;padding:9px 8px;font-size:12.5px;color:#e0e0e0;border-bottom:1px solid rgba(255,255,255,0.05);align-items:center">
+                <div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div>
+                <div style="display:flex;align-items:center;gap:6px;color:{{ c.statusColor }};font-weight:600"><div style="width:6px;height:6px;border-radius:50%;background:{{ c.statusColor }}"></div>{{ c.status }}</div>
+                <div style="color:#9a9a9a;font-family:Consolas,monospace;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.image }}</div>
+                <div style="color:#9a9a9a">{{ c.uptime }}</div>
+                <div style="color:{{ c.healthColor }};font-weight:600">{{ c.health }}</div>
+                <div style="color:#9a9a9a;font-family:Consolas,monospace;font-size:11.5px">{{ c.port }}</div>
+                <div>
+                  <button onClick="{{ c.onUpdate }}" title="Pull latest from GitHub &amp; run ./update.sh" style="display:flex;align-items:center;gap:4px;padding:5px 9px;background:transparent;color:#9fc9ef;border:1px solid rgba(47,142,224,0.35);border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer" style-hover="background:rgba(47,142,224,0.12)">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+                    Update
+                  </button>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <sc-if value="{{ selectedNoContainers }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:26px 0;color:#7a7a7a;font-size:13px">Device is offline &mdash; container status unavailable.</div>
+          </sc-if>
+        </div>
+
+        <div style="margin-top:14px">
+          <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">SERVICES ON THIS DEVICE</div>
+          <sc-if value="{{ selectedHasServices }}" hint-placeholder-val="{{ true }}">
+            <div style="display:flex;flex-wrap:wrap;gap:10px">
+              <sc-for list="{{ selectedServices }}" as="svc" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:10px;background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:9px 12px;min-width:210px">
+                  <div style="width:34px;height:34px;border-radius:7px;background:{{ svc.color }};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;flex-shrink:0">{{ svc.mono }}</div>
+                  <div style="min-width:0;flex:1">
+                    <div style="font-size:13px;font-weight:600;color:#f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ svc.name }}</div>
+                    <div style="font-size:11px;color:#8a8a8a;font-family:Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ svc.url }}</div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ selectedNoServices }}" hint-placeholder-val="{{ false }}">
+            <div style="text-align:center;padding:20px;color:#7a7a7a;font-size:13px;background:#272727;border:1px dashed rgba(255,255,255,0.12);border-radius:8px">No services registered on this device yet.</div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- SERVICES (global) -->
+      <sc-if value="{{ isServices }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px">
+          <div>
+            <div style="font-size:20px;font-weight:600;color:#f5f5f5">Services</div>
+            <div style="font-size:13px;color:#9a9a9a;margin-top:3px">{{ servicesSummaryText }}</div>
+          </div>
+          <sc-if value="{{ hasServiceFilter }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ clearServiceFilter }}" style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(47,142,224,0.15);color:#5aa9ea;border:1px solid rgba(47,142,224,0.35);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer">
+              Filtered: {{ serviceFilterName }} &nbsp;&times;
+            </button>
+          </sc-if>
+        </div>
+
+        <sc-if value="{{ servicesEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="text-align:center;padding:60px 20px;color:#7a7a7a;font-size:13px;background:#272727;border:1px dashed rgba(255,255,255,0.12);border-radius:8px">No services registered on this device.</div>
+        </sc-if>
+        <sc-if value="{{ servicesNotEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">
+            <sc-for list="{{ filteredServices }}" as="svc" hint-placeholder-count="6">
+              <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s" style-hover="border-color:rgba(255,255,255,0.2)">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:38px;height:38px;border-radius:8px;background:{{ svc.color }};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:14px;flex-shrink:0">{{ svc.mono }}</div>
+                  <div style="min-width:0">
+                    <div style="font-size:14px;font-weight:600;color:#f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ svc.name }}</div>
+                    <div style="font-size:11px;color:#8a8a8a">{{ svc.deviceName }}</div>
+                  </div>
+                </div>
+                <div style="font-size:11.5px;color:#8a8a8a;font-family:Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ svc.url }}</div>
+                <button style="display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 0;background:transparent;color:#dcdcdc;border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+                  Open &nbsp;
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </sc-if>
+
+      <!-- DEVICE SETTINGS -->
+      <sc-if value="{{ isDeviceSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+          <button onClick="{{ backToSelectedDevice }}" style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;background:transparent;color:#c8c8c8;border:1px solid rgba(255,255,255,0.14);border-radius:6px;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <div style="font-size:19px;font-weight:600;color:#f5f5f5">Settings &middot; {{ selectedDevice.name }}</div>
+        </div>
+
+        <div style="max-width:560px;display:flex;flex-direction:column;gap:14px">
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:11.5px;color:#9a9a9a;margin-bottom:5px;font-weight:600">Name</div>
+              <input value="{{ settingsForm.name }}" onChange="{{ onChangeSettingsName }}" style="width:100%;box-sizing:border-box;padding:8px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px" />
+            </div>
+            <div>
+              <div style="font-size:11.5px;color:#9a9a9a;margin-bottom:5px;font-weight:600">Hostname</div>
+              <input value="{{ settingsForm.hostname }}" onChange="{{ onChangeSettingsHostname }}" style="width:100%;box-sizing:border-box;padding:8px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px;font-family:Consolas,monospace" />
+            </div>
+            <div>
+              <div style="font-size:11.5px;color:#9a9a9a;margin-bottom:5px;font-weight:600">SSH username</div>
+              <input value="{{ settingsForm.sshUser }}" onChange="{{ onChangeSettingsSsh }}" style="width:100%;box-sizing:border-box;padding:8px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px;font-family:Consolas,monospace" />
+            </div>
+            <div>
+              <div style="font-size:11.5px;color:#9a9a9a;margin-bottom:5px;font-weight:600">Description</div>
+              <textarea value="{{ settingsForm.description }}" onChange="{{ onChangeSettingsDescription }}" rows="2" style="width:100%;box-sizing:border-box;padding:8px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+            </div>
+            <div>
+              <div style="font-size:11.5px;color:#9a9a9a;margin-bottom:5px;font-weight:600">Refresh interval</div>
+              <select value="{{ settingsForm.refreshInterval }}" onChange="{{ onChangeSettingsInterval }}" style="width:180px;box-sizing:border-box;padding:8px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px">
+                <option value="15s">15 seconds</option>
+                <option value="30s">30 seconds</option>
+                <option value="1m">1 minute</option>
+                <option value="5m">5 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:12px">NOTIFICATIONS</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13px;color:#e0e0e0">Notify when device goes offline</div>
+                <div onClick="{{ toggleNotifyOffline }}" style="width:36px;height:20px;border-radius:10px;background:{{ toggleBg.offline }};position:relative;cursor:pointer;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:{{ toggleLeft.offline }};transition:left .15s"></div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13px;color:#e0e0e0">Notify on high resource usage</div>
+                <div onClick="{{ toggleNotifyResource }}" style="width:36px;height:20px;border-radius:10px;background:{{ toggleBg.resource }};position:relative;cursor:pointer;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:{{ toggleLeft.resource }};transition:left .15s"></div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13px;color:#e0e0e0">Notify on container failure</div>
+                <div onClick="{{ toggleNotifyContainer }}" style="width:36px;height:20px;border-radius:10px;background:{{ toggleBg.container }};position:relative;cursor:pointer;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:{{ toggleLeft.container }};transition:left .15s"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">REGISTERED SERVICES</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{ deviceSettingsServices }}" as="svc" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#e0e0e0">
+                  <div style="width:15px;height:15px;border-radius:4px;background:{{ svc.color }};flex-shrink:0"></div>
+                  {{ svc.name }}
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button onClick="{{ backToSelectedDevice }}" style="padding:8px 16px;background:transparent;color:#dcdcdc;border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">Cancel</button>
+            <button onClick="{{ saveDeviceSettings }}" style="padding:8px 16px;background:#2f8ee0;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer" style-hover="background:#4aa3f0">Save changes</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- GLOBAL SETTINGS -->
+      <sc-if value="{{ isGlobalSettings }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:20px;font-weight:600;color:#f5f5f5;margin-bottom:2px">Settings</div>
+        <div style="font-size:13px;color:#9a9a9a;margin-bottom:18px">General application preferences</div>
+
+        <div style="max-width:560px;display:flex;flex-direction:column;gap:14px">
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">APPEARANCE</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:13px;color:#e0e0e0">Theme</div>
+              <div style="display:flex;background:#1e1e1e;border-radius:7px;padding:3px;gap:2px">
+                <button onClick="{{ setThemeDark }}" style="padding:6px 12px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;background:{{ themeBg.dark }};color:{{ themeColor.dark }}">Dark</button>
+                <button onClick="{{ setThemeLight }}" style="padding:6px 12px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;background:{{ themeBg.light }};color:{{ themeColor.light }}">Light</button>
+                <button onClick="{{ setThemeSystem }}" style="padding:6px 12px;border:none;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;background:{{ themeBg.system }};color:{{ themeColor.system }}">System</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">STARTUP</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;color:#e0e0e0">Start Pi Control with Windows</div>
+                <div style="font-size:11.5px;color:#8a8a8a;margin-top:2px">Launches minimized to the system tray</div>
+              </div>
+              <div onClick="{{ toggleStartWithWindows }}" style="width:36px;height:20px;border-radius:10px;background:{{ toggleBg.startWithWindows }};position:relative;cursor:pointer;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:{{ toggleLeft.startWithWindows }};transition:left .15s"></div></div>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">MONITORING</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:13px;color:#e0e0e0">Default refresh interval</div>
+              <select value="{{ globalForm.refreshInterval }}" onChange="{{ onChangeGlobalInterval }}" style="width:150px;box-sizing:border-box;padding:7px 10px;background:#1e1e1e;border:1px solid rgba(255,255,255,0.14);border-radius:6px;color:#f0f0f0;font-size:13px">
+                <option value="15s">15 seconds</option>
+                <option value="30s">30 seconds</option>
+                <option value="1m">1 minute</option>
+                <option value="5m">5 minutes</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:10px">NOTIFICATIONS</div>
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div style="font-size:13px;color:#e0e0e0">Enable desktop notifications</div>
+              <div onClick="{{ toggleGlobalNotifications }}" style="width:36px;height:20px;border-radius:10px;background:{{ toggleBg.globalNotify }};position:relative;cursor:pointer;flex-shrink:0"><div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:{{ toggleLeft.globalNotify }};transition:left .15s"></div></div>
+            </div>
+          </div>
+
+          <div style="background:#272727;border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:.03em;margin-bottom:12px">ABOUT</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:38px;height:38px;border-radius:8px;background:#2f8ee0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px">π</div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:#f0f0f0">Pi Control</div>
+                <div style="font-size:12px;color:#8a8a8a">Version 1.4.2</div>
+              </div>
+              <div style="flex:1"></div>
+              <button style="padding:7px 14px;background:transparent;color:#dcdcdc;border:1px solid rgba(255,255,255,0.14);border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer" style-hover="background:rgba(255,255,255,0.06)">Check for updates</button>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- TERMINAL MODAL -->
+    <sc-if value="{{ terminalOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;border-radius:10px;z-index:20">
+        <div style="width:620px;height:380px;background:#0c0c0c;border-radius:8px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column">
+          <div style="height:36px;background:#161616;display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:12px;color:#9a9a9a;font-family:Consolas,monospace">{{ terminalDeviceName }} &mdash; SSH Terminal</div>
+            <button onClick="{{ closeTerminal }}" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:#9a9a9a;cursor:pointer;border-radius:4px" style-hover="background:rgba(255,255,255,0.1)">&times;</button>
+          </div>
+          <div style="flex:1;padding:14px;font-family:Consolas,monospace;font-size:13px;color:#d6d6d6;line-height:1.7;overflow-y:auto">
+            <div>Connecting to {{ terminalDeviceName }}.tail3f2a.ts.net...</div>
+            <div style="color:#6ccb5f">Connection established.</div>
+            <div>&nbsp;</div>
+            <div>pi@{{ terminalDeviceName }}:~ $ <span style="animation:blinkCursor 1s step-end infinite">&#9608;</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+<!-- UPDATE MODAL -->
+    <sc-if value="{{ updateOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;border-radius:10px;z-index:20">
+        <div style="width:560px;background:#0c0c0c;border-radius:8px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column">
+          <div style="height:36px;background:#161616;display:flex;align-items:center;justify-content:space-between;padding:0 12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.06)">
+            <div style="font-size:12px;color:#9a9a9a;font-family:Consolas,monospace">{{ updateContainerName }} on {{ updateDeviceName }} &mdash; ./update.sh</div>
+            <button onClick="{{ closeUpdateModal }}" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;color:#9a9a9a;cursor:pointer;border-radius:4px" style-hover="background:rgba(255,255,255,0.1)">&times;</button>
+          </div>
+          <div style="padding:14px;font-family:Consolas,monospace;font-size:12.5px;color:#d6d6d6;line-height:1.7">
+            <div>$ ./update.sh</div>
+            <div style="color:#8a8a8a">Pulling latest changes from origin/main...</div>
+            <sc-if value="{{ updateRunning }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:7px;color:#9fc9ef;margin-top:4px">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 0.7s linear infinite"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>
+                Rebuilding image and recreating container...
+              </div>
+            </sc-if>
+            <sc-if value="{{ updateDone }}" hint-placeholder-val="{{ false }}">
+              <div style="color:#dcdcdc;margin-top:4px">3 files changed, rebuilding docker image...</div>
+              <div style="color:#dcdcdc">Recreating container {{ updateContainerName }}...</div>
+              <div style="color:#6ccb5f;font-weight:600;margin-top:6px">&#10003; Update complete &mdash; container running</div>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- TRAY MENU -->
+    <sc-if value="{{ trayOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;bottom:56px;left:8px;width:210px;background:#2c2c2c;border:1px solid rgba(255,255,255,0.12);border-radius:8px;box-shadow:0 12px 30px rgba(0,0,0,0.5);padding:6px;z-index:30">
+        <button onClick="{{ trayOpenDashboard }}" style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;color:#e6e6e6;font-size:13px;cursor:pointer;border-radius:5px" style-hover="background:rgba(255,255,255,0.08)">Open Dashboard</button>
+        <button onClick="{{ trayRefreshAll }}" style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;color:#e6e6e6;font-size:13px;cursor:pointer;border-radius:5px" style-hover="background:rgba(255,255,255,0.08)">Refresh All</button>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:5px 4px"></div>
+        <button style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;color:#e6e6e6;font-size:13px;cursor:pointer;border-radius:5px" style-hover="background:rgba(255,255,255,0.08)">Pi2 Terminal</button>
+        <button style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;color:#e6e6e6;font-size:13px;cursor:pointer;border-radius:5px" style-hover="background:rgba(255,255,255,0.08)">Pi5 Terminal</button>
+        <div style="height:1px;background:rgba(255,255,255,0.1);margin:5px 4px"></div>
+        <button style="width:100%;text-align:left;padding:8px 10px;background:transparent;border:none;color:#ff8a84;font-size:13px;cursor:pointer;border-radius:5px" style-hover="background:rgba(255,95,86,0.12)">Quit</button>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const GREEN = '#6ccb5f';
+const ORANGE = '#ffb454';
+const RED = '#ff6a63';
+const NEUTRAL_BAR = '#6e6e6e';
+const TEXT_SECONDARY = '#c8c8c8';
+
+function levelColor(pct) { return pct >= 90 ? RED : pct >= 75 ? ORANGE : NEUTRAL_BAR; }
+function tempColor(t) { return t >= 80 ? RED : t >= 68 ? ORANGE : TEXT_SECONDARY; }
+
+const RAW_DEVICES = [
+  { id: 'pi5-ha', name: 'pi5-homeassistant', hostname: 'pi5-homeassistant.tail3f2a.ts.net', ip: '100.101.2.10', model: 'Raspberry Pi 5 \u00b7 8GB', status: 'healthy', cpu: 18, mem: 42, disk: 61, temp: 52, uptime: '14d 6h', containersRunning: 5, containersTotal: 6, lastRefresh: 'Just now' },
+  { id: 'pi5-nas', name: 'pi5-nas', hostname: 'pi5-nas.tail3f2a.ts.net', ip: '100.101.2.14', model: 'Raspberry Pi 5 \u00b7 8GB', status: 'healthy', cpu: 9, mem: 55, disk: 78, temp: 48, uptime: '32d 2h', containersRunning: 4, containersTotal: 4, lastRefresh: 'Just now' },
+  { id: 'pi4-media', name: 'pi4-mediaserver', hostname: 'pi4-mediaserver.tail3f2a.ts.net', ip: '100.101.2.21', model: 'Raspberry Pi 4 \u00b7 4GB', status: 'warning', cpu: 87, mem: 91, disk: 88, temp: 74, uptime: '6d 1h', containersRunning: 7, containersTotal: 8, lastRefresh: '1 min ago', note: 'High CPU & memory load \u2014 check Jellyfin transcode queue.' },
+  { id: 'pi4-finance', name: 'pi4-financeapp', hostname: 'pi4-financeapp.tail3f2a.ts.net', ip: '100.101.2.33', model: 'Raspberry Pi 4 \u00b7 2GB', status: 'healthy', cpu: 22, mem: 38, disk: 45, temp: 55, uptime: '21d 14h', containersRunning: 3, containersTotal: 3, lastRefresh: 'Just now' },
+  { id: 'pi3-backup', name: 'pi3-backup', hostname: 'pi3-backup.tail3f2a.ts.net', ip: '100.101.2.40', model: 'Raspberry Pi 3 Model B+', status: 'offline', cpu: 0, mem: 0, disk: 0, temp: 0, uptime: '\u2014', containersRunning: 0, containersTotal: 5, lastRefresh: '2h ago' }
+];
+
+const CONTAINERS = {
+  'pi5-ha': [
+    { name: 'homeassistant', status: 'running', health: 'healthy', image: 'homeassistant/home-assistant:2024.8', uptime: '14d 6h', port: '8123' },
+    { name: 'esphome', status: 'running', health: 'healthy', image: 'esphome/esphome:2024.7', uptime: '14d 6h', port: '6052' },
+    { name: 'mosquitto', status: 'running', health: 'healthy', image: 'eclipse-mosquitto:2', uptime: '14d 6h', port: '1883' },
+    { name: 'nodered', status: 'running', health: 'healthy', image: 'nodered/node-red:3.1', uptime: '14d 6h', port: '1880' },
+    { name: 'zigbee2mqtt', status: 'running', health: 'degraded', image: 'koenkk/zigbee2mqtt:1.35', uptime: '2d 3h', port: '8080' },
+    { name: 'influxdb', status: 'restarting', health: 'unhealthy', image: 'influxdb:2.7', uptime: '3m', port: '8086' }
+  ],
+  'pi5-nas': [
+    { name: 'portainer', status: 'running', health: 'healthy', image: 'portainer/portainer-ce:2.19', uptime: '32d', port: '9000' },
+    { name: 'samba', status: 'running', health: 'healthy', image: 'dperson/samba:latest', uptime: '32d', port: '445' },
+    { name: 'syncthing', status: 'running', health: 'healthy', image: 'syncthing/syncthing:1.27', uptime: '32d', port: '8384' },
+    { name: 'watchtower', status: 'running', health: 'healthy', image: 'containrrr/watchtower:latest', uptime: '32d', port: '\u2014' }
+  ],
+  'pi4-media': [
+    { name: 'jellyfin', status: 'running', health: 'degraded', image: 'jellyfin/jellyfin:10.9', uptime: '6d', port: '8096' },
+    { name: 'sonarr', status: 'running', health: 'healthy', image: 'linuxserver/sonarr:latest', uptime: '6d', port: '8989' },
+    { name: 'radarr', status: 'running', health: 'healthy', image: 'linuxserver/radarr:latest', uptime: '6d', port: '7878' },
+    { name: 'prowlarr', status: 'running', health: 'healthy', image: 'linuxserver/prowlarr:latest', uptime: '6d', port: '9696' },
+    { name: 'qbittorrent', status: 'running', health: 'healthy', image: 'linuxserver/qbittorrent:latest', uptime: '6d', port: '8081' },
+    { name: 'bazarr', status: 'running', health: 'healthy', image: 'linuxserver/bazarr:latest', uptime: '6d', port: '6767' },
+    { name: 'overseerr', status: 'running', health: 'healthy', image: 'sctx/overseerr:latest', uptime: '6d', port: '5055' },
+    { name: 'tautulli', status: 'stopped', health: 'unhealthy', image: 'tautulli/tautulli:latest', uptime: '\u2014', port: '8181' }
+  ],
+  'pi4-finance': [
+    { name: 'firefly-iii', status: 'running', health: 'healthy', image: 'fireflyiii/core:latest', uptime: '21d', port: '8080' },
+    { name: 'firefly-db', status: 'running', health: 'healthy', image: 'postgres:16', uptime: '21d', port: '\u2014' },
+    { name: 'firefly-cron', status: 'running', health: 'healthy', image: 'alpine:cron', uptime: '21d', port: '\u2014' }
+  ],
+  'pi3-backup': []
+};
+
+const ACTIVITY = {
+  'pi5-ha': [
+    { text: 'Container influxdb restarting (crash loop)', time: '2 min ago', level: 'error' },
+    { text: 'Container zigbee2mqtt reconnected to coordinator', time: '2d ago', level: 'info' },
+    { text: 'Scheduled refresh completed', time: '14d ago', level: 'info' }
+  ],
+  'pi5-nas': [
+    { text: 'Disk usage crossed 75% threshold', time: '3h ago', level: 'warning' },
+    { text: 'Container watchtower updated syncthing', time: '5d ago', level: 'info' },
+    { text: 'Scheduled refresh completed', time: '32d ago', level: 'info' }
+  ],
+  'pi4-media': [
+    { text: 'Container jellyfin CPU usage exceeded 80%', time: '4 min ago', level: 'warning' },
+    { text: 'Container tautulli stopped unexpectedly', time: '18 min ago', level: 'error' },
+    { text: 'Disk usage crossed 85% threshold', time: '1h ago', level: 'warning' },
+    { text: 'Device refreshed after reboot', time: '6d ago', level: 'info' }
+  ],
+  'pi4-finance': [
+    { text: 'Container firefly-iii updated to latest', time: '1d ago', level: 'info' },
+    { text: 'Scheduled refresh completed', time: '21d ago', level: 'info' }
+  ],
+  'pi3-backup': [
+    { text: 'Device went offline', time: '2h ago', level: 'error' },
+    { text: 'Last successful backup sync', time: '1d ago', level: 'info' }
+  ]
+};
+
+const SERVICES = [
+  { id: 'ha', name: 'Home Assistant', deviceId: 'pi5-ha', url: 'http://pi5-homeassistant:8123', mono: 'HA', color: '#3aa0d8' },
+  { id: 'esphome', name: 'ESPHome', deviceId: 'pi5-ha', url: 'http://pi5-homeassistant:6052', mono: 'ES', color: '#4aa3f0' },
+  { id: 'frigate', name: 'Frigate', deviceId: 'pi5-ha', url: 'http://pi5-homeassistant:5000', mono: 'FR', color: '#e8985f' },
+  { id: 'portainer', name: 'Portainer', deviceId: 'pi5-nas', url: 'http://pi5-nas:9000', mono: 'PT', color: '#3ec7dc' },
+  { id: 'jellyfin', name: 'Jellyfin', deviceId: 'pi4-media', url: 'http://pi4-mediaserver:8096', mono: 'JF', color: '#9b6fd6' },
+  { id: 'overseerr', name: 'Overseerr', deviceId: 'pi4-media', url: 'http://pi4-mediaserver:5055', mono: 'OV', color: '#6f7fd6' },
+  { id: 'firefly', name: 'Firefly III', deviceId: 'pi4-finance', url: 'http://pi4-financeapp:8080', mono: 'FF', color: '#5fae6a' }
+];
+
+const DEVICE_NAMES = RAW_DEVICES.reduce((m, d) => { m[d.id] = d.name; return m; }, {});
+
+function pctWidth(v) { return Math.max(2, Math.min(100, v)) + '%'; }
+
+class Component extends DCLogic {
+  state = {
+    screen: 'dashboard',
+    selectedDeviceId: null,
+    devices: RAW_DEVICES.map(d => ({ ...d })),
+    refreshingId: null,
+    refreshingAll: false,
+    terminalOpen: false,
+    terminalDeviceName: '',
+    trayOpen: false,
+    serviceFilterDeviceId: null,
+    settingsForm: null,
+    globalForm: { refreshInterval: '30s', startWithWindows: true, globalNotify: true, theme: 'dark' },
+    toggles: { offline: true, resource: true, container: false }
+  };
+
+  enrichDevice(d) {
+    const isOffline = d.status === 'offline';
+    const dotColor = d.status === 'healthy' ? GREEN : d.status === 'warning' ? ORANGE : RED;
+    const statusLabel = d.status === 'healthy' ? 'Online' : d.status === 'warning' ? 'Needs attention' : 'Offline';
+    const isRefreshing = this.state.refreshingId === d.id || this.state.refreshingAll;
+    return {
+      ...d,
+      isOffline,
+      showMetrics: !isOffline,
+      dotColor,
+      dotAnim: d.status === 'healthy' ? 'pulseDot 2.4s ease-in-out infinite' : 'none',
+      statusLabel,
+      statusChipBg: d.status === 'healthy' ? 'rgba(108,203,95,0.15)' : d.status === 'warning' ? 'rgba(255,180,84,0.15)' : 'rgba(255,106,99,0.15)',
+      cardBorder: d.status === 'warning' ? 'rgba(255,180,84,0.35)' : d.status === 'offline' ? 'rgba(255,106,99,0.25)' : 'rgba(255,255,255,0.08)',
+      cpuColor: levelColor(d.cpu), memColor: levelColor(d.mem), diskColor: levelColor(d.disk), tempColor: tempColor(d.temp),
+      cpuWidth: pctWidth(d.cpu), memWidth: pctWidth(d.mem), diskWidth: pctWidth(d.disk), tempWidth: pctWidth(d.temp),
+      hasNote: !!d.note,
+      terminalTextColor: isOffline ? '#6a6a6a' : '#dcdcdc',
+      spinStyle: isRefreshing ? 'animation:spin 0.7s linear infinite' : '',
+      onOpenCard: () => this.openDevice(d.id),
+      onOpenTerminal: (e) => { e.stopPropagation(); if (!isOffline) this.openTerminal(d.name); },
+      onOpenServices: (e) => { e.stopPropagation(); this.openServicesForDevice(d.id); },
+      onRefresh: (e) => { e.stopPropagation(); this.refreshDevice(d.id); }
+    };
+  }
+
+  openDevice(id) { this.setState({ screen: 'device', selectedDeviceId: id }); }
+  goDashboard() { this.setState({ screen: 'dashboard' }); }
+  goServicesGlobal() { this.setState({ screen: 'services', serviceFilterDeviceId: null }); }
+  openServicesForDevice(id) { this.setState({ screen: 'services', serviceFilterDeviceId: id }); }
+  goGlobalSettings() { this.setState({ screen: 'globalSettings' }); }
+  openSelectedDeviceSettings() { this.openDeviceSettings(this.state.selectedDeviceId); }
+  openDeviceSettings(id) {
+    const d = this.state.devices.find(x => x.id === id);
+    this.setState({
+      screen: 'deviceSettings', selectedDeviceId: id,
+      settingsForm: { name: d.name, hostname: d.hostname, sshUser: 'pi', description: '', refreshInterval: '30s' }
+    });
+  }
+  backToSelectedDevice() { this.setState({ screen: 'device' }); }
+  saveDeviceSettings() { this.setState({ screen: 'device' }); }
+
+  clearServiceFilter() { this.setState({ serviceFilterDeviceId: null }); }
+
+  openTerminal(deviceName) { this.setState({ terminalOpen: true, terminalDeviceName: deviceName }); }
+  closeTerminal() { this.setState({ terminalOpen: false }); }
+
+  openUpdate(containerName, deviceName) {
+    this.setState({ updateModal: { containerName, deviceName, status: 'running' } });
+    setTimeout(() => {
+      this.setState(s => s.updateModal ? { updateModal: { ...s.updateModal, status: 'done' } } : {});
+    }, 1300);
+  }
+  closeUpdateModal() { this.setState({ updateModal: null }); }
+
+  toggleTray() { this.setState(s => ({ trayOpen: !s.trayOpen })); }
+  trayOpenDashboard() { this.setState({ screen: 'dashboard', trayOpen: false }); }
+  trayRefreshAll() { this.setState({ trayOpen: false }); this.refreshAll(); }
+
+  refreshDevice(id) {
+    this.setState({ refreshingId: id });
+    setTimeout(() => {
+      this.setState(s => ({
+        refreshingId: null,
+        devices: s.devices.map(d => d.id === id ? { ...d, lastRefresh: 'Just now' } : d)
+      }));
+    }, 800);
+  }
+  refreshAll() {
+    this.setState({ refreshingAll: true });
+    setTimeout(() => {
+      this.setState(s => ({ refreshingAll: false, devices: s.devices.map(d => ({ ...d, lastRefresh: d.status === 'offline' ? d.lastRefresh : 'Just now' })) }));
+    }, 900);
+  }
+
+  onChangeSettingsName(e) { this.setState(s => ({ settingsForm: { ...s.settingsForm, name: e.target.value } })); }
+  onChangeSettingsHostname(e) { this.setState(s => ({ settingsForm: { ...s.settingsForm, hostname: e.target.value } })); }
+  onChangeSettingsSsh(e) { this.setState(s => ({ settingsForm: { ...s.settingsForm, sshUser: e.target.value } })); }
+  onChangeSettingsDescription(e) { this.setState(s => ({ settingsForm: { ...s.settingsForm, description: e.target.value } })); }
+  onChangeSettingsInterval(e) { this.setState(s => ({ settingsForm: { ...s.settingsForm, refreshInterval: e.target.value } })); }
+  onChangeGlobalInterval(e) { this.setState(s => ({ globalForm: { ...s.globalForm, refreshInterval: e.target.value } })); }
+
+  toggleNotifyOffline() { this.setState(s => ({ toggles: { ...s.toggles, offline: !s.toggles.offline } })); }
+  toggleNotifyResource() { this.setState(s => ({ toggles: { ...s.toggles, resource: !s.toggles.resource } })); }
+  toggleNotifyContainer() { this.setState(s => ({ toggles: { ...s.toggles, container: !s.toggles.container } })); }
+  toggleStartWithWindows() { this.setState(s => ({ globalForm: { ...s.globalForm, startWithWindows: !s.globalForm.startWithWindows } })); }
+  toggleGlobalNotifications() { this.setState(s => ({ globalForm: { ...s.globalForm, globalNotify: !s.globalForm.globalNotify } })); }
+  setThemeDark() { this.setState(s => ({ globalForm: { ...s.globalForm, theme: 'dark' } })); }
+  setThemeLight() { this.setState(s => ({ globalForm: { ...s.globalForm, theme: 'light' } })); }
+  setThemeSystem() { this.setState(s => ({ globalForm: { ...s.globalForm, theme: 'system' } })); }
+
+  renderVals() {
+    const s = this.state;
+    const devices = s.devices.map(d => this.enrichDevice(d));
+    const healthyCount = s.devices.filter(d => d.status === 'healthy').length;
+    const warningCount = s.devices.filter(d => d.status === 'warning').length;
+    const offlineCount = s.devices.filter(d => d.status === 'offline').length;
+
+    const isDashboard = s.screen === 'dashboard';
+    const isDevice = s.screen === 'device';
+    const isServices = s.screen === 'services';
+    const isDeviceSettings = s.screen === 'deviceSettings';
+    const isGlobalSettings = s.screen === 'globalSettings';
+
+    const activeNavBg = 'rgba(47,142,224,0.18)';
+    const activeNavColor = '#5aa9ea';
+    const navBg = {
+      dashboard: isDashboard ? activeNavBg : 'transparent',
+      services: isServices ? activeNavBg : 'transparent',
+      settings: (isGlobalSettings || isDeviceSettings) ? activeNavBg : 'transparent'
+    };
+    const navColor = {
+      dashboard: isDashboard ? activeNavColor : '#9a9a9a',
+      services: isServices ? activeNavColor : '#9a9a9a',
+      settings: (isGlobalSettings || isDeviceSettings) ? activeNavColor : '#9a9a9a'
+    };
+
+    const selectedRaw = s.devices.find(d => d.id === s.selectedDeviceId) || s.devices[0];
+    const selectedDevice = this.enrichDevice(selectedRaw);
+    const selectedContainers = (CONTAINERS[selectedRaw.id] || []).map(c => ({
+      ...c,
+      statusColor: c.status === 'running' ? GREEN : c.status === 'restarting' ? ORANGE : RED,
+      healthColor: c.health === 'healthy' ? GREEN : c.health === 'degraded' ? ORANGE : RED,
+      onUpdate: () => this.openUpdate(c.name, selectedRaw.name)
+    }));
+    const selectedActivity = (ACTIVITY[selectedRaw.id] || []).map(a => ({ ...a, color: a.level === 'error' ? RED : a.level === 'warning' ? ORANGE : '#8a8a8a' }));
+    const selectedServicesList = SERVICES.filter(sv => sv.deviceId === selectedRaw.id);
+
+    const serviceFilterDeviceId = s.serviceFilterDeviceId;
+    const filteredServices = (serviceFilterDeviceId ? SERVICES.filter(sv => sv.deviceId === serviceFilterDeviceId) : SERVICES)
+      .map(sv => ({ ...sv, deviceName: DEVICE_NAMES[sv.deviceId] }));
+
+    const deviceCount = new Set(SERVICES.map(sv => sv.deviceId)).size;
+
+    return {
+      devices, isDashboard, isDevice, isServices, isDeviceSettings, isGlobalSettings,
+      summaryText: `${devices.length} devices \u00b7 ${healthyCount} healthy \u00b7 ${warningCount} warning \u00b7 ${offlineCount} offline`,
+      navBg, navColor,
+      trayOpen: s.trayOpen, trayBtnBg: s.trayOpen ? 'rgba(255,255,255,0.1)' : 'transparent',
+      hasAttentionBadge: warningCount + offlineCount > 0,
+      refreshAllSpinStyle: s.refreshingAll ? 'animation:spin 0.7s linear infinite' : '',
+      goDashboard: () => this.goDashboard(),
+      goServicesGlobal: () => this.goServicesGlobal(),
+      goGlobalSettings: () => this.goGlobalSettings(),
+      toggleTray: () => this.toggleTray(),
+      refreshAll: () => this.refreshAll(),
+
+      selectedDevice, selectedContainers, selectedActivity,
+      selectedHasContainers: selectedContainers.length > 0,
+      selectedNoContainers: selectedContainers.length === 0,
+      selectedHasServices: selectedServicesList.length > 0,
+      selectedNoServices: selectedServicesList.length === 0,
+      selectedServices: selectedServicesList.map(sv => ({ ...sv })),
+      openSelectedDeviceSettings: () => this.openSelectedDeviceSettings(),
+
+      servicesSummaryText: `${SERVICES.length} services across ${deviceCount} devices`,
+      hasServiceFilter: !!serviceFilterDeviceId,
+      serviceFilterName: serviceFilterDeviceId ? DEVICE_NAMES[serviceFilterDeviceId] : '',
+      clearServiceFilter: () => this.clearServiceFilter(),
+      filteredServices,
+      servicesEmpty: filteredServices.length === 0,
+      servicesNotEmpty: filteredServices.length > 0,
+
+      settingsForm: s.settingsForm || { name: '', hostname: '', sshUser: 'pi', description: '', refreshInterval: '30s' },
+      onChangeSettingsName: (e) => this.onChangeSettingsName(e),
+      onChangeSettingsHostname: (e) => this.onChangeSettingsHostname(e),
+      onChangeSettingsSsh: (e) => this.onChangeSettingsSsh(e),
+      onChangeSettingsDescription: (e) => this.onChangeSettingsDescription(e),
+      onChangeSettingsInterval: (e) => this.onChangeSettingsInterval(e),
+      deviceSettingsServices: selectedServicesList,
+      backToSelectedDevice: () => this.backToSelectedDevice(),
+      saveDeviceSettings: () => this.saveDeviceSettings(),
+
+      toggleBg: {
+        offline: s.toggles.offline ? '#2f8ee0' : '#3a3a3a',
+        resource: s.toggles.resource ? '#2f8ee0' : '#3a3a3a',
+        container: s.toggles.container ? '#2f8ee0' : '#3a3a3a',
+        startWithWindows: s.globalForm.startWithWindows ? '#2f8ee0' : '#3a3a3a',
+        globalNotify: s.globalForm.globalNotify ? '#2f8ee0' : '#3a3a3a'
+      },
+      toggleLeft: {
+        offline: s.toggles.offline ? '18px' : '2px',
+        resource: s.toggles.resource ? '18px' : '2px',
+        container: s.toggles.container ? '18px' : '2px',
+        startWithWindows: s.globalForm.startWithWindows ? '18px' : '2px',
+        globalNotify: s.globalForm.globalNotify ? '18px' : '2px'
+      },
+      toggleNotifyOffline: () => this.toggleNotifyOffline(),
+      toggleNotifyResource: () => this.toggleNotifyResource(),
+      toggleNotifyContainer: () => this.toggleNotifyContainer(),
+      toggleStartWithWindows: () => this.toggleStartWithWindows(),
+      toggleGlobalNotifications: () => this.toggleGlobalNotifications(),
+
+      globalForm: s.globalForm,
+      onChangeGlobalInterval: (e) => this.onChangeGlobalInterval(e),
+      themeBg: {
+        dark: s.globalForm.theme === 'dark' ? '#2f8ee0' : 'transparent',
+        light: s.globalForm.theme === 'light' ? '#2f8ee0' : 'transparent',
+        system: s.globalForm.theme === 'system' ? '#2f8ee0' : 'transparent'
+      },
+      themeColor: {
+        dark: s.globalForm.theme === 'dark' ? '#fff' : '#9a9a9a',
+        light: s.globalForm.theme === 'light' ? '#fff' : '#9a9a9a',
+        system: s.globalForm.theme === 'system' ? '#fff' : '#9a9a9a'
+      },
+      setThemeDark: () => this.setThemeDark(),
+      setThemeLight: () => this.setThemeLight(),
+      setThemeSystem: () => this.setThemeSystem(),
+
+      terminalOpen: s.terminalOpen, terminalDeviceName: s.terminalDeviceName,
+      closeTerminal: () => this.closeTerminal(),
+
+      updateOpen: !!s.updateModal,
+      updateContainerName: s.updateModal ? s.updateModal.containerName : '',
+      updateDeviceName: s.updateModal ? s.updateModal.deviceName : '',
+      updateRunning: !!s.updateModal && s.updateModal.status === 'running',
+      updateDone: !!s.updateModal && s.updateModal.status === 'done',
+      closeUpdateModal: () => this.closeUpdateModal(),
+      trayOpenDashboard: () => this.trayOpenDashboard(),
+      trayRefreshAll: () => this.trayRefreshAll()
+    };
+  }
+}
+
+</script>
+</body>
+</html>
