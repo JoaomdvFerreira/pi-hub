@@ -5,7 +5,9 @@ use tauri::{AppHandle, Manager};
 
 use crate::application::device_service::{self, DeviceInput, DeviceServiceError};
 use crate::domain::connection_status::DeviceConnectionStatus;
-use crate::domain::device::{validate_host, validate_ssh_port, validate_ssh_username, Device};
+use crate::domain::device::{
+    validate_host, validate_service_url, validate_ssh_port, validate_ssh_username, Device,
+};
 use crate::error::ApplicationError;
 use crate::infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, SshTarget};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
@@ -94,6 +96,50 @@ pub fn update_device(
 pub fn delete_device(app: AppHandle, id: String) -> Result<(), ApplicationError> {
     let repo = repository(&app)?;
     device_service::delete_device(&repo, &id).map_err(to_application_error)
+}
+
+/// Opens a device's registered service URL in the system default browser.
+/// Re-validates the http/https scheme at open time (defense in depth on top
+/// of the validation already applied when the service was saved) so this
+/// command can never be used to hand an arbitrary URI scheme to the OS
+/// opener, regardless of how the stored data got there.
+#[tauri::command]
+pub fn open_device_service(
+    app: AppHandle,
+    device_id: String,
+    service_id: String,
+) -> Result<(), ApplicationError> {
+    let repo = repository(&app)?;
+    let device = repo.get(&device_id).ok_or_else(|| ApplicationError {
+        code: "NotFoundError".into(),
+        message: format!("device '{device_id}' was not found"),
+        remediation: None,
+        retryable: false,
+    })?;
+    let service = device
+        .services
+        .iter()
+        .find(|s| s.id == service_id)
+        .ok_or_else(|| ApplicationError {
+            code: "NotFoundError".into(),
+            message: format!("service '{service_id}' was not found on this device"),
+            remediation: None,
+            retryable: false,
+        })?;
+
+    validate_service_url(&service.url).map_err(|err| ApplicationError {
+        code: "ValidationError".into(),
+        message: err.0,
+        remediation: None,
+        retryable: false,
+    })?;
+
+    tauri_plugin_opener::open_url(&service.url, None::<&str>).map_err(|err| ApplicationError {
+        code: "PlatformIntegrationError".into(),
+        message: format!("could not open the service URL: {err}"),
+        remediation: Some("Check that a default browser is configured.".into()),
+        retryable: true,
+    })
 }
 
 /// Tests SSH connectivity to a host/port/username combination without

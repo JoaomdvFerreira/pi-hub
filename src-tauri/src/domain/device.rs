@@ -70,7 +70,7 @@ fn validate_service(service: &DeviceService) -> Result<(), DeviceValidationError
     validate_service_url(&service.url)
 }
 
-fn validate_service_url(raw_url: &str) -> Result<(), DeviceValidationError> {
+pub(crate) fn validate_service_url(raw_url: &str) -> Result<(), DeviceValidationError> {
     let parsed = url::Url::parse(raw_url)
         .map_err(|_| DeviceValidationError(format!("service url '{raw_url}' is not a valid URL")))?;
     if parsed.scheme() == "http" || parsed.scheme() == "https" {

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/app/router";
-import { getDevice } from "@/lib/tauri/devices";
+import { getDevice, openDeviceService } from "@/lib/tauri/devices";
 import { refreshDevice } from "@/lib/tauri/monitoring";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
 import { useDeviceActivity } from "@/stores/useDeviceActivity";
@@ -58,9 +58,11 @@ function MetricStat({ label, value, unit, colorClass, barClass }: MetricStatProp
 }
 
 export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
-  const { goDashboard, goDeviceSettings, goServices } = useRouter();
+  const { goDashboard, goDeviceSettings } = useRouter();
   const [device, setDevice] = useState<Device | null | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
+  const [openingServiceId, setOpeningServiceId] = useState<string | null>(null);
+  const [serviceOpenError, setServiceOpenError] = useState<string | null>(null);
 
   const deviceIds = useMemo(() => [deviceId], [deviceId]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -81,6 +83,18 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
   }, [load]);
+
+  async function handleOpenService(serviceId: string) {
+    setOpeningServiceId(serviceId);
+    setServiceOpenError(null);
+    try {
+      await openDeviceService(deviceId, serviceId);
+    } catch {
+      setServiceOpenError("Could not open this service. Check that a default browser is configured.");
+    } finally {
+      setOpeningServiceId(null);
+    }
+  }
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -371,8 +385,10 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
               <button
                 key={svc.id}
                 type="button"
-                onClick={() => goServices(deviceId)}
-                className="flex min-w-[210px] items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent"
+                disabled={!svc.enabled || openingServiceId === svc.id}
+                title={svc.enabled ? "Open in default browser" : "This service is disabled"}
+                onClick={() => handleOpenService(svc.id)}
+                className="flex min-w-[210px] items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-card"
               >
                 <span className="flex size-[34px] shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
                   {svc.name.slice(0, 2).toUpperCase()}
@@ -385,7 +401,9 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
                     {svc.url}
                   </span>
                 </span>
-                {!svc.enabled ? (
+                {openingServiceId === svc.id ? (
+                  <Loader2 className="size-3.5 shrink-0 animate-spin" />
+                ) : !svc.enabled ? (
                   <Badge variant="secondary" className="shrink-0">
                     Disabled
                   </Badge>
@@ -394,6 +412,9 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
             ))}
           </div>
         )}
+        {serviceOpenError ? (
+          <p className="mt-2 text-sm text-destructive">{serviceOpenError}</p>
+        ) : null}
       </section>
     </div>
   );

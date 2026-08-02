@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ServicesEditor } from "@/features/devices/ServicesEditor";
 import { createDevice, testDeviceConnection, updateDevice } from "@/lib/tauri/devices";
 import {
   connectionStatusColorClass,
@@ -279,6 +280,16 @@ export function DeviceForm({ mode, device, onSaved, onCancel }: DeviceFormProps)
             ) : null}
           </div>
         ) : null}
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+        <h2 className="text-xs font-bold tracking-wide text-muted-foreground">
+          REGISTERED SERVICES
+        </h2>
+        <ServicesEditor
+          services={form.services}
+          onChange={(services) => update("services", services)}
+        />
       </div>
 
       {formError ? <p className="text-sm text-destructive">{formError}</p> : null}

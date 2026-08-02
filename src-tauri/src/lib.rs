@@ -35,6 +35,7 @@ pub fn run() {
             commands::devices::update_device,
             commands::devices::delete_device,
             commands::devices::test_device_connection,
+            commands::devices::open_device_service,
             commands::monitoring::refresh_device,
             commands::monitoring::refresh_all_devices,
             commands::monitoring::get_latest_snapshot
