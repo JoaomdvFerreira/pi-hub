@@ -2,6 +2,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::domain::settings::AppSettings;
 use crate::error::ApplicationError;
+use crate::platform::autostart;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 
 fn repository(app: &AppHandle) -> Result<JsonSettingsRepository, ApplicationError> {
@@ -31,6 +32,16 @@ pub fn save_app_settings(
         code: "ValidationError".into(),
         message: err.0,
         remediation: Some("Adjust the setting to a valid value and try again.".into()),
+        retryable: true,
+    })?;
+
+    // Sync the OS-level registration before persisting, so a failure here
+    // (e.g. no permission to write the Run registry key) leaves the saved
+    // preference unchanged rather than claiming a state that isn't real.
+    autostart::sync(&app, settings.start_with_windows).map_err(|err| ApplicationError {
+        code: "PlatformIntegrationError".into(),
+        message: format!("could not update the Windows startup registration: {}", err.0),
+        remediation: Some("Try again, or check that Pi-Hub has permission to modify startup settings.".into()),
         retryable: true,
     })?;
 

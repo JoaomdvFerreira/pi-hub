@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M004",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU018",
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -743,12 +743,12 @@
         "validationCommands": [
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-021"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T19:14:01.463Z"
+        "updatedAt": "2026-08-02T19:30:54.881Z"
       }
     ],
     "dependencies": [
@@ -2179,12 +2179,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-017",
-    "workUnitId": "WU017",
+    "id": "PKT-018",
+    "workUnitId": "WU018",
     "milestoneId": "M004",
-    "createdAt": "2026-08-02T19:22:10.465Z",
+    "createdAt": "2026-08-02T19:30:54.881Z",
     "format": "markdown",
-    "contentHash": "sha256:30f15ac11fb4d2b56ee6d2aaf8772dfbaee4575bfae79f83f2ea5c116fb1f8bc",
+    "contentHash": "sha256:039c46dca0e9909c4a43506b24499678429c9e4d42d32c62ba162c1f4a71e3a0",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -2202,8 +2202,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T19:30:40.148Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T19:30:54.881Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
