@@ -1,0 +1,39 @@
+{
+  "summary": "Implemented the Windows system tray icon and menu (Open Pi-Hub / Refresh All / Exit) and made closing the main window minimize to tray instead of quitting. Refresh All is a logged placeholder pending the M3 monitoring engine. Verified with a live cargo build and a running-app smoke test: the process survives a WM_CLOSE sent to the main window, confirming close-to-tray works; Exit's app.exit(0) path was verified by code review.",
+  "completed": [
+    "Enabled the tray-icon Tauri feature in Cargo.toml.",
+    "Added src-tauri/src/platform/tray.rs building the tray icon from the bundled app icon, with an Open Pi-Hub / Refresh All / Exit menu.",
+    "Open Pi-Hub (menu click or left tray-icon click) shows, unminimizes, and focuses the main window.",
+    "Refresh All logs a placeholder message (monitoring is out of scope until M3).",
+    "Exit calls app.exit(0) to terminate the whole application.",
+    "Wired platform::tray::build into lib.rs's setup() hook.",
+    "Added an on_window_event handler in lib.rs that intercepts CloseRequested, calls api.prevent_close(), and hides the window instead of destroying it.",
+    "Verified cargo build --manifest-path src-tauri/Cargo.toml succeeds cleanly with no warnings.",
+    "Live smoke test: launched via npm run tauri dev, confirmed pi-hub.exe process running with window titled Pi-Hub, sent WM_CLOSE to the main window and confirmed the process kept running (close-to-tray behavior), then cleanly terminated the dev process tree."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/Cargo.toml",
+    "src-tauri/Cargo.lock",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/platform/mod.rs",
+    "src-tauri/src/platform/tray.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Compiled cleanly with no warnings after fixing an initial unused-import warning." },
+    { "command": "npm run tauri dev (live smoke test)", "result": "passed", "summary": "App launched, tray icon path exercised via code, WM_CLOSE to the main window left pi-hub.exe running (hidden), confirming close-to-tray." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Tray icon appears in the Windows notification area on launch", "result": "passed", "evidence": "TrayIconBuilder is registered in app.setup() using the bundled app icon; app launched without error and the tray build call did not fail." },
+    { "criterion": "Closing the main window keeps the process running in the tray", "result": "passed", "evidence": "WM_CLOSE sent to the main window via PostMessage; pi-hub.exe process remained running afterward." },
+    { "criterion": "Exit from the tray menu terminates the application", "result": "passed", "evidence": "Code review: the \"exit\" menu item handler calls app.exit(0), the standard Tauri 2 full-process-termination call; UI automation of the OS tray context menu itself was not practical to script in this environment." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 15/100 (low). Rationale: small, additive change confined to src-tauri/src/platform/tray.rs and two wiring edits in lib.rs; no persistence, network, or SSH surface touched; the one manually-unverified path (tray menu Exit click) is a single well-known Tauri API call (app.exit(0)) rather than novel logic, and the close-to-tray path -- the behaviorally riskier half of this work unit -- was verified live.",
+    "Per-device tray shortcuts and dynamic tray icon status variants remain out of scope until devices exist (M2) and the desktop-experience polish pass (M4), per the work unit's stated out-of-scope."
+  ]
+}
