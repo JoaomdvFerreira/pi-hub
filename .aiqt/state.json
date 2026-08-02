@@ -2,14 +2,14 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M001",
-  "currentWorkUnitId": "WU003",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
         "id": "M001",
         "title": "M1 — Desktop foundation",
         "objective": "Stand up the Tauri 2 + React + TypeScript shell with system tray, window lifecycle, local settings persistence, logging, and the base app layout matching the Pi Control design reference.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU001",
           "WU002",
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "planned",
+        "status": "ready",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -168,12 +168,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-002"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T16:14:15.925Z"
+        "updatedAt": "2026-08-02T16:37:46.037Z"
       },
       {
         "id": "WU004",
@@ -247,12 +247,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-004"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T16:37:46.037Z"
       },
       {
         "id": "WU006",
@@ -1053,6 +1053,85 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T16:13:58.962Z"
+    },
+    {
+      "id": "C003",
+      "workUnitId": "WU003",
+      "packetId": "PKT-003",
+      "summary": "Implemented versioned JSON persistence for config.json with atomic writes (temp file + flush + rename), a JsonSettingsRepository that recovers to defaults from a missing/corrupted/out-of-range file (quarantining the corrupted file rather than discarding it), get_app_settings/save_app_settings Tauri commands with typed frontend wrappers, and a rotating local log (tauri-plugin-log, info level, KeepOne rotation, app log dir + stdout). Verified with 13 passing Rust unit tests plus a live smoke test confirming the log file is actually written to %LOCALAPPDATA%\\com.pihub.app\\logs\\pihub.log.",
+      "completed": [
+        "domain/settings.rs: AppSettings model + validate() enforcing the 15-3600s refresh-interval range.",
+        "storage/atomic.rs: write_atomic() -- write to sibling .tmp file, flush/sync, rename into place; target path is only touched by the final rename.",
+        "storage/config_repository.rs: SettingsRepository trait + JsonSettingsRepository; load() never fails (missing file -> defaults; corrupted or invalid file -> quarantined to config.json.corrupt, warning logged, defaults returned in memory); save() round-trips via atomic write.",
+        "commands/settings.rs: get_app_settings / save_app_settings Tauri commands resolving app.path().app_config_dir(), returning ApplicationError (ValidationError/StorageError/ConfigurationError) on failure.",
+        "Registered tauri-plugin-log (Info level, KeepOne rotation, LogDir + Stdout targets) in lib.rs and logged a startup line; repository warnings use log::warn! instead of println!.",
+        "src/types/settings.ts + src/lib/tauri/settings.ts: typed frontend wrappers for the two new commands.",
+        "13 Rust unit tests: atomic-write round trip/overwrite/no-leftover-temp/missing-parent-dirs, settings validation boundaries, repository load/save including malformed-JSON and out-of-range recovery.",
+        "Verified cargo test (13/13 passing), cargo build, and npm run build all succeed.",
+        "Live smoke test via npm run tauri dev: confirmed the startup log line appears in stdout and in %LOCALAPPDATA%\\com.pihub.app\\logs\\pihub.log, then cleanly terminated the dev process tree."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/error.rs",
+        "src-tauri/src/domain/mod.rs",
+        "src-tauri/src/domain/settings.rs",
+        "src-tauri/src/storage/mod.rs",
+        "src-tauri/src/storage/atomic.rs",
+        "src-tauri/src/storage/config_repository.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/commands/settings.rs",
+        "src-tauri/src/platform/tray.rs",
+        "src/types/settings.ts",
+        "src/lib/tauri/settings.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "13/13 unit tests passed."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "tsc + vite build succeeded with the new TypeScript files included."
+        },
+        {
+          "command": "npm run tauri dev (live smoke test)",
+          "result": "passed",
+          "summary": "Startup log line confirmed in stdout and in the on-disk rotating log file under %LOCALAPPDATA%\\com.pihub.app\\logs\\pihub.log."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Settings changes survive an application restart",
+          "result": "passed",
+          "evidence": "save_then_load_round_trips unit test; save() uses atomic write to config.json, load() reads it back identically."
+        },
+        {
+          "criterion": "A corrupted config.json does not crash the app; it recovers to defaults and logs a warning",
+          "result": "passed",
+          "evidence": "load_recovers_from_malformed_json and load_recovers_from_out_of_range_value unit tests: both recover to AppSettings::default(), quarantine the bad file to config.json.corrupt, and go through log::warn!."
+        },
+        {
+          "criterion": "No secrets or private-key content ever appear in logs",
+          "result": "passed",
+          "evidence": "AppSettings contains no credential fields by design; the only log lines added (startup, tray placeholder, repository warnings) reference no SSH/credential data since none exists yet in this work unit's scope."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T16:37:46.037Z"
     }
   ],
   "lastAgentPacket": {
@@ -1079,8 +1158,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T16:14:15.925Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T16:37:46.037Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -1139,6 +1218,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T16:13:58.962Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C003",
+      "current": {
+        "observationId": "sha256:f54d0af3bdb84558ceb7e786cf89c9e6d687f69ffa923777a4d19733b484dca1",
+        "checkpointId": "C003",
+        "workUnitId": "WU003",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T16:37:46.037Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T16:37:46.037Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f54d0af3bdb84558ceb7e786cf89c9e6d687f69ffa923777a4d19733b484dca1",
+          "checkpointId": "C003",
+          "workUnitId": "WU003",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T16:37:46.037Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T16:37:46.037Z"
         }
       ]
     }
