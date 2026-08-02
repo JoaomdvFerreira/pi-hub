@@ -21,7 +21,7 @@ export function AppShell() {
         )}
         {screen.name === "globalSettings" && <GlobalSettingsScreen />}
         {screen.name === "device" && (
-          <DeviceDetailScreen deviceId={screen.deviceId} />
+          <DeviceDetailScreen key={screen.deviceId} deviceId={screen.deviceId} />
         )}
         {screen.name === "deviceSettings" && (
           <DeviceSettingsScreen deviceId={screen.deviceId} />

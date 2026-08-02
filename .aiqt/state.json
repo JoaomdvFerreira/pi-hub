@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M004",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU014",
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -594,12 +594,12 @@
           "npm run build",
           "npm run lint"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-016"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:57:45.353Z"
+        "updatedAt": "2026-08-02T18:57:57.422Z"
       },
       {
         "id": "WU015",
@@ -1910,12 +1910,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-013",
-    "workUnitId": "WU013",
+    "id": "PKT-014",
+    "workUnitId": "WU014",
     "milestoneId": "M004",
-    "createdAt": "2026-08-02T18:45:04.927Z",
+    "createdAt": "2026-08-02T18:57:57.422Z",
     "format": "markdown",
-    "contentHash": "sha256:ad6fcc7488c30f3f0cf9dd2fcbab5151cc844e507b3e5f00b1b4d2cc7db5a048",
+    "contentHash": "sha256:d1023ddb8e199a85dfa85f8934e2035a23447bd4495850b5c0493630b2b16071",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1935,8 +1935,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T18:57:45.353Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T18:57:57.422Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
