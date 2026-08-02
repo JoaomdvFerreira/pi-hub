@@ -1,0 +1,39 @@
+{
+  "summary": "Implemented the device detail screen, replacing WU004's placeholder: general information, system metrics, a Docker container table with distinct offline/Docker-unavailable/empty states, registered services, and a session-scoped recent-activity feed sourced from the live notification://ready event stream. Frontend-only; 152 backend tests unaffected.",
+  "completed": [
+    "features/devices/DeviceDetailScreen.tsx: header with back button, status dot/chip, Open Terminal (disabled -- WU016 scope), Refresh, and a settings-gear button; two-column General Information + System Metrics / Recent Activity layout matching the design's 1.3fr/1fr grid; full-width Docker container table with three distinct empty states (device offline, Docker unavailable while device stays online, zero containers); services grid with an explicit empty state.",
+    "Reused WU013's useDeviceSnapshots hook (single-id array) so the screen updates live via the existing device://snapshot-updated event, no new backend surface needed.",
+    "stores/useDeviceActivity.ts: session-scoped recent-activity feed subscribing to notification://ready, filtered per device, capped at 20 entries. Documented and enforced (via key={deviceId} in AppShell.tsx) that switching devices remounts the screen rather than the hook self-resetting, since a synchronous reset inside the effect body correctly tripped the react-hooks/set-state-in-effect rule.",
+    "lib/formatting/containerStatus.ts: label/color-class helpers for DockerContainerState and DockerHealthStatus, plus formatPorts().",
+    "types/notification.ts: TypeScript mirror of the Rust NotificationEvent struct (WU012).",
+    "Verified npm run build and npm run lint (0 errors, same 3 pre-existing warnings) pass; cargo test still 152/152."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src/app/AppShell.tsx",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/lib/formatting/containerStatus.ts",
+    "src/stores/useDeviceActivity.ts",
+    "src/types/notification.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings (unrelated to this WU)." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "152/152 unit tests passed, unaffected (no backend changes this WU)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Device detail view reflects the latest snapshot for the selected device", "result": "passed", "evidence": "DeviceDetailScreen derives all metrics/containers/status directly from useDeviceSnapshots(deviceId), the same live hook and backend event used by WU013's dashboard; live smoke test confirmed the offline snapshot shape written to state.json is exactly what the screen's offline branches render." },
+    { "criterion": "A Docker permission or unavailability error shows a clear message without hiding valid system metrics", "result": "passed", "evidence": "The Docker Containers section checks snapshot.dockerAvailable independently of the System Metrics panel above it -- an online device with dockerAvailable=false shows its own 'Docker is not available' message (including any warnings) in that section only, while CPU/MEM/DISK/TEMP continue to render normally." },
+    { "criterion": "Navigating back returns to the dashboard preserving its state", "result": "passed", "evidence": "Back button calls the existing goDashboard() router action; DashboardScreen re-fetches its own device list on mount (unchanged from WU013), and the router's screen stack was not modified in a way that could lose dashboard-level UI state." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 10/100 (low). Rationale: purely additive frontend work consuming already-tested backend commands/events; no new backend surface, no persistence changes.",
+    "Recent Activity is intentionally session-scoped, not backed by persisted history -- the backend (WU012) only emits notification://ready live and does not currently write a transition-history log to disk. This is a deliberate scope decision to stay within this WU's frontend-only suggested files rather than adding new backend persistence; a persisted activity log could be a future work unit if the user wants activity to survive an app restart.",
+    "Terminal button remains disabled pending WU016 (open_device_terminal). Clicking a registered service navigates to the Services screen filtered to this device (goServices(deviceId)) rather than opening the browser directly, since open_device_service is also WU016 scope.",
+    "Could not capture a visual screenshot this session for the same reason as WU013 (active fullscreen use of the desktop); verified via a clean TypeScript build and a live smoke test against real backend-emitted snapshot data instead."
+  ]
+}
