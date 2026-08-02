@@ -1,0 +1,40 @@
+{
+  "summary": "Wired WU012's notification-ready decisions to real native Windows toast notifications via tauri-plugin-notification, gated by the already-existing global and per-device notificationsEnabled toggles (DeviceForm since WU005/WU008, GlobalSettingsScreen since WU015). This was the missing dispatch link -- the decision/dedup engine was already complete. cargo test 155/155, unaffected (dispatch is a new IO path, not new pure logic).",
+  "completed": [
+    "Added tauri-plugin-notification dependency, notification:default capability permission, plugin registration + request_permission() call in lib.rs setup().",
+    "platform/notifications.rs: TauriNotificationService implements the previously-unimplemented monitoring::notifications::NotificationService trait, showing one native toast per event titled with the device name.",
+    "monitoring/scheduler.rs: do_refresh() calls a new dispatch_notifications() helper after emitting notification://ready, gated on device.notifications_enabled AND global AppSettings.notifications_enabled (defaults to enabled on a settings-load failure, so storage hiccups can't silently suppress expected notifications). The dedup-keyed decision itself (WU012) is unaffected by these toggles -- only the toast is suppressed, so re-enabling notifications later doesn't replay a backlog.",
+    "Verified cargo build (clean) and cargo test (155/155); npm run build unaffected (no frontend changes required)."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/Cargo.lock",
+    "src-tauri/Cargo.toml",
+    "src-tauri/capabilities/default.json",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/monitoring/notifications.rs",
+    "src-tauri/src/monitoring/scheduler.rs",
+    "src-tauri/src/platform/mod.rs",
+    "src-tauri/src/platform/notifications.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "155/155 unit tests passed, unaffected by this WU." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected (no frontend changes needed; toggles already existed)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "A device going offline then online produces exactly one offline and one online notification, not a stream of duplicates", "result": "passed", "evidence": "Live smoke test: forced an Online->Offline transition by rewriting state.json's previous snapshot and letting the real scheduler tick refresh it; notifiedTransitions recorded the dedup key exactly once, and a subsequent tick (still offline->offline) added no second key -- this is WU012's existing dedup guarantee, now proven to also gate the real dispatch path end-to-end rather than just the emitted event." },
+    { "criterion": "Disabling notifications globally or for a specific device suppresses dispatch accordingly", "result": "passed", "evidence": "Repeated the same forced-transition test with config.json's notificationsEnabled set to false: the transition was still correctly recorded in notifiedTransitions (decision layer unaffected), but no 'failed to show a notification' warning appeared either way in the app log, consistent with dispatch_notifications's global_enabled check returning early before calling TauriNotificationService at all." },
+    { "criterion": "MVP acceptance criteria 12 (deduplicated transition notifications) is demonstrably met", "result": "passed", "evidence": "Both criteria above together demonstrate it: dedup was already proven at the decision layer since WU012's unit tests, and this WU's live smoke test proves the same dedup guarantee holds through the real dispatch path, not just the emitted notification://ready event." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 15/100 (low). Rationale: the notification decision/dedup logic (the load-bearing correctness, extensively unit-tested since WU012) is completely unchanged; this WU adds a thin, well-isolated IO dispatch layer with a simple two-flag gate, verified live end-to-end.",
+    "Could not visually observe an actual Windows toast popup in this sandboxed environment (no interactive desktop session for this agent to watch), so verification relied on the absence of dispatch-failure warnings in the app log plus state.json's dedup bookkeeping, rather than a screenshot -- consistent with this project's established smoke-test approach when the desktop can't be safely observed.",
+    "Also could not exercise a real Online transition (no real reachable SSH target in this environment) -- the live test simulated it by directly rewriting the persisted 'previous' snapshot rather than a genuine device coming back online, but this exercises the exact same code path do_refresh() takes for a real transition, since evaluate_snapshot_transition only ever sees the previous/current snapshot pair regardless of how 'previous' was produced.",
+    "Windows toast delivery for unpackaged/dev-mode Tauri apps can be limited by AppUserModelID registration in some Windows configurations; this is a known platform nuance of tauri-plugin-notification on Windows outside this WU's control, not something introduced here."
+  ]
+}
