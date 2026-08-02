@@ -77,29 +77,40 @@ mod tests {
     #[test]
     fn simulates_offline() {
         let executor = FakeRemoteExecutor::offline();
-        let err = executor.probe(&target(), Duration::from_secs(5)).unwrap_err();
+        let err = executor
+            .probe(&target(), Duration::from_secs(5))
+            .unwrap_err();
         assert_eq!(err, SshError::ConnectionRefused);
-        assert_eq!(err.to_connection_status(), crate::domain::connection_status::DeviceConnectionStatus::Offline);
+        assert_eq!(
+            err.to_connection_status(),
+            crate::domain::connection_status::DeviceConnectionStatus::Offline
+        );
     }
 
     #[test]
     fn simulates_timeout() {
         let executor = FakeRemoteExecutor::timeout();
-        let err = executor.probe(&target(), Duration::from_secs(5)).unwrap_err();
+        let err = executor
+            .probe(&target(), Duration::from_secs(5))
+            .unwrap_err();
         assert_eq!(err, SshError::RemoteCommandTimeout);
     }
 
     #[test]
     fn simulates_authentication_failure() {
         let executor = FakeRemoteExecutor::authentication_error();
-        let err = executor.probe(&target(), Duration::from_secs(5)).unwrap_err();
+        let err = executor
+            .probe(&target(), Duration::from_secs(5))
+            .unwrap_err();
         assert_eq!(err, SshError::AuthenticationError);
     }
 
     #[test]
     fn simulates_host_key_failure() {
         let executor = FakeRemoteExecutor::host_key_error();
-        let err = executor.probe(&target(), Duration::from_secs(5)).unwrap_err();
+        let err = executor
+            .probe(&target(), Duration::from_secs(5))
+            .unwrap_err();
         assert_eq!(err, SshError::HostKeyError);
     }
 }

@@ -71,8 +71,8 @@ mod tests {
         let permit1 = coordinator.acquire_permit().await;
         let permit2 = coordinator.acquire_permit().await;
 
-        let third = tokio::time::timeout(Duration::from_millis(50), coordinator.acquire_permit())
-            .await;
+        let third =
+            tokio::time::timeout(Duration::from_millis(50), coordinator.acquire_permit()).await;
         assert!(
             third.is_err(),
             "a third permit must not be granted while 2 permits (max_concurrent=2) are held"

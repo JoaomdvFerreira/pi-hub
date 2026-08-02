@@ -47,8 +47,8 @@ impl RemoteExecutor for OpenSshExecutor {
             command,
         ]);
 
-        let outcome = run_with_timeout(&mut cmd, timeout)
-            .map_err(|err| SshError::Spawn(err.to_string()))?;
+        let outcome =
+            run_with_timeout(&mut cmd, timeout).map_err(|err| SshError::Spawn(err.to_string()))?;
 
         classify_outcome(outcome)
     }
@@ -73,7 +73,9 @@ fn classify_outcome(raw: RawProcessOutcome) -> Result<RemoteExecutionResult, Ssh
         if lower_stderr.contains("permission denied") {
             return Err(SshError::AuthenticationError);
         }
-        if lower_stderr.contains("connection timed out") || lower_stderr.contains("operation timed out") {
+        if lower_stderr.contains("connection timed out")
+            || lower_stderr.contains("operation timed out")
+        {
             return Err(SshError::ConnectionTimeout);
         }
         // Connection refused, "no route to host", and any other
@@ -114,10 +116,7 @@ mod tests {
     #[test]
     fn classifies_dns_resolution_failure() {
         let outcome = raw(Some(255), "ssh: Could not resolve hostname bogus: nodename");
-        assert_eq!(
-            classify_outcome(outcome),
-            Err(SshError::DnsResolutionError)
-        );
+        assert_eq!(classify_outcome(outcome), Err(SshError::DnsResolutionError));
     }
 
     #[test]
@@ -137,7 +136,10 @@ mod tests {
 
     #[test]
     fn classifies_permission_denied_as_authentication_error() {
-        let outcome = raw(Some(255), "joao@raspberrypi5: Permission denied (publickey).");
+        let outcome = raw(
+            Some(255),
+            "joao@raspberrypi5: Permission denied (publickey).",
+        );
         assert_eq!(
             classify_outcome(outcome),
             Err(SshError::AuthenticationError)
@@ -146,13 +148,19 @@ mod tests {
 
     #[test]
     fn classifies_connection_timeout() {
-        let outcome = raw(Some(255), "ssh: connect to host raspberrypi5 port 22: Connection timed out");
+        let outcome = raw(
+            Some(255),
+            "ssh: connect to host raspberrypi5 port 22: Connection timed out",
+        );
         assert_eq!(classify_outcome(outcome), Err(SshError::ConnectionTimeout));
     }
 
     #[test]
     fn classifies_unrecognized_connection_failure_as_connection_refused() {
-        let outcome = raw(Some(255), "ssh: connect to host raspberrypi5 port 22: Connection refused");
+        let outcome = raw(
+            Some(255),
+            "ssh: connect to host raspberrypi5 port 22: Connection refused",
+        );
         assert_eq!(classify_outcome(outcome), Err(SshError::ConnectionRefused));
     }
 

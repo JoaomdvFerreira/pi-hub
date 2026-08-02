@@ -64,11 +64,16 @@ fn not_found_error(device_id: &str) -> ApplicationError {
 /// the backend events. If a refresh for this device is already in
 /// progress, returns the latest known snapshot instead of starting a
 /// second one.
-pub async fn refresh_one(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, ApplicationError> {
+pub async fn refresh_one(
+    app: &AppHandle,
+    device_id: &str,
+) -> Result<DeviceSnapshot, ApplicationError> {
     let coordinator = app.state::<RefreshCoordinator>();
     if !coordinator.try_claim(device_id) {
         let repo = snapshot_repository(app)?;
-        return repo.get(device_id).ok_or_else(|| not_found_error(device_id));
+        return repo
+            .get(device_id)
+            .ok_or_else(|| not_found_error(device_id));
     }
 
     let result = do_refresh(app, device_id).await;
@@ -104,12 +109,14 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         retryable: true,
     })?;
 
-    snapshot_repo.upsert(&snapshot).map_err(|err| ApplicationError {
-        code: "StorageError".into(),
-        message: err.to_string(),
-        remediation: Some("Check disk space and file permissions, then try again.".into()),
-        retryable: true,
-    })?;
+    snapshot_repo
+        .upsert(&snapshot)
+        .map_err(|err| ApplicationError {
+            code: "StorageError".into(),
+            message: err.to_string(),
+            remediation: Some("Check disk space and file permissions, then try again.".into()),
+            retryable: true,
+        })?;
 
     let _ = app.emit("device://snapshot-updated", &snapshot);
 
@@ -122,11 +129,17 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     }
 
     let container_changes = detect_container_changes(
-        previous.as_ref().map(|p| p.containers.as_slice()).unwrap_or(&[]),
+        previous
+            .as_ref()
+            .map(|p| p.containers.as_slice())
+            .unwrap_or(&[]),
         &snapshot.containers,
     );
     if !container_changes.is_empty() {
-        let _ = app.emit("container://status-changed", (device_id, &container_changes));
+        let _ = app.emit(
+            "container://status-changed",
+            (device_id, &container_changes),
+        );
     }
 
     let notifications =

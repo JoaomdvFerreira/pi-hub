@@ -54,8 +54,7 @@ mod tests {
 
     #[test]
     fn warns_on_unrecognized_key_but_keeps_going() {
-        let (fields, warnings) =
-            parse_key_value_payload("SOMETHING_ELSE=1\nPIHUB_HOSTNAME=pi5\n");
+        let (fields, warnings) = parse_key_value_payload("SOMETHING_ELSE=1\nPIHUB_HOSTNAME=pi5\n");
         assert_eq!(fields.get("PIHUB_HOSTNAME"), Some(&"pi5".to_string()));
         assert_eq!(warnings.len(), 1);
     }

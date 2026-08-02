@@ -92,7 +92,10 @@ impl std::fmt::Display for SshError {
             SshError::AuthenticationError => write!(f, "authentication failed"),
             SshError::HostKeyError => write!(f, "host key verification failed"),
             SshError::RemoteCommandError { exit_code, stderr } => {
-                write!(f, "remote command failed (exit code {exit_code:?}): {stderr}")
+                write!(
+                    f,
+                    "remote command failed (exit code {exit_code:?}): {stderr}"
+                )
             }
             SshError::RemoteCommandTimeout => write!(f, "remote command timed out"),
         }

@@ -82,7 +82,10 @@ mod tests {
     use crate::storage::snapshot_repository::JsonSnapshotRepository;
     use tempfile::tempdir;
 
-    fn snapshot(status: DeviceConnectionStatus, containers: Vec<DockerContainerSummary>) -> DeviceSnapshot {
+    fn snapshot(
+        status: DeviceConnectionStatus,
+        containers: Vec<DockerContainerSummary>,
+    ) -> DeviceSnapshot {
         DeviceSnapshot {
             device_id: "pi5".into(),
             connection_status: status,
@@ -98,7 +101,11 @@ mod tests {
         }
     }
 
-    fn container(id: &str, state: DockerContainerState, health: DockerHealthStatus) -> DockerContainerSummary {
+    fn container(
+        id: &str,
+        state: DockerContainerState,
+        health: DockerHealthStatus,
+    ) -> DockerContainerSummary {
         DockerContainerSummary {
             id: id.into(),
             name: format!("container-{id}"),
@@ -168,7 +175,8 @@ mod tests {
         // A fresh repository instance over the same directory simulates
         // the app restarting between the two evaluations.
         let repo_after_restart = JsonSnapshotRepository::new(dir.path());
-        let events = evaluate_snapshot_transition(&repo_after_restart, "pi5", Some(&previous), &current);
+        let events =
+            evaluate_snapshot_transition(&repo_after_restart, "pi5", Some(&previous), &current);
         assert!(events.is_empty());
     }
 
@@ -190,15 +198,31 @@ mod tests {
         let previous = snapshot(
             DeviceConnectionStatus::Online,
             vec![
-                container("a", DockerContainerState::Running, DockerHealthStatus::Healthy),
-                container("b", DockerContainerState::Running, DockerHealthStatus::Healthy),
+                container(
+                    "a",
+                    DockerContainerState::Running,
+                    DockerHealthStatus::Healthy,
+                ),
+                container(
+                    "b",
+                    DockerContainerState::Running,
+                    DockerHealthStatus::Healthy,
+                ),
             ],
         );
         let current = snapshot(
             DeviceConnectionStatus::Online,
             vec![
-                container("a", DockerContainerState::Exited, DockerHealthStatus::Unhealthy),
-                container("b", DockerContainerState::Running, DockerHealthStatus::Unhealthy),
+                container(
+                    "a",
+                    DockerContainerState::Exited,
+                    DockerHealthStatus::Unhealthy,
+                ),
+                container(
+                    "b",
+                    DockerContainerState::Running,
+                    DockerHealthStatus::Unhealthy,
+                ),
             ],
         );
 
@@ -215,7 +239,11 @@ mod tests {
         let repo = JsonSnapshotRepository::new(dir.path());
         let current = snapshot(
             DeviceConnectionStatus::Online,
-            vec![container("a", DockerContainerState::Exited, DockerHealthStatus::None)],
+            vec![container(
+                "a",
+                DockerContainerState::Exited,
+                DockerHealthStatus::None,
+            )],
         );
 
         let events = evaluate_snapshot_transition(&repo, "pi5", None, &current);

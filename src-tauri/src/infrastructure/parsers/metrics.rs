@@ -114,14 +114,23 @@ PIHUB_TEMP_MILLIC=45200
 
         assert!(warnings.is_empty());
         assert_eq!(metrics.hostname.as_deref(), Some("raspberrypi5"));
-        assert_eq!(metrics.model.as_deref(), Some("Raspberry Pi 5 Model B Rev 1.0"));
+        assert_eq!(
+            metrics.model.as_deref(),
+            Some("Raspberry Pi 5 Model B Rev 1.0")
+        );
         assert_eq!(metrics.uptime_seconds, Some(84922));
         assert_eq!(metrics.cpu_usage_percent, Some(18.0));
         assert_eq!(metrics.load_average_1m, Some(0.42));
         assert_eq!(metrics.memory_total_bytes, Some(8_589_934_592));
-        assert_eq!(metrics.memory_used_bytes, Some(8_589_934_592 - 6_432_382_976));
+        assert_eq!(
+            metrics.memory_used_bytes,
+            Some(8_589_934_592 - 6_432_382_976)
+        );
         assert_eq!(metrics.disk_total_bytes, Some(250_000_000_000));
-        assert_eq!(metrics.disk_used_bytes, Some(250_000_000_000 - 183_000_000_000));
+        assert_eq!(
+            metrics.disk_used_bytes,
+            Some(250_000_000_000 - 183_000_000_000)
+        );
         assert_eq!(metrics.temperature_celsius, Some(45.2));
     }
 
@@ -220,8 +229,8 @@ PIHUB_UPTIME_SECONDS=300
     #[test]
     fn collect_system_metrics_propagates_connection_failure() {
         let executor = FakeRemoteExecutor::offline();
-        let err = collect_system_metrics(&executor, &target(), Duration::from_secs(10))
-            .unwrap_err();
+        let err =
+            collect_system_metrics(&executor, &target(), Duration::from_secs(10)).unwrap_err();
         assert_eq!(err, SshError::ConnectionRefused);
     }
 }

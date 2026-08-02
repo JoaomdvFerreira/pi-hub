@@ -88,9 +88,7 @@ pub fn refresh_device_sync(
             }
             Ok(DockerCollectionResult::Unavailable) => (false, Vec::new()),
             Ok(DockerCollectionResult::PermissionDenied) => {
-                warnings.push(
-                    "Docker permission denied for the configured SSH user.".to_string(),
-                );
+                warnings.push("Docker permission denied for the configured SSH user.".to_string());
                 (false, Vec::new())
             }
             Err(err) => {

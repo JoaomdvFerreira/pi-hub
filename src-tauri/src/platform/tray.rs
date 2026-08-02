@@ -82,8 +82,13 @@ fn build_devices_submenu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
     let devices = load_devices(app);
 
     if devices.is_empty() {
-        let placeholder =
-            MenuItem::with_id(app, "no_devices", "No devices registered", false, None::<&str>)?;
+        let placeholder = MenuItem::with_id(
+            app,
+            "no_devices",
+            "No devices registered",
+            false,
+            None::<&str>,
+        )?;
         return Submenu::with_items(app, "Devices", true, &[&placeholder]);
     }
 
@@ -91,8 +96,10 @@ fn build_devices_submenu(app: &AppHandle) -> tauri::Result<Submenu<Wry>> {
     for device in &devices {
         device_items.push(build_device_submenu(app, device)?);
     }
-    let refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> =
-        device_items.iter().map(|s| s as &dyn tauri::menu::IsMenuItem<Wry>).collect();
+    let refs: Vec<&dyn tauri::menu::IsMenuItem<Wry>> = device_items
+        .iter()
+        .map(|s| s as &dyn tauri::menu::IsMenuItem<Wry>)
+        .collect();
     Submenu::with_items(app, "Devices", true, &refs)
 }
 
@@ -169,7 +176,9 @@ fn open_terminal_for(app: &AppHandle, device_id: &str) {
     let Some(device) = devices.into_iter().find(|d| d.id == device_id) else {
         return;
     };
-    if let Err(err) = terminal::launch_ssh_terminal(&device.host, device.ssh_port, &device.ssh_username) {
+    if let Err(err) =
+        terminal::launch_ssh_terminal(&device.host, device.ssh_port, &device.ssh_username)
+    {
         log::warn!("failed to launch terminal from the tray: {}", err.0);
     }
 }

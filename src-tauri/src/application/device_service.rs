@@ -1,6 +1,8 @@
 use serde::Deserialize;
 
-use crate::domain::device::{Device, DeviceService as DeviceServiceEntry, DeviceType, DeviceValidationError};
+use crate::domain::device::{
+    Device, DeviceService as DeviceServiceEntry, DeviceType, DeviceValidationError,
+};
 use crate::storage::device_repository::DeviceRepository;
 use crate::storage::StorageError;
 

@@ -158,11 +158,7 @@ mod tests {
             None
         );
         assert_eq!(
-            device_transition_event(
-                "pi5",
-                Some(Online),
-                DeviceConnectionStatus::CommandError
-            ),
+            device_transition_event("pi5", Some(Online), DeviceConnectionStatus::CommandError),
             None
         );
     }
@@ -183,8 +179,10 @@ mod tests {
         assert!(
             container_state_transition_event("pi5", "abc", "x", Some(Running), Stopped).is_some()
         );
-        assert!(container_state_transition_event("pi5", "abc", "x", Some(Running), Restarting)
-            .is_some());
+        assert!(
+            container_state_transition_event("pi5", "abc", "x", Some(Running), Restarting)
+                .is_some()
+        );
     }
 
     #[test]
@@ -232,9 +230,14 @@ mod tests {
 
     #[test]
     fn container_becomes_unhealthy_notifies() {
-        let event =
-            container_health_transition_event("pi5", "abc", "homeassistant", Some(Healthy), Unhealthy)
-                .unwrap();
+        let event = container_health_transition_event(
+            "pi5",
+            "abc",
+            "homeassistant",
+            Some(Healthy),
+            Unhealthy,
+        )
+        .unwrap();
         assert!(event.message.contains("unhealthy"));
     }
 

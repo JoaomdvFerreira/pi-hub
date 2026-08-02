@@ -33,7 +33,10 @@ impl NotificationService for TauriNotificationService<'_> {
             .show();
 
         if let Err(err) = result {
-            log::warn!("failed to show a notification for '{}': {err}", self.device_name);
+            log::warn!(
+                "failed to show a notification for '{}': {err}",
+                self.device_name
+            );
         }
     }
 }

@@ -67,8 +67,8 @@ pub fn run() {
             // grant this immediately with no user prompt; requesting it
             // up front is still the cross-platform-correct thing to do,
             // since other platforms this plugin supports do prompt.
-            if let Err(err) = tauri_plugin_notification::NotificationExt::notification(app)
-                .request_permission()
+            if let Err(err) =
+                tauri_plugin_notification::NotificationExt::notification(app).request_permission()
             {
                 log::warn!("could not request notification permission: {err}");
             }
@@ -82,9 +82,10 @@ pub fn run() {
             if let Ok(config_dir) = app.path().app_config_dir() {
                 use storage::config_repository::SettingsRepository;
                 let settings =
-                    storage::config_repository::JsonSettingsRepository::new(config_dir)
-                        .load();
-                if let Err(err) = platform::autostart::sync(app.handle(), settings.start_with_windows) {
+                    storage::config_repository::JsonSettingsRepository::new(config_dir).load();
+                if let Err(err) =
+                    platform::autostart::sync(app.handle(), settings.start_with_windows)
+                {
                     log::warn!("could not sync the Windows startup registration: {}", err.0);
                 }
             }

@@ -71,8 +71,9 @@ fn validate_service(service: &DeviceService) -> Result<(), DeviceValidationError
 }
 
 pub(crate) fn validate_service_url(raw_url: &str) -> Result<(), DeviceValidationError> {
-    let parsed = url::Url::parse(raw_url)
-        .map_err(|_| DeviceValidationError(format!("service url '{raw_url}' is not a valid URL")))?;
+    let parsed = url::Url::parse(raw_url).map_err(|_| {
+        DeviceValidationError(format!("service url '{raw_url}' is not a valid URL"))
+    })?;
     if parsed.scheme() == "http" || parsed.scheme() == "https" {
         Ok(())
     } else {
@@ -131,8 +132,14 @@ pub(crate) fn validate_host(host: &str) -> Result<(), DeviceValidationError> {
         && host.split('.').all(|label| {
             !label.is_empty()
                 && label.len() <= 63
-                && label.chars().next().is_some_and(|c| c.is_ascii_alphanumeric())
-                && label.chars().last().is_some_and(|c| c.is_ascii_alphanumeric())
+                && label
+                    .chars()
+                    .next()
+                    .is_some_and(|c| c.is_ascii_alphanumeric())
+                && label
+                    .chars()
+                    .last()
+                    .is_some_and(|c| c.is_ascii_alphanumeric())
                 && label.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
         });
     if is_valid_hostname {

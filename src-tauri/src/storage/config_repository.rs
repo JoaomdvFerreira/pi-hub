@@ -106,7 +106,10 @@ mod tests {
         let settings = repo.load();
 
         assert_eq!(settings, AppSettings::default());
-        assert!(!config_path.exists(), "corrupted file should be moved aside");
+        assert!(
+            !config_path.exists(),
+            "corrupted file should be moved aside"
+        );
         assert!(dir.path().join("config.json.corrupt").exists());
     }
 

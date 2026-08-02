@@ -40,8 +40,13 @@ pub fn save_app_settings(
     // preference unchanged rather than claiming a state that isn't real.
     autostart::sync(&app, settings.start_with_windows).map_err(|err| ApplicationError {
         code: "PlatformIntegrationError".into(),
-        message: format!("could not update the Windows startup registration: {}", err.0),
-        remediation: Some("Try again, or check that Pi-Hub has permission to modify startup settings.".into()),
+        message: format!(
+            "could not update the Windows startup registration: {}",
+            err.0
+        ),
+        remediation: Some(
+            "Try again, or check that Pi-Hub has permission to modify startup settings.".into(),
+        ),
         retryable: true,
     })?;
 

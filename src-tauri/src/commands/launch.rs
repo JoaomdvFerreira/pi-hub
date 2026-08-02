@@ -22,23 +22,27 @@ fn repository(app: &AppHandle) -> Result<JsonDeviceRepository, ApplicationError>
 /// the user's own Windows Terminal + OpenSSH setup entirely.
 #[tauri::command]
 pub fn open_device_terminal(app: AppHandle, device_id: String) -> Result<(), ApplicationError> {
-    let device = repository(&app)?.get(&device_id).ok_or_else(|| ApplicationError {
-        code: "NotFoundError".into(),
-        message: format!("device '{device_id}' was not found"),
-        remediation: None,
-        retryable: false,
-    })?;
+    let device = repository(&app)?
+        .get(&device_id)
+        .ok_or_else(|| ApplicationError {
+            code: "NotFoundError".into(),
+            message: format!("device '{device_id}' was not found"),
+            remediation: None,
+            retryable: false,
+        })?;
 
     terminal::launch_ssh_terminal(&device.host, device.ssh_port, &device.ssh_username).map_err(
-        |err| ApplicationError {
+        |err| {
+            ApplicationError {
             code: "PlatformIntegrationError".into(),
             message: err.0,
             remediation: Some(
-                "Make sure Windows Terminal is installed (it ships with Windows 11 by default; \
-                 otherwise install it from the Microsoft Store)."
+                "Make sure either Windows Terminal, PowerShell, or Command Prompt can be launched, \
+                 and that the Windows OpenSSH client is installed."
                     .into(),
             ),
             retryable: true,
+        }
         },
     )
 }

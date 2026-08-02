@@ -22,7 +22,10 @@ fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, Applic
 /// and collection off the async runtime's worker threads, so it never
 /// blocks the UI.
 #[tauri::command]
-pub async fn refresh_device(app: AppHandle, id: String) -> Result<DeviceSnapshot, ApplicationError> {
+pub async fn refresh_device(
+    app: AppHandle,
+    id: String,
+) -> Result<DeviceSnapshot, ApplicationError> {
     scheduler::refresh_one(&app, &id).await
 }
 

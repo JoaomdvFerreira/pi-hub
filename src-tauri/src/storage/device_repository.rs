@@ -155,7 +155,10 @@ mod tests {
         let repo = JsonDeviceRepository::new(dir.path());
 
         assert_eq!(repo.load_all(), Vec::new());
-        assert!(!devices_path.exists(), "corrupted file should be moved aside");
+        assert!(
+            !devices_path.exists(),
+            "corrupted file should be moved aside"
+        );
         assert!(dir.path().join("devices.json.corrupt").exists());
     }
 

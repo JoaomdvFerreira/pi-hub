@@ -10,15 +10,21 @@ pub struct AutostartError(pub String);
 /// settings save, not just when the toggle changes.
 pub fn sync(app: &AppHandle, wanted: bool) -> Result<(), AutostartError> {
     let manager = app.autolaunch();
-    let currently_enabled = manager.is_enabled().map_err(|err| AutostartError(err.to_string()))?;
+    let currently_enabled = manager
+        .is_enabled()
+        .map_err(|err| AutostartError(err.to_string()))?;
 
     if wanted == currently_enabled {
         return Ok(());
     }
 
     if wanted {
-        manager.enable().map_err(|err| AutostartError(err.to_string()))
+        manager
+            .enable()
+            .map_err(|err| AutostartError(err.to_string()))
     } else {
-        manager.disable().map_err(|err| AutostartError(err.to_string()))
+        manager
+            .disable()
+            .map_err(|err| AutostartError(err.to_string()))
     }
 }

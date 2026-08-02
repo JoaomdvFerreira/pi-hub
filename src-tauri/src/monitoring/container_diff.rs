@@ -80,7 +80,10 @@ mod tests {
         let changes = detect_container_changes(&previous, &current);
 
         assert_eq!(changes.len(), 1);
-        assert_eq!(changes[0].previous_state, Some(DockerContainerState::Running));
+        assert_eq!(
+            changes[0].previous_state,
+            Some(DockerContainerState::Running)
+        );
         assert_eq!(changes[0].current_state, DockerContainerState::Exited);
     }
 

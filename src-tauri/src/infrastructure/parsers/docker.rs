@@ -339,8 +339,8 @@ mod tests {
     #[test]
     fn collect_reports_unavailable_when_docker_is_not_installed() {
         let executor = FakeRemoteExecutor::online("PIHUB_DOCKER_AVAILABLE=0\n");
-        let result = collect_docker_containers(&executor, &target(), Duration::from_secs(10))
-            .unwrap();
+        let result =
+            collect_docker_containers(&executor, &target(), Duration::from_secs(10)).unwrap();
         assert_eq!(result, DockerCollectionResult::Unavailable);
     }
 
@@ -348,8 +348,8 @@ mod tests {
     fn collect_reports_available_containers_on_success() {
         let payload = format!("PIHUB_DOCKER_AVAILABLE=1\n{HOME_ASSISTANT_LINE}\n");
         let executor = FakeRemoteExecutor::online(payload);
-        let result = collect_docker_containers(&executor, &target(), Duration::from_secs(10))
-            .unwrap();
+        let result =
+            collect_docker_containers(&executor, &target(), Duration::from_secs(10)).unwrap();
         match result {
             DockerCollectionResult::Available { containers, .. } => {
                 assert_eq!(containers.len(), 1);
@@ -362,19 +362,18 @@ mod tests {
     fn collect_classifies_permission_denied_without_failing() {
         let executor = FakeRemoteExecutor::returning(Err(SshError::RemoteCommandError {
             exit_code: Some(1),
-            stderr: "permission denied while trying to connect to the Docker daemon socket"
-                .into(),
+            stderr: "permission denied while trying to connect to the Docker daemon socket".into(),
         }));
-        let result = collect_docker_containers(&executor, &target(), Duration::from_secs(10))
-            .unwrap();
+        let result =
+            collect_docker_containers(&executor, &target(), Duration::from_secs(10)).unwrap();
         assert_eq!(result, DockerCollectionResult::PermissionDenied);
     }
 
     #[test]
     fn collect_propagates_connection_level_failures() {
         let executor = FakeRemoteExecutor::offline();
-        let err = collect_docker_containers(&executor, &target(), Duration::from_secs(10))
-            .unwrap_err();
+        let err =
+            collect_docker_containers(&executor, &target(), Duration::from_secs(10)).unwrap_err();
         assert_eq!(err, SshError::ConnectionRefused);
     }
 
@@ -384,8 +383,8 @@ mod tests {
             exit_code: Some(127),
             stderr: "sh: docker: command not found".into(),
         }));
-        let err = collect_docker_containers(&executor, &target(), Duration::from_secs(10))
-            .unwrap_err();
+        let err =
+            collect_docker_containers(&executor, &target(), Duration::from_secs(10)).unwrap_err();
         assert!(matches!(err, SshError::RemoteCommandError { .. }));
     }
 }
