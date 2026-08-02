@@ -30,7 +30,10 @@ pub fn run() {
             commands::settings::get_app_settings,
             commands::settings::save_app_settings,
             commands::devices::get_devices,
-            commands::devices::get_device
+            commands::devices::get_device,
+            commands::devices::create_device,
+            commands::devices::update_device,
+            commands::devices::delete_device
         ])
         .setup(|app| {
             log::info!("Pi-Hub starting up");

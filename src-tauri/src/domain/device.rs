@@ -43,9 +43,6 @@ pub struct Device {
     pub updated_at: String,
 }
 
-// The message is surfaced via ApplicationError once device CRUD commands
-// exist (M2); until then it's only inspected in tests via is_err().
-#[allow(dead_code)]
 #[derive(Debug)]
 pub struct DeviceValidationError(pub String);
 
@@ -57,7 +54,31 @@ impl Device {
         validate_host(&self.host)?;
         validate_ssh_port(self.ssh_port)?;
         validate_ssh_username(&self.ssh_username)?;
+        for service in &self.services {
+            validate_service(service)?;
+        }
         Ok(())
+    }
+}
+
+fn validate_service(service: &DeviceService) -> Result<(), DeviceValidationError> {
+    if service.name.trim().is_empty() {
+        return Err(DeviceValidationError(
+            "service name must not be empty".into(),
+        ));
+    }
+    validate_service_url(&service.url)
+}
+
+fn validate_service_url(raw_url: &str) -> Result<(), DeviceValidationError> {
+    let parsed = url::Url::parse(raw_url)
+        .map_err(|_| DeviceValidationError(format!("service url '{raw_url}' is not a valid URL")))?;
+    if parsed.scheme() == "http" || parsed.scheme() == "https" {
+        Ok(())
+    } else {
+        Err(DeviceValidationError(format!(
+            "service url '{raw_url}' must use the http or https scheme"
+        )))
     }
 }
 
@@ -224,6 +245,62 @@ mod tests {
     fn rejects_empty_name() {
         let mut device = sample_device();
         device.name = "   ".into();
+        assert!(device.validate().is_err());
+    }
+
+    fn sample_service() -> DeviceService {
+        DeviceService {
+            id: "ha".into(),
+            name: "Home Assistant".into(),
+            url: "http://raspberrypi5:8123".into(),
+            icon: None,
+            description: None,
+            enabled: true,
+        }
+    }
+
+    #[test]
+    fn accepts_http_and_https_service_urls() {
+        let mut device = sample_device();
+        let mut https_service = sample_service();
+        https_service.url = "https://raspberrypi5:8123".into();
+        device.services = vec![sample_service(), https_service];
+        assert!(device.validate().is_ok());
+    }
+
+    #[test]
+    fn rejects_service_url_with_disallowed_scheme() {
+        let mut device = sample_device();
+        let mut service = sample_service();
+        service.url = "javascript:alert(1)".into();
+        device.services = vec![service];
+        assert!(device.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_service_url_with_file_scheme() {
+        let mut device = sample_device();
+        let mut service = sample_service();
+        service.url = "file:///etc/passwd".into();
+        device.services = vec![service];
+        assert!(device.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_malformed_service_url() {
+        let mut device = sample_device();
+        let mut service = sample_service();
+        service.url = "not a url".into();
+        device.services = vec![service];
+        assert!(device.validate().is_err());
+    }
+
+    #[test]
+    fn rejects_empty_service_name() {
+        let mut device = sample_device();
+        let mut service = sample_service();
+        service.name = "  ".into();
+        device.services = vec![service];
         assert!(device.validate().is_err());
     }
 

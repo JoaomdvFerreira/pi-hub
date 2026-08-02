@@ -29,3 +29,17 @@ export interface Device {
   createdAt: string;
   updatedAt: string;
 }
+
+/** The editable fields of a device, used for both create and update. */
+export interface DeviceInput {
+  name: string;
+  host: string;
+  sshPort: number;
+  sshUsername: string;
+  description?: string;
+  deviceType: DeviceType;
+  monitoringEnabled: boolean;
+  refreshIntervalSeconds?: number;
+  notificationsEnabled: boolean;
+  services: DeviceService[];
+}

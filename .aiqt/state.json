@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M002",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU006",
   "workGraph": {
     "milestones": [
       {
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -284,13 +284,13 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-005",
           "DEP-006"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:22:55.525Z"
+        "updatedAt": "2026-08-02T17:23:07.696Z"
       },
       {
         "id": "WU007",
@@ -1296,12 +1296,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-005",
-    "workUnitId": "WU005",
+    "id": "PKT-006",
+    "workUnitId": "WU006",
     "milestoneId": "M002",
-    "createdAt": "2026-08-02T17:17:41.744Z",
+    "createdAt": "2026-08-02T17:23:07.696Z",
     "format": "markdown",
-    "contentHash": "sha256:d2f146400241cdda99502eb81c62ec7744664b7981221e1849634a07b5a52a4f",
+    "contentHash": "sha256:b1b48c5222163671e347e56797c4e41166a59cb2df47bb657e40caa01d3a11b1",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1319,8 +1319,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T17:22:55.525Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T17:23:07.696Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

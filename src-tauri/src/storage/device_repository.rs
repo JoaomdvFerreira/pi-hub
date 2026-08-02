@@ -7,15 +7,8 @@ use crate::domain::device::Device;
 use crate::storage::atomic::write_atomic;
 use crate::storage::StorageError;
 
-// Read by save_all() below; only exercised directly by tests until the
-// device CRUD commands land in the next work unit.
-#[allow(dead_code)]
 pub const DEVICES_SCHEMA_VERSION: u32 = 1;
 
-// save_all() is exercised by the round-trip tests below; the create/update/
-// delete commands that call it in normal operation land in the next work
-// unit (device CRUD commands).
-#[allow(dead_code)]
 pub trait DeviceRepository: Send + Sync {
     /// Loads all devices from disk. Never fails: a missing or corrupted
     /// devices.json recovers to an empty list, and any device that fails

@@ -2453,6 +2453,7 @@ dependencies = [
 name = "pi-hub"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "log",
  "serde",
  "serde_json",
@@ -2461,6 +2462,8 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-opener",
  "tempfile",
+ "url",
+ "uuid",
 ]
 
 [[package]]
