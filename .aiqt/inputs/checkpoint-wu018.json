@@ -1,0 +1,38 @@
+{
+  "summary": "Wired the existing 'Start Pi-Hub with Windows' toggle (UI and persistence since WU015) to a real Windows Run-key registration via tauri-plugin-autostart, launching with --minimized so autostart opens straight to the tray. Sync runs both on settings save and on every app launch (so the two can't drift). This completes M4 and the full 18-work-unit MVP plan. cargo test 155/155, unaffected.",
+  "completed": [
+    "platform/autostart.rs: sync(app, wanted) enables/disables the OS Run-key registration via tauri-plugin-autostart's AutoLaunchManager, idempotent (only writes when the desired state differs from the actual current state).",
+    "commands/settings.rs::save_app_settings calls autostart::sync before persisting, so a registration failure leaves the saved preference unchanged rather than claiming a state that isn't real.",
+    "lib.rs: registered tauri-plugin-autostart with a --minimized launch arg; setup() hides the main window when launched with that arg (autostart opens to the tray, not a popped-up window) and re-syncs the OS registration against the persisted preference on every launch, not just on save.",
+    "Verified cargo build (clean) and cargo test (155/155, unaffected -- no new pure logic); npm run build/lint unaffected (no frontend changes needed, the toggle already existed since WU015)."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/Cargo.lock",
+    "src-tauri/Cargo.toml",
+    "src-tauri/src/commands/settings.rs",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/platform/autostart.rs",
+    "src-tauri/src/platform/mod.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "155/155 unit tests passed, unaffected by this WU." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected (no frontend changes needed)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Enabling the setting registers Pi-Hub to launch minimized at Windows sign-in", "result": "passed", "evidence": "Live smoke test: seeded config.json with startWithWindows: true, launched the app, and confirmed via PowerShell (Get-ItemProperty on HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run) that a 'Pi-Hub' entry pointing at the built exe with '--minimized' appended was created." },
+    { "criterion": "Disabling it removes the registration", "result": "passed", "evidence": "Flipped startWithWindows to false in config.json and relaunched the exe directly (exercising the startup-sync path added in this WU, not just save_app_settings); confirmed via the same registry check that the 'Pi-Hub' entry was gone afterward." },
+    { "criterion": "Default state after first install is disabled", "result": "passed", "evidence": "AppSettings::default().start_with_windows is false (unchanged from WU001); sync() is a no-op when the wanted state already matches the actual OS state, and a fresh install has no existing registration, so a default install never calls enable()." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 20/100 (low). Rationale: touches the Windows registry (Run key) rather than only local JSON files, which is new territory for this project's persistence, but the write path is a thin, idempotent wrapper around a well-established plugin with no custom registry code, and was verified end-to-end against the real registry in a live smoke test rather than only unit-tested.",
+    "Added a small scope extension beyond the packet's literal suggestion: syncing on every app launch (not just on settings save) so the OS registration can't silently drift from the persisted preference. This was necessary to make the disable path independently testable (relaunching the exe directly rather than needing to click the UI toggle, which this agent can't safely do without stealing focus on the user's active desktop) and is also a genuine correctness improvement.",
+    "This completes M004 and the full AIQT plan (WU001-WU018). All 18 work units are checkpointed as done; 155 backend unit tests pass; the app has been live-smoke-tested at every UI-adding work unit throughout M4.",
+    "No new frontend work was required -- GlobalSettingsScreen's startWithWindows Switch (WU015) already calls save_app_settings on every toggle, which now has the real registry side effect behind it."
+  ]
+}

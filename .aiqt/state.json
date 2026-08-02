@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
-  "projectStatus": "in_progress",
-  "currentMilestoneId": "M004",
-  "currentWorkUnitId": "WU018",
+  "projectStatus": "review",
+  "currentMilestoneId": null,
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "in_progress",
+        "status": "done",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -743,12 +743,12 @@
         "validationCommands": [
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-021"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T19:30:54.881Z"
+        "updatedAt": "2026-08-02T19:37:54.499Z"
       }
     ],
     "dependencies": [
@@ -2176,6 +2176,67 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T19:30:40.148Z"
+    },
+    {
+      "id": "C018",
+      "workUnitId": "WU018",
+      "packetId": "PKT-018",
+      "summary": "Wired the existing 'Start Pi-Hub with Windows' toggle (UI and persistence since WU015) to a real Windows Run-key registration via tauri-plugin-autostart, launching with --minimized so autostart opens straight to the tray. Sync runs both on settings save and on every app launch (so the two can't drift). This completes M4 and the full 18-work-unit MVP plan. cargo test 155/155, unaffected.",
+      "completed": [
+        "platform/autostart.rs: sync(app, wanted) enables/disables the OS Run-key registration via tauri-plugin-autostart's AutoLaunchManager, idempotent (only writes when the desired state differs from the actual current state).",
+        "commands/settings.rs::save_app_settings calls autostart::sync before persisting, so a registration failure leaves the saved preference unchanged rather than claiming a state that isn't real.",
+        "lib.rs: registered tauri-plugin-autostart with a --minimized launch arg; setup() hides the main window when launched with that arg (autostart opens to the tray, not a popped-up window) and re-syncs the OS registration against the persisted preference on every launch, not just on save.",
+        "Verified cargo build (clean) and cargo test (155/155, unaffected -- no new pure logic); npm run build/lint unaffected (no frontend changes needed, the toggle already existed since WU015)."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/Cargo.lock",
+        "src-tauri/Cargo.toml",
+        "src-tauri/src/commands/settings.rs",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/platform/autostart.rs",
+        "src-tauri/src/platform/mod.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "155/155 unit tests passed, unaffected by this WU."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Unaffected (no frontend changes needed)."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Enabling the setting registers Pi-Hub to launch minimized at Windows sign-in",
+          "result": "passed",
+          "evidence": "Live smoke test: seeded config.json with startWithWindows: true, launched the app, and confirmed via PowerShell (Get-ItemProperty on HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Run) that a 'Pi-Hub' entry pointing at the built exe with '--minimized' appended was created."
+        },
+        {
+          "criterion": "Disabling it removes the registration",
+          "result": "passed",
+          "evidence": "Flipped startWithWindows to false in config.json and relaunched the exe directly (exercising the startup-sync path added in this WU, not just save_app_settings); confirmed via the same registry check that the 'Pi-Hub' entry was gone afterward."
+        },
+        {
+          "criterion": "Default state after first install is disabled",
+          "result": "passed",
+          "evidence": "AppSettings::default().start_with_windows is false (unchanged from WU001); sync() is a no-op when the wanted state already matches the actual OS state, and a fresh install has no existing registration, so a default install never calls enable()."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt review",
+      "createdAt": "2026-08-02T19:37:54.499Z"
     }
   ],
   "lastAgentPacket": {
@@ -2202,8 +2263,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T19:30:54.881Z",
+  "nextRecommendedCommand": "aiqt review",
+  "lastUpdatedAt": "2026-08-02T19:37:54.499Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -2712,6 +2773,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T19:30:40.148Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C018",
+      "current": {
+        "observationId": "sha256:c520fff8b4cd62fbca66c424da2557a9b966ad2f2875a8de2570885625ea9f64",
+        "checkpointId": "C018",
+        "workUnitId": "WU018",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T19:37:54.499Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T19:37:54.499Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:c520fff8b4cd62fbca66c424da2557a9b966ad2f2875a8de2570885625ea9f64",
+          "checkpointId": "C018",
+          "workUnitId": "WU018",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T19:37:54.499Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T19:37:54.499Z"
         }
       ]
     }
