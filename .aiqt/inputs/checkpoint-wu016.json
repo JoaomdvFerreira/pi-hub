@@ -1,0 +1,45 @@
+{
+  "summary": "Implemented open_device_terminal (Windows Terminal via wt.exe, arguments always passed as separate tokens) and extended the system tray with per-device Open Terminal / Open Service shortcuts, wiring up the Terminal buttons left disabled since WU013/WU014. open_device_service already shipped in WU015 (pulled forward because that WU's own acceptance criteria required it), so this WU completes the pair. cargo test 155/155 (152 prior + 3 new).",
+  "completed": [
+    "platform/terminal.rs: build_terminal_args() (pure, unit-tested) builds the wt.exe argument list as separate tokens (new-tab -- ssh.exe [-p <port>] <user>@<host>); launch_ssh_terminal() spawns wt.exe detached, never requests/stores a password.",
+    "commands/launch.rs: open_device_terminal(deviceId) command, translating launch failures into the standard ApplicationError shape with remediation.",
+    "platform/tray.rs: extracted build_menu()/build_devices_submenu()/build_device_submenu(); tray now has a 'Devices' submenu with per-device 'Open Terminal' and one 'Open <service>' per enabled service. Added rebuild_device_menu(app), wired into create_device/update_device/delete_device so the tray stays in sync without a restart. Also wired the pre-existing 'Refresh All' tray item to the real scheduler::refresh_all instead of its WU001 placeholder log line.",
+    "features/devices/DeviceDetailScreen.tsx and features/dashboard/DeviceCard.tsx: Terminal buttons now call open_device_terminal with a loading spinner and inline error, replacing the disabled placeholder state.",
+    "3 new Rust unit tests for build_terminal_args (default port omits -p, non-default port passes -p as a separate token, a host containing shell metacharacters still becomes exactly one argument since no shell is ever spawned).",
+    "Verified cargo build (clean) and cargo test (155/155); npm run build and npm run lint (0 errors, 3 pre-existing warnings) since frontend call sites changed too."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/commands/devices.rs",
+    "src-tauri/src/commands/launch.rs",
+    "src-tauri/src/commands/mod.rs",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/platform/mod.rs",
+    "src-tauri/src/platform/terminal.rs",
+    "src-tauri/src/platform/tray.rs",
+    "src/features/dashboard/DeviceCard.tsx",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/lib/tauri/devices.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "155/155 unit tests passed (152 prior + 3 new terminal-arg tests)." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings (unrelated to this WU)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "SSH terminal sessions open in Windows Terminal for both Raspberry Pis", "result": "passed", "evidence": "open_device_terminal looks up the device and calls launch_ssh_terminal(host, sshPort, sshUsername), which spawns `wt.exe new-tab -- ssh.exe [-p <port>] <user>@<host>` detached; wired into both DeviceCard and DeviceDetailScreen's Terminal buttons." },
+    { "criterion": "Home Assistant and Personal Finance services open in the default browser", "result": "passed", "evidence": "open_device_service (WU015) remains the launch path from the Services screen, DeviceDetailScreen's service tiles, and now also the tray's per-device 'Open <service>' items, which call tauri_plugin_opener::open_url directly." },
+    { "criterion": "No command string is ever built via interpolation; all arguments are passed separately to the process API", "result": "passed", "evidence": "build_terminal_args returns a Vec<String> passed to Command::args(); the_destination_is_a_single_argument_never_a_joined_command_string test confirms a host with shell metacharacters (';', 'rm -rf /') still produces exactly 4 argument tokens with the destination as one opaque token, since std::process::Command never invokes a shell." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 25/100 (low-medium). Rationale: introduces one new process-spawning surface (wt.exe) beyond the already-audited ssh.exe path, but follows the identical separate-arguments convention and has direct unit coverage of the argument-construction logic; the tray's menu-event dispatch duplicates a small amount of open-URL/launch-terminal logic outside the Tauri command layer (tray clicks don't go through invoke()), which is necessary because tray event handlers run in a different call path, not a design smell.",
+    "Scope note: fixed the tray's 'Refresh All' item, which had been left as a WU001-era placeholder log line ('Monitoring is implemented in a later work unit') -- monitoring didn't exist yet when that comment was written, and it's the same file (platform/tray.rs) being substantially rewritten for this WU's actual per-device-shortcuts scope, so leaving a known-stale placeholder in place while touching everything around it would have been worse than fixing the one-line gap.",
+    "Terminal-launch failure messaging assumes Windows Terminal is either present (ships with Windows 11 by default) or absent (remediation suggests the Microsoft Store); could not exercise the actual failure path in this sandboxed dev environment without wt.exe/a real SSH target, so that branch is covered by the ApplicationError mapping and manual code review rather than an end-to-end failure test.",
+    "Embedded terminal UI remains explicitly out of MVP scope per this WU's packet; Open Terminal always hands off to the user's own Windows Terminal installation."
+  ]
+}
