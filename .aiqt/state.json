@@ -2,14 +2,14 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M001",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU003",
   "workGraph": {
     "milestones": [
       {
         "id": "M001",
         "title": "M1 — Desktop foundation",
         "objective": "Stand up the Tauri 2 + React + TypeScript shell with system tray, window lifecycle, local settings persistence, logging, and the base app layout matching the Pi Control design reference.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU001",
           "WU002",
@@ -168,12 +168,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-002"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:50:44.744Z"
+        "updatedAt": "2026-08-02T16:14:15.925Z"
       },
       {
         "id": "WU004",
@@ -1056,12 +1056,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-002",
-    "workUnitId": "WU002",
+    "id": "PKT-003",
+    "workUnitId": "WU003",
     "milestoneId": "M001",
-    "createdAt": "2026-08-02T16:00:09.270Z",
+    "createdAt": "2026-08-02T16:14:15.925Z",
     "format": "markdown",
-    "contentHash": "sha256:983b849623ea468658227971b7575b5da57fc5faa2a3ec24def13eee40e800eb",
+    "contentHash": "sha256:610ac84dae9a1925357121a0dea1cdf9c9c8efe322fb34eb3622c1b29b737e67",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -1079,8 +1079,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-02T16:13:58.962Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-02T16:14:15.925Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

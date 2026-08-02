@@ -33,7 +33,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             "refresh_all" => {
                 // Monitoring is implemented in a later work unit; this is a
                 // menu-shape placeholder only.
-                println!("Refresh All requested from tray (not yet implemented)");
+                log::info!("Refresh All requested from tray (not yet implemented)");
             }
             "exit" => app.exit(0),
             _ => {}
