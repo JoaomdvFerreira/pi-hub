@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { HardDrive, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { HardDrive, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,21 +15,21 @@ import {
 import { EmptyState } from "@/components/layout/EmptyState";
 import { useRouter } from "@/app/router";
 import { deleteDevice, getDevices } from "@/lib/tauri/devices";
-import type { Device, DeviceType } from "@/types/device";
-
-const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
-  "raspberry-pi": "Raspberry Pi",
-  "linux-server": "Linux server",
-  "mini-pc": "Mini PC",
-  nas: "NAS",
-  other: "Other",
-};
+import { refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
+import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
+import { DeviceCard } from "@/features/dashboard/DeviceCard";
+import type { Device } from "@/types/device";
 
 export function DashboardScreen() {
-  const { goAddDevice, goDeviceSettings } = useRouter();
+  const { goAddDevice, goDevice, goDeviceSettings, goServices } = useRouter();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set());
+  const [refreshingAll, setRefreshingAll] = useState(false);
+
+  const deviceIds = useMemo(() => (devices ?? []).map((d) => d.id), [devices]);
+  const snapshots = useDeviceSnapshots(deviceIds);
 
   const load = useCallback(async () => {
     try {
@@ -60,6 +59,33 @@ export function DashboardScreen() {
     }
   }
 
+  async function handleRefresh(id: string) {
+    setRefreshingIds((prev) => new Set(prev).add(id));
+    try {
+      await refreshDevice(id);
+    } catch {
+      // The failure is already reflected in the device's snapshot
+      // (connectionStatus/error), which the card renders directly.
+    } finally {
+      setRefreshingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  async function handleRefreshAll() {
+    setRefreshingAll(true);
+    try {
+      await refreshAllDevices();
+    } catch {
+      setError("Could not refresh all devices.");
+    } finally {
+      setRefreshingAll(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
@@ -73,10 +99,18 @@ export function DashboardScreen() {
                 : `${devices.length} device${devices.length === 1 ? "" : "s"} registered.`}
           </p>
         </div>
-        <Button onClick={goAddDevice}>
-          <Plus />
-          Add Device
-        </Button>
+        <div className="flex items-center gap-2">
+          {devices !== null && devices.length > 0 ? (
+            <Button variant="outline" onClick={handleRefreshAll} disabled={refreshingAll}>
+              {refreshingAll ? <Loader2 className="animate-spin" /> : <RefreshCw />}
+              Refresh All
+            </Button>
+          ) : null}
+          <Button onClick={goAddDevice}>
+            <Plus />
+            Add Device
+          </Button>
+        </div>
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -92,58 +126,54 @@ export function DashboardScreen() {
           description="Register a Raspberry Pi or Linux server to start monitoring it here."
         />
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-3.5">
           {devices.map((device) => (
-            <div
-              key={device.id}
-              className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="truncate text-sm font-semibold text-foreground">
-                    {device.name}
-                  </span>
-                  <Badge variant="secondary">
-                    {DEVICE_TYPE_LABELS[device.deviceType]}
-                  </Badge>
-                </div>
-                <div className="truncate font-mono text-xs text-muted-foreground">
-                  {device.sshUsername}@{device.host}:{device.sshPort}
-                </div>
+            <div key={device.id} className="flex flex-col gap-2">
+              <DeviceCard
+                device={device}
+                snapshot={snapshots[device.id]}
+                refreshing={refreshingIds.has(device.id)}
+                onOpenDetail={() => goDevice(device.id)}
+                onOpenServices={() => goServices(device.id)}
+                onRefresh={() => handleRefresh(device.id)}
+              />
+              <div className="flex items-center gap-2 px-0.5">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-xs text-muted-foreground"
+                  onClick={() => goDeviceSettings(device.id)}
+                >
+                  <Pencil className="size-3" /> Edit
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs text-muted-foreground"
+                      disabled={deletingId === device.id}
+                    >
+                      <Trash2 className="size-3" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {device.name}?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This removes the device and its registered services
+                        from Pi-Hub. This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(device.id)}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => goDeviceSettings(device.id)}
-              >
-                <Pencil /> Edit
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={deletingId === device.id}
-                  >
-                    <Trash2 /> Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {device.name}?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This removes the device and its registered services from
-                      Pi-Hub. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDelete(device.id)}>
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
             </div>
           ))}
         </div>
