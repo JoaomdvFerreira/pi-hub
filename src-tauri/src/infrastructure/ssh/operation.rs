@@ -15,9 +15,8 @@ pub enum RemoteOperation {
     // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     SystemMetrics,
-    // Reserved for the M3 Docker monitoring work unit, which pairs the
-    // command body with the parser that consumes its output; not
-    // constructed yet.
+    // Only constructed by infrastructure::parsers::docker, which nothing
+    // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     DockerContainers,
 }
@@ -96,13 +95,31 @@ if [ -r /sys/class/thermal/thermal_zone0/temp ]; then
 fi
 "#;
 
+/// Checks Docker availability, then lists containers read-only. Always
+/// exits 0 when Docker itself is unavailable (reported via
+/// `PIHUB_DOCKER_AVAILABLE=0`, never as a command failure); when Docker is
+/// available, the script's exit status is `docker ps`'s own exit status,
+/// so a permission failure surfaces as a normal remote-command error whose
+/// stderr can be inspected -- never a second, separate probe. Docker is
+/// never contacted over TCP; this only ever runs `docker` as the SSH
+/// user's own CLI.
+pub const DOCKER_CONTAINERS_COMMAND: &str = r#"
+if ! command -v docker >/dev/null 2>&1; then
+  printf 'PIHUB_DOCKER_AVAILABLE=0\n'
+  exit 0
+fi
+printf 'PIHUB_DOCKER_AVAILABLE=1\n'
+docker ps -a --no-trunc --format '{{json .}}'
+"#;
+
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
     pub fn command(&self) -> Option<&'static str> {
         match self {
             RemoteOperation::Probe => Some(PROBE_COMMAND),
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
-            RemoteOperation::SystemIdentity | RemoteOperation::DockerContainers => None,
+            RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
+            RemoteOperation::SystemIdentity => None,
         }
     }
 }
@@ -125,8 +142,15 @@ mod tests {
     }
 
     #[test]
-    fn docker_containers_is_reserved_and_undefined_for_now() {
+    fn docker_containers_has_a_fixed_command() {
+        assert_eq!(
+            RemoteOperation::DockerContainers.command(),
+            Some(DOCKER_CONTAINERS_COMMAND)
+        );
+    }
+
+    #[test]
+    fn system_identity_is_reserved_and_undefined_for_now() {
         assert_eq!(RemoteOperation::SystemIdentity.command(), None);
-        assert_eq!(RemoteOperation::DockerContainers.command(), None);
     }
 }

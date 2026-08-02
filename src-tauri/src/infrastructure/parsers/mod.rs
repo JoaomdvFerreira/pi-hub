@@ -3,5 +3,6 @@
 // a later M3 work unit.
 #![allow(dead_code, unused_imports)]
 
+pub mod docker;
 pub mod key_value;
 pub mod metrics;

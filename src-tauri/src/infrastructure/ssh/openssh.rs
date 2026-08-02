@@ -84,6 +84,7 @@ fn classify_outcome(raw: RawProcessOutcome) -> Result<RemoteExecutionResult, Ssh
     if raw.exit_code != Some(0) {
         return Err(SshError::RemoteCommandError {
             exit_code: raw.exit_code,
+            stderr: raw.stderr,
         });
     }
 
@@ -160,7 +161,10 @@ mod tests {
         let outcome = raw(Some(127), "sh: docker: command not found");
         assert_eq!(
             classify_outcome(outcome),
-            Err(SshError::RemoteCommandError { exit_code: Some(127) })
+            Err(SshError::RemoteCommandError {
+                exit_code: Some(127),
+                stderr: "sh: docker: command not found".into()
+            })
         );
     }
 

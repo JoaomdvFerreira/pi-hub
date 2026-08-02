@@ -11,7 +11,10 @@ pub enum SshError {
     /// Host-key verification failed, or the remote host key changed.
     /// Pi-Hub never auto-resolves this: it is always surfaced as-is.
     HostKeyError,
-    RemoteCommandError { exit_code: Option<i32> },
+    RemoteCommandError {
+        exit_code: Option<i32>,
+        stderr: String,
+    },
     RemoteCommandTimeout,
 }
 
@@ -72,8 +75,8 @@ impl std::fmt::Display for SshError {
             SshError::ConnectionTimeout => write!(f, "connection timed out"),
             SshError::AuthenticationError => write!(f, "authentication failed"),
             SshError::HostKeyError => write!(f, "host key verification failed"),
-            SshError::RemoteCommandError { exit_code } => {
-                write!(f, "remote command failed (exit code {exit_code:?})")
+            SshError::RemoteCommandError { exit_code, stderr } => {
+                write!(f, "remote command failed (exit code {exit_code:?}): {stderr}")
             }
             SshError::RemoteCommandTimeout => write!(f, "remote command timed out"),
         }
@@ -118,7 +121,11 @@ mod tests {
             DeviceConnectionStatus::AuthenticationError
         );
         assert_eq!(
-            SshError::RemoteCommandError { exit_code: Some(1) }.to_connection_status(),
+            SshError::RemoteCommandError {
+                exit_code: Some(1),
+                stderr: String::new()
+            }
+            .to_connection_status(),
             DeviceConnectionStatus::CommandError
         );
         assert_eq!(
