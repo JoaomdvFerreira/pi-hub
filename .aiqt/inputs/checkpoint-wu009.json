@@ -1,0 +1,43 @@
+{
+  "summary": "Implemented the SystemMetrics remote operation (a single POSIX sh script collecting CPU/memory/disk/temperature/load/uptime/identity in one SSH round trip, syntax-checked with both sh -n and dash -n) and a defensive PIHUB_* key-value parser that never fails on a missing or invalid individual field. 18 new Rust unit tests, 82 total passing.",
+  "completed": [
+    "domain/system_metrics.rs: SystemMetrics with every field Option<_>, matching this work unit's explicit scope of optional fields for anything that may be unavailable.",
+    "infrastructure/ssh/operation.rs: SYSTEM_METRICS_COMMAND, a single POSIX sh script collecting CPU usage (two-sample /proc/stat delta with a bounded 0.3s sleep), memory (/proc/meminfo), root-disk usage (df -Pk /), temperature (primary thermal zone, optional), load average (/proc/loadavg), uptime (/proc/uptime), and identity fields (hostname/model/OS/kernel/arch) folded into the same session rather than a separate SystemIdentity round trip.",
+    "infrastructure/parsers/key_value.rs: parse_key_value_payload() -- generic PIHUB_KEY=value parser; non-PIHUB_ or malformed lines produce a warning instead of aborting.",
+    "infrastructure/parsers/metrics.rs: parse_system_metrics() rejects invalid numeric values (with a warning) while preserving every other valid field; memory/disk used-bytes are derived from total-available and only set when available <= total (guards against a nonsensical negative value). collect_system_metrics() wires a RemoteExecutor + SshTarget to the fixed command and the parser.",
+    "Marked both new modules #[allow(dead_code, unused_imports)] since nothing calls into them yet -- the M3 scheduler work unit wires them up -- following the WU007 precedent.",
+    "18 new Rust unit tests: 6 for the generic key-value parser, 12 for system-metrics parsing (full payload, empty payload, missing-optional-field survival, invalid-numeric survival, mixed malformed/unrecognized lines, memory-used derivation incl. the available>total guard, temperature conversion, and collect_system_metrics integration via FakeRemoteExecutor for both success and connection failure).",
+    "Verified cargo test (82/82), cargo build (no warnings), and npm run build all pass.",
+    "Syntax-checked the remote script with both `sh -n` and `dash -n` (dash closely matches Raspberry Pi OS's default /bin/sh) and hand-verified the CPU-delta arithmetic against a worked example."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/domain/mod.rs",
+    "src-tauri/src/domain/system_metrics.rs",
+    "src-tauri/src/infrastructure/mod.rs",
+    "src-tauri/src/infrastructure/parsers/mod.rs",
+    "src-tauri/src/infrastructure/parsers/key_value.rs",
+    "src-tauri/src/infrastructure/parsers/metrics.rs",
+    "src-tauri/src/infrastructure/ssh/operation.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "82/82 unit tests passed (18 new)." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected by this backend-only work unit; still succeeds." },
+    { "command": "manual: sh -n and dash -n against the remote script", "result": "passed", "summary": "Both POSIX-compatible shells accept the script's syntax without error." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Missing/optional fields (e.g. temperature) never fail the whole metrics collection", "result": "passed", "evidence": "missing_optional_fields_do_not_fail_collection test: a payload with only hostname+uptime still parses those two fields correctly with zero warnings and every other field simply None." },
+    { "criterion": "Malformed key-value lines produce warnings without discarding valid fields", "result": "passed", "evidence": "malformed_and_unrecognized_lines_produce_warnings_without_discarding_valid_fields and invalid_numeric_value_is_dropped_with_a_warning_but_other_fields_survive tests." },
+    { "criterion": "Rust unit tests cover well-formed, partially-malformed, and empty payloads", "result": "passed", "evidence": "parses_a_well_formed_payload_completely, malformed_and_unrecognized_lines_produce_warnings_without_discarding_valid_fields, and empty_payload_yields_all_none_and_no_warnings tests." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 25/100 (low-medium). Rationale: the parser side is thoroughly unit-tested and purely data-in/data-out (never executes remote content); the residual risk is entirely in the remote shell script itself, which was syntax-checked with two POSIX-compliant shells and hand-verified arithmetically but has NOT been run against a real Raspberry Pi, since none is available in this environment. Per spec section 25.4 this is an explicit manual-test item, not something unit tests can cover -- recommend validating SYSTEM_METRICS_COMMAND against the real Pi 2 and Pi 5 before relying on it in production, and adjusting field-name assumptions (e.g. /proc/device-tree/model presence, os-release format) if real output differs.",
+    "SystemIdentity remains in the RemoteOperation catalogue for documentation purposes but intentionally has no command of its own -- its fields are collected as part of the SystemMetrics session per spec 12.1's 'one SSH session where practical' guidance, avoiding a second round trip.",
+    "DockerContainers remains undefined, reserved for the Docker monitoring work unit (wu-docker-monitoring)."
+  ]
+}
