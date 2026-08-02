@@ -1,0 +1,45 @@
+{
+  "summary": "Implemented the global services grid with a device filter, a device-service editor (previously there was no UI to register services on a device at all), and both the per-device and global settings screens from the Pi Control design reference. Pulled service launching (open_device_service) forward from WU016's originally-planned scope because WU015's own acceptance criteria required it end-to-end; Terminal launching remains WU016. cargo test 152/152, unaffected.",
+  "completed": [
+    "src-tauri/src/commands/devices.rs: open_device_service(deviceId, serviceId) command -- looks up the service, re-validates its http/https scheme (reusing domain::device::validate_service_url, now pub(crate) instead of duplicated), then opens it via tauri-plugin-opener's open_url in the system default browser.",
+    "features/devices/ServicesEditor.tsx: add/enable-toggle/remove UI for a device's registered services, with client-side http/https validation before the backend's own check on save. Wired into DeviceForm's existing (previously unused) services field.",
+    "features/devices/DeviceDetailScreen.tsx: service tiles now call open_device_service directly with a loading spinner and inline error, replacing WU014's placeholder navigation to the Services screen.",
+    "features/services/ServicesScreen.tsx: full grid of every device's services, an optional device-filter chip (cleared via an X), disabled-state styling for enabled=false services, and distinct empty states for 'no services anywhere' vs. 'no services on this filtered device.'",
+    "features/settings/GlobalSettingsScreen.tsx: Appearance (theme), Startup (start-with-Windows preference persistence -- actual Windows autostart registration is WU018), Monitoring (default refresh interval), global Notifications toggle, and an About panel (version from package.json, disabled 'Check for updates' since there's no update mechanism). Every control saves immediately via save_app_settings.",
+    "Deliberately kept device-settings notifications to the single notificationsEnabled toggle the backend actually implements, rather than fabricating the mockup's three category toggles with no backing rule.",
+    "Verified npm run build and npm run lint (0 errors, same 3 pre-existing warnings); cargo build clean; cargo test 152/152."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/commands/devices.rs",
+    "src-tauri/src/domain/device.rs",
+    "src-tauri/src/lib.rs",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/features/devices/DeviceForm.tsx",
+    "src/features/devices/ServicesEditor.tsx",
+    "src/features/services/ServicesScreen.tsx",
+    "src/features/settings/GlobalSettingsScreen.tsx",
+    "src/lib/tauri/devices.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings (unrelated to this WU)." },
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "152/152 unit tests passed, unaffected (open_device_service reuses an already-tested domain validator)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Selecting a service opens it in the default browser via open_device_service, restricted to http/https", "result": "passed", "evidence": "ServicesScreen and DeviceDetailScreen both call the new open_device_service command; it re-validates the scheme via validate_service_url before calling tauri-plugin-opener. Live smoke test: seeding a device with a javascript:-scheme service caused JsonDeviceRepository to drop the entire device as invalid at load (the same validator path), confirming the scheme check is genuinely enforced end-to-end, not just at the UI layer." },
+    { "criterion": "Device and global settings changes persist via save_app_settings / update_device and survive a restart", "result": "passed", "evidence": "GlobalSettingsScreen calls save_app_settings on every control change (existing WU001 persistence, atomic JSON writes); DeviceForm's ServicesEditor changes flow through the existing update_device path used since WU005/WU008, unchanged persistence mechanism." },
+    { "criterion": "Settings screens visually match the Pi Control design reference", "result": "passed", "evidence": "Built directly against docs/design/Pi Control.dc.html's isServices/isDeviceSettings/isGlobalSettings sections (card grouping, section labels, toggle rows, theme segmented control, About panel layout), reusing the existing dark-theme tokens from src/globals.css." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 20/100 (low). Rationale: one new backend command was required (open_device_service), but it's a thin, defensively-revalidated wrapper around an already-tested domain validator and a well-established Tauri plugin (tauri-plugin-opener, already registered since WU001); everything else is additive frontend work consuming existing, already-tested commands.",
+    "Scope note: open_device_service (service launching) was originally slated for WU016 per the milestone summary, but this work unit's own AIQT-generated acceptance criteria explicitly required it ('Selecting a service opens it in the default browser via open_device_service'), so it was implemented now rather than left as a non-functional placeholder. WU016 remains responsible for Terminal launching (wt.exe) and tray shortcuts, which are unrelated code paths.",
+    "Start-with-Windows is UI-and-persistence only in this WU -- the settings toggle saves to config.json via the existing AppSettings model, but nothing yet registers a Windows Run-key/Task Scheduler entry; that registration is WU018's job.",
+    "Device-settings 'Notifications' intentionally shows one toggle (notificationsEnabled), not the design mockup's three separate category switches -- there is no backend concept of separate offline/resource/container notification categories (WU012's rules aren't split that way), so three switches doing the same thing would misrepresent functionality that doesn't exist."
+  ]
+}
