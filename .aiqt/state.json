@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M004",
-  "currentWorkUnitId": "WU013",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -45,7 +45,7 @@
         "id": "M004",
         "title": "M4 — Desktop experience",
         "objective": "Deliver the final dashboard, device detail, services, and settings screens matching the Pi Control design, plus terminal/service launching, deduplicated notifications, and autostart.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU013",
           "WU014",
@@ -554,13 +554,13 @@
           "npm run build",
           "npm run lint"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-014",
           "DEP-015"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T18:45:04.927Z"
+        "updatedAt": "2026-08-02T18:57:45.353Z"
       },
       {
         "id": "WU014",
@@ -594,12 +594,12 @@
           "npm run build",
           "npm run lint"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-016"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T18:57:45.353Z"
       },
       {
         "id": "WU015",
@@ -670,12 +670,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-018"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T18:57:45.353Z"
       },
       {
         "id": "WU017",
@@ -1844,6 +1844,69 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T18:44:39.341Z"
+    },
+    {
+      "id": "C013",
+      "workUnitId": "WU013",
+      "packetId": "PKT-013",
+      "summary": "Replaced the plain device list with the card-based dashboard grid from the design reference, wired to live snapshot data. Each DeviceCard shows connection status, CPU/MEM/DISK/TEMP mini bars with the same warning/offline thresholds as the mockup, an offline banner with last-seen time, uptime/container/last-refresh footer, and Terminal (disabled until WU016)/Services/Refresh actions. A new useDeviceSnapshots hook loads each device's last-known snapshot on mount and stays live via the existing device://snapshot-updated event. Refresh All and per-card Refresh both call the already-async WU011 monitoring commands. Frontend-only; 152 backend tests unaffected.",
+      "completed": [
+        "features/dashboard/DeviceCard.tsx: status dot (pulses when online), name/type badge/hostname, offline/error banner with relative last-seen time, 4-column CPU/MEM/DISK/TEMP bars (dimmed via opacity when snapshot.stale, carrying forward WU011's stale-data-stays-visible behavior), uptime/container-count/last-refresh footer, Terminal (disabled with a 'not wired up yet' tooltip since open_device_terminal doesn't exist until WU016)/Services/Refresh action row. Entire card is clickable and keyboard-accessible (Enter/Space) to open device detail; action buttons stop propagation.",
+        "stores/useDeviceSnapshots.ts: fetches get_latest_snapshot per device on mount, subscribes to device://snapshot-updated for the component's lifetime, returns a live Record<deviceId, DeviceSnapshot>.",
+        "features/dashboard/DashboardScreen.tsx: renders the card grid, adds a Refresh All button (refresh_all_devices) and wires each card's Refresh button (refresh_device); kept Edit/Delete as compact buttons below each card since Device Detail's settings-gear edit entry point doesn't exist until WU014 -- removing them now would have made devices uneditable for a work unit.",
+        "lib/formatting/{uptime,relativeTime,metricThresholds,deviceMetrics}.ts: small pure formatting helpers (seconds -> '14d 6h', ISO timestamp -> '5 min ago', percent/temp -> threshold color class, metrics -> memory/disk percent).",
+        "Verified npm run build and npm run lint (0 errors, same 3 pre-existing warnings) pass; cargo test still 152/152 (untouched by this frontend-only work unit)."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src/features/dashboard/DashboardScreen.tsx",
+        "src/features/dashboard/DeviceCard.tsx",
+        "src/lib/formatting/deviceMetrics.ts",
+        "src/lib/formatting/metricThresholds.ts",
+        "src/lib/formatting/relativeTime.ts",
+        "src/lib/formatting/uptime.ts",
+        "src/stores/useDeviceSnapshots.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript build succeeds with the new components/hooks/helpers."
+        },
+        {
+          "command": "npm run lint",
+          "result": "passed",
+          "summary": "0 errors, 3 pre-existing HMR-granularity warnings (unrelated to this WU)."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "152/152 unit tests passed, unaffected (no backend changes this WU)."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Dashboard shows a card per device with live status and metrics",
+          "result": "passed",
+          "evidence": "DeviceCard renders status dot/metrics/footer from useDeviceSnapshots, which is backed by get_latest_snapshot + the device://snapshot-updated event confirmed emitted in the WU011/WU012 backend."
+        },
+        {
+          "criterion": "Offline/stale devices are visually distinguishable from healthy ones",
+          "result": "passed",
+          "evidence": "Offline banner (WifiOff icon + status label + last-seen) renders whenever snapshot exists but connectionStatus != online; stale carried-forward metrics render at opacity-60 per metricThresholds/DeviceCard."
+        },
+        {
+          "criterion": "Refresh actions (single device and all devices) are reachable from the dashboard",
+          "result": "passed",
+          "evidence": "Refresh All button calls refreshAllDevices; each card's Refresh icon button calls refreshDevice(id), both showing a spinner while in flight via refreshingIds/refreshingAll state."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T18:57:45.353Z"
     }
   ],
   "lastAgentPacket": {
@@ -1872,8 +1935,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T18:45:04.927Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T18:57:45.353Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -2232,6 +2295,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T18:44:39.341Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C013",
+      "current": {
+        "observationId": "sha256:ec17f5fb5fa24ba206740c8477596af38702e938c5e8cf444ecd433ada5b43f2",
+        "checkpointId": "C013",
+        "workUnitId": "WU013",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T18:57:45.353Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T18:57:45.353Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:ec17f5fb5fa24ba206740c8477596af38702e938c5e8cf444ecd433ada5b43f2",
+          "checkpointId": "C013",
+          "workUnitId": "WU013",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T18:57:45.353Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T18:57:45.353Z"
         }
       ]
     }
