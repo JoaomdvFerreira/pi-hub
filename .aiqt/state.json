@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M002",
-  "currentWorkUnitId": "WU006",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -21,7 +21,7 @@
         "id": "M002",
         "title": "M2 — Device registry and SSH connectivity",
         "objective": "Let the user register, edit, and remove devices; connect to them over Windows OpenSSH with proper timeout/authentication/host-key error classification; persist devices.json.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU005",
           "WU006",
@@ -284,13 +284,13 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-005",
           "DEP-006"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T17:23:07.696Z"
+        "updatedAt": "2026-08-02T17:28:08.609Z"
       },
       {
         "id": "WU007",
@@ -324,12 +324,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-007"
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
-        "updatedAt": "2026-08-02T15:26:16.573Z"
+        "updatedAt": "2026-08-02T17:28:08.609Z"
       },
       {
         "id": "WU008",
@@ -1293,6 +1293,82 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-02T17:22:55.525Z"
+    },
+    {
+      "id": "C006",
+      "workUnitId": "WU006",
+      "packetId": "PKT-006",
+      "summary": "Implemented create_device/update_device/delete_device with strict validation, via a new application::device_service layer (commands -> application -> domain -> storage). Extended Device::validate() to also validate each service's name and URL (http/https only). create_device generates a UUID id and RFC3339 timestamps; update_device preserves id/created_at while bumping updated_at and 404s on an unknown id; delete_device 404s if nothing was removed; all three validate before ever touching disk, so invalid input never persists or corrupts the existing device list. 12 new Rust unit tests, 43 total passing.",
+      "completed": [
+        "domain/device.rs: Device::validate() now also validates each registered service's name (non-empty) and url (must parse and use http or https; rejects javascript:, file:, data:, and malformed URLs).",
+        "application/device_service.rs: DeviceInput (editable fields only, no client-settable id/createdAt/updatedAt) + create_device/update_device/delete_device.",
+        "create_device: generates a UUID v4 id and matching RFC3339 created_at/updated_at (via chrono), validates, then persists.",
+        "update_device: looks up the existing device by id (NotFound if missing), preserves id and created_at, bumps updated_at, validates, then persists; a rejected update never touches the stored list.",
+        "delete_device: removes by id, NotFound if nothing was removed.",
+        "commands/devices.rs: create_device/update_device/delete_device Tauri commands, mapping DeviceServiceError to the existing ApplicationError (ValidationError/NotFoundError/StorageError); registered in lib.rs.",
+        "src/types/device.ts + src/lib/tauri/devices.ts: added DeviceInput type and createDevice/updateDevice/deleteDevice wrappers.",
+        "Added uuid, chrono, and url as direct Cargo dependencies.",
+        "12 new Rust unit tests (5 domain service-URL/name validation, 7 application-layer create/update/delete including rejected-input-doesn't-persist cases), for 43 total.",
+        "Verified cargo test (43/43), cargo build, npm run build, and npm run lint all pass."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/src/domain/device.rs",
+        "src-tauri/src/application/mod.rs",
+        "src-tauri/src/application/device_service.rs",
+        "src-tauri/src/commands/devices.rs",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/storage/device_repository.rs",
+        "src/types/device.ts",
+        "src/lib/tauri/devices.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "43/43 unit tests passed (12 new)."
+        },
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "tsc + vite build succeeded."
+        },
+        {
+          "command": "npm run lint",
+          "result": "passed",
+          "summary": "0 errors, same 2 pre-existing HMR-granularity warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Invalid host/port/username/service URL values are rejected with a clear ApplicationError",
+          "result": "passed",
+          "evidence": "create_rejects_invalid_input_without_persisting and update_rejects_invalid_input_leaving_original_untouched tests; commands map DeviceServiceError::Validation to ApplicationError{code: \"ValidationError\", ...}."
+        },
+        {
+          "criterion": "Shell metacharacters in any field are rejected",
+          "result": "passed",
+          "evidence": "Host/username shell-metacharacter rejection was already covered in WU005; this work unit adds the equivalent guard for service URLs (only http/https schemes accepted, via url::Url::parse + scheme check) so a service URL can't be used to smuggle a dangerous scheme either."
+        },
+        {
+          "criterion": "Rust unit tests cover valid and invalid input cases",
+          "result": "passed",
+          "evidence": "12 new tests across domain::device (service URL/name validation) and application::device_service (create/update/delete success and failure paths, including that a rejected create/update never persists)."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-02T17:28:08.609Z"
     }
   ],
   "lastAgentPacket": {
@@ -1319,8 +1395,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-02T17:23:07.696Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-02T17:28:08.609Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -1469,6 +1545,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T17:22:55.525Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C006",
+      "current": {
+        "observationId": "sha256:d4f75bd9a290a67bfeece87f5d8137cd153f6ec898ad54d6fa77d962759a1a0c",
+        "checkpointId": "C006",
+        "workUnitId": "WU006",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-02T17:28:08.609Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-02T17:28:08.609Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:d4f75bd9a290a67bfeece87f5d8137cd153f6ec898ad54d6fa77d962759a1a0c",
+          "checkpointId": "C006",
+          "workUnitId": "WU006",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-02T17:28:08.609Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-02T17:28:08.609Z"
         }
       ]
     }
