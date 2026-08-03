@@ -1,10 +1,13 @@
 import { RouterProvider } from "@/app/router";
 import { AppShell } from "@/app/AppShell";
+import { TerminalSessionsProvider } from "@/stores/useTerminalSessions";
 
 function App() {
   return (
     <RouterProvider>
-      <AppShell />
+      <TerminalSessionsProvider>
+        <AppShell />
+      </TerminalSessionsProvider>
     </RouterProvider>
   );
 }

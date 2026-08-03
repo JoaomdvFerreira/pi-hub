@@ -21,7 +21,7 @@ way every other build in this project has been produced.
 2. Build the signed bundle:
 
    ```powershell
-   $env:TAURI_SIGNING_PRIVATE_KEY_PATH = "C:\Users\João\.tauri\pi-hub-updater.key"
+   $env:TAURI_SIGNING_PRIVATE_KEY = "C:\Users\João\.tauri\pi-hub-updater.key"
    npm run tauri build
    ```
 

@@ -67,7 +67,15 @@
           "WU022",
           "WU023",
           "WU024",
-          "WU025"
+          "WU025",
+          "WU026",
+          "WU027",
+          "WU028",
+          "WU029",
+          "WU030",
+          "WU031",
+          "WU032",
+          "WU033"
         ]
       }
     ],
@@ -1013,6 +1021,270 @@
         "dependencies": [],
         "createdAt": "2026-08-03T08:23:10.283Z",
         "updatedAt": "2026-08-03T08:38:33.671Z"
+      },
+      {
+        "id": "WU026",
+        "milestoneId": "M005",
+        "title": "Persist recent device activity across restarts",
+        "objective": "Make the device detail screen's 'Recent Activity' feed survive an app restart instead of always starting empty, since notification-worthy transitions are currently only held in memory for the running session.",
+        "scope": [
+          "Persist a bounded (e.g. last 50) per-app activity log of notification-worthy transitions to disk, alongside existing state (state.json/snapshot storage)",
+          "Hydrate src/stores/useDeviceActivity.ts from the persisted log on load instead of always starting empty",
+          "Keep the existing live-update behavior via notification://ready unchanged for the running session"
+        ],
+        "outOfScope": [
+          "Unbounded/full historical audit log",
+          "Charting or analytics over activity history"
+        ],
+        "acceptanceCriteria": [
+          "Closing and reopening the app still shows the device's most recent activity entries, not an empty feed",
+          "The persisted log stays bounded (does not grow without limit) across long-running use"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/storage/",
+          "src-tauri/src/monitoring/notifications.rs",
+          "src/stores/useDeviceActivity.ts"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU027",
+        "milestoneId": "M005",
+        "title": "Actionable Windows notifications",
+        "objective": "Clicking a Pi-Hub desktop notification currently does nothing; it should bring the app to the foreground and navigate to the relevant device, closing the loop between 'device went offline' and actually looking at it.",
+        "scope": [
+          "Wire a click handler on notifications dispatched from src-tauri/src/platform/notifications.rs so clicking one shows the main window and routes the frontend to that device's detail screen",
+          "Carry the device id through the notification payload/action needed to do this"
+        ],
+        "outOfScope": [
+          "Custom notification action buttons beyond the default click",
+          "Notification history/center UI"
+        ],
+        "acceptanceCriteria": [
+          "Clicking a device-offline or container-status notification brings Pi-Hub to the foreground already showing that device's detail screen",
+          "Dismissing a notification without clicking it has no side effects"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/notifications.rs",
+          "src/app/router.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU028",
+        "milestoneId": "M005",
+        "title": "Terminal reconnect on disconnect",
+        "objective": "When an SSH session in the terminal dock drops, the window currently just shows 'Session ended' and must be closed and reopened; add a reconnect action that resumes it in place.",
+        "scope": [
+          "Add a 'Reconnect' control shown in a terminal window's closed/error state, reusing openTerminalSession for the same device",
+          "Preserve the window's existing position/size/minimized state across a reconnect"
+        ],
+        "outOfScope": [
+          "Automatic/unattended reconnect retries",
+          "Preserving scrollback across a reconnect (a fresh session is expected)"
+        ],
+        "acceptanceCriteria": [
+          "After a session ends (remote disconnect, network drop, etc.), clicking Reconnect opens a new session to the same device in the same window without needing to reopen the terminal from the device card",
+          "Reconnecting does not create a duplicate/orphaned PTY session on the Rust side"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src/features/terminal/TerminalWindow.tsx"
+        ],
+        "validationCommands": [
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU029",
+        "milestoneId": "M005",
+        "title": "Remember terminal window position and size per device",
+        "objective": "Each terminal window currently opens centered with a small cascade offset and forgets its geometry on close, so a user who regularly reopens the same device's terminal has to re-drag/resize it every time.",
+        "scope": [
+          "Persist each device's last terminal window position and size (e.g. in src/stores/useTerminalSessions.tsx or local settings storage)",
+          "Use the remembered geometry as the initial position/size the next time that device's terminal is opened, falling back to the current centered/cascaded default when there is none yet"
+        ],
+        "outOfScope": [
+          "Syncing window geometry across machines/installs",
+          "Per-monitor-aware placement beyond simple viewport clamping"
+        ],
+        "acceptanceCriteria": [
+          "Dragging/resizing a device's terminal, closing it, and reopening it later restores the last position and size",
+          "A device opened for the first time still gets the existing centered/cascaded default"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src/stores/useTerminalSessions.tsx",
+          "src/features/terminal/TerminalWindow.tsx"
+        ],
+        "validationCommands": [
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU030",
+        "milestoneId": "M005",
+        "title": "Dynamic tray icon for offline/unhealthy devices",
+        "objective": "The tray icon is currently static regardless of fleet health; since Pi-Hub is designed to live in the tray, badging or swapping the icon when any monitored device is offline or unhealthy lets the user notice at a glance without opening the window.",
+        "scope": [
+          "Add an alternate tray icon (or badge overlay) used when at least one monitoring-enabled device is offline, in an error state, or has an unhealthy/failed container",
+          "Update the tray icon reactively from the existing device://status-changed / container://status-changed events the scheduler already emits",
+          "Revert to the normal icon once every device is healthy again"
+        ],
+        "outOfScope": [
+          "Per-device icon variants or a menu bar summary beyond the single glanceable icon state",
+          "Animated/blinking icon states"
+        ],
+        "acceptanceCriteria": [
+          "The tray icon visibly changes within one refresh cycle of a monitored device going offline or a container becoming unhealthy",
+          "The tray icon returns to its normal state once the underlying issue clears"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/tray.rs",
+          "src-tauri/icons/"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "cargo build --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU031",
+        "milestoneId": "M005",
+        "title": "Instant refresh after a Docker container action",
+        "objective": "After starting/stopping/restarting a container, the UI currently just says the dashboard will reflect the result on the next scheduled refresh (up to several minutes by default), giving no immediate confirmation the action worked.",
+        "scope": [
+          "After a successful container action in src-tauri/src/commands/containers.rs, trigger a single-device refresh for that device immediately (reusing the existing refresh_one path) instead of waiting for the scheduler's next tick",
+          "Update ContainerActionsCell.tsx's copy/UX to reflect the faster feedback"
+        ],
+        "outOfScope": [
+          "Real-time container state streaming outside the existing refresh/snapshot model",
+          "Changing the scheduled background refresh interval itself"
+        ],
+        "acceptanceCriteria": [
+          "Starting, stopping, or restarting a container updates that device's snapshot (and the visible container state) within a couple of seconds, without waiting for the device's normal refresh interval",
+          "A failed action does not trigger a false 'success' refresh"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/containers.rs",
+          "src/features/devices/ContainerActionsCell.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU032",
+        "milestoneId": "M005",
+        "title": "Bounded container log viewer",
+        "objective": "The functional spec already lists a bounded container log viewer as Phase 2 backlog; Docker actions already go through an established SSH remote-command catalogue, so a read-only 'view recent logs' extension is a small, spec-sanctioned addition rather than a new category of feature.",
+        "scope": [
+          "Add a bounded log-fetch remote operation (e.g. docker logs --tail N) to the existing SSH remote command catalogue",
+          "Expose a Tauri command wrapping it and a panel/dialog in the device detail screen (near ContainerActionsCell) to view a container's recent logs on demand"
+        ],
+        "outOfScope": [
+          "Live/streaming log tailing",
+          "Log search, filtering, or persistence across sessions"
+        ],
+        "acceptanceCriteria": [
+          "From a device's container list, the user can view that container's most recent bounded log output on demand",
+          "Fetching logs for a container with little/no output, or an unreachable device, fails gracefully with a clear message rather than hanging or crashing"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/ssh/operation.rs",
+          "src-tauri/src/commands/containers.rs",
+          "src/features/devices/ContainerActionsCell.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU033",
+        "milestoneId": "M005",
+        "title": "Surface each device's refresh interval and next-refresh timing",
+        "objective": "A device's refreshIntervalSeconds can already be overridden per-device in DeviceForm.tsx, but nothing in the dashboard or detail screen shows the current interval or when the next refresh will happen, so the setting is invisible once saved.",
+        "scope": [
+          "Show a small 'next refresh in Ns' or 'custom interval' indicator on DeviceCard and/or DeviceDetailScreen, derived from the device's effective refresh interval and its last snapshot's capturedAt",
+          "Distinguish a device using its own override from one using the global default interval"
+        ],
+        "outOfScope": [
+          "A live countdown timer with second-by-second UI updates (a coarse/periodically-updated indicator is sufficient)",
+          "Changing the refresh interval from this indicator (editing stays in DeviceForm)"
+        ],
+        "acceptanceCriteria": [
+          "A device with a custom refresh interval visibly shows that it differs from the global default",
+          "The indicator reflects a reasonable estimate of time until the next automatic refresh"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src/features/dashboard/DeviceCard.tsx",
+          "src/features/devices/DeviceDetailScreen.tsx"
+        ],
+        "validationCommands": [
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T16:54:41.010Z",
+        "updatedAt": "2026-08-03T16:54:41.010Z"
       }
     ],
     "dependencies": [
@@ -3002,8 +3274,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt review",
-  "lastUpdatedAt": "2026-08-03T08:38:33.671Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T16:54:41.010Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

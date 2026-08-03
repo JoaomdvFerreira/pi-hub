@@ -10,6 +10,7 @@ use crate::domain::device::{
 };
 use crate::error::ApplicationError;
 use crate::infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, SshTarget};
+use crate::platform::pty::PtySessionManager;
 use crate::platform::tray;
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 
@@ -101,6 +102,12 @@ pub fn update_device(
 pub fn delete_device(app: AppHandle, id: String) -> Result<(), ApplicationError> {
     let repo = repository(&app)?;
     device_service::delete_device(&repo, &id).map_err(to_application_error)?;
+    // Otherwise a terminal left open on a just-deleted device keeps its
+    // ssh.exe running indefinitely, referencing a device no one can ever
+    // reach again from any screen -- the one-session-per-device guarantee
+    // this manager otherwise upholds doesn't help once the device itself
+    // is gone.
+    app.state::<PtySessionManager>().close_all_for_device(&id);
     tray::rebuild_device_menu(&app);
     Ok(())
 }

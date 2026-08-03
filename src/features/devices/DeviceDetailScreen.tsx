@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ExternalLink, Loader2, RefreshCw, Settings, TerminalSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,7 +27,7 @@ import {
   formatPorts,
 } from "@/lib/formatting/containerStatus";
 import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
-import { LazyTerminalModal } from "@/features/terminal/LazyTerminalModal";
+import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
 
@@ -70,7 +70,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [openingServiceId, setOpeningServiceId] = useState<string | null>(null);
   const [serviceOpenError, setServiceOpenError] = useState<string | null>(null);
-  const [terminalOpen, setTerminalOpen] = useState(false);
+  const { openTerminal } = useTerminalSessions();
   const [openingExternalTerminal, setOpeningExternalTerminal] = useState(false);
   const [terminalError, setTerminalError] = useState<string | null>(null);
 
@@ -183,7 +183,10 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           </span>
         ) : null}
         <div className="flex-1" />
-        <Button title="Open an in-app SSH terminal" onClick={() => setTerminalOpen(true)}>
+        <Button
+          title="Open an in-app SSH terminal"
+          onClick={() => openTerminal(device.id, device.name)}
+        >
           <TerminalSquare />
           Open Terminal
         </Button>
@@ -462,16 +465,6 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           <p className="mt-2 text-sm text-destructive">{serviceOpenError}</p>
         ) : null}
       </section>
-
-      {terminalOpen ? (
-        <Suspense fallback={null}>
-          <LazyTerminalModal
-            deviceId={deviceId}
-            deviceName={device.name}
-            onClose={() => setTerminalOpen(false)}
-          />
-        </Suspense>
-      ) : null}
     </div>
   );
 }

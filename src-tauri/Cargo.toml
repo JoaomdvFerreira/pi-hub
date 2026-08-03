@@ -1,6 +1,6 @@
 [package]
 name = "pi-hub"
-version = "0.1.0"
+version = "0.2.0"
 description = "Pi-Hub: a Windows system-tray control center for personal self-hosted infrastructure"
 authors = ["João Ferreira"]
 edition = "2021"

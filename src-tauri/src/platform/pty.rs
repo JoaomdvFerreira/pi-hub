@@ -171,7 +171,7 @@ impl PtySessionManager {
     /// own) is logged, not propagated -- the goal here is "make sure
     /// nothing of this device's is left running," not "assert that a kill
     /// call succeeded."
-    fn close_all_for_device(&self, device_id: &str) {
+    pub fn close_all_for_device(&self, device_id: &str) {
         let sessions = self.lock_sessions();
         for (id, session) in sessions.iter() {
             if session.device_id != device_id {

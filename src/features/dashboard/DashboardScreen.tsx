@@ -17,11 +17,13 @@ import { useRouter } from "@/app/router";
 import { deleteDevice, getDevices } from "@/lib/tauri/devices";
 import { refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
+import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import { DeviceCard } from "@/features/dashboard/DeviceCard";
 import type { Device } from "@/types/device";
 
 export function DashboardScreen() {
   const { goAddDevice, goDevice, goDeviceSettings, goServices } = useRouter();
+  const { closeTerminal } = useTerminalSessions();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -53,13 +55,23 @@ export function DashboardScreen() {
     setDeletingId(id);
     try {
       await deleteDevice(id);
+      // The Rust side already kills any live PTY session for this device;
+      // this drops the now-orphaned floating terminal window (if any) so
+      // it doesn't linger on screen referencing a device nothing can
+      // navigate back to.
+      closeTerminal(id);
       await load();
     } finally {
       setDeletingId(null);
     }
   }
 
-  async function handleRefresh(id: string) {
+  // useCallback (not a plain function) so this stays referentially stable
+  // across renders -- DeviceCard is memoized specifically so one device's
+  // snapshot update doesn't re-render every other card, which only works
+  // if the callbacks it's passed don't themselves change identity every
+  // render.
+  const handleRefresh = useCallback(async (id: string) => {
     setRefreshingIds((prev) => new Set(prev).add(id));
     try {
       await refreshDevice(id);
@@ -73,7 +85,7 @@ export function DashboardScreen() {
         return next;
       });
     }
-  }
+  }, []);
 
   async function handleRefreshAll() {
     setRefreshingAll(true);
@@ -133,9 +145,9 @@ export function DashboardScreen() {
                 device={device}
                 snapshot={snapshots[device.id]}
                 refreshing={refreshingIds.has(device.id)}
-                onOpenDetail={() => goDevice(device.id)}
-                onOpenServices={() => goServices(device.id)}
-                onRefresh={() => handleRefresh(device.id)}
+                onOpenDetail={goDevice}
+                onOpenServices={goServices}
+                onRefresh={handleRefresh}
               />
               <div className="flex items-center gap-2 px-0.5">
                 <Button

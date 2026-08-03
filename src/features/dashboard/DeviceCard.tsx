@@ -1,9 +1,9 @@
-import { Suspense, useState, type MouseEvent } from "react";
+import { memo, type MouseEvent } from "react";
 import { Grid2x2, RefreshCw, TerminalSquare, WifiOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { LazyTerminalModal } from "@/features/terminal/LazyTerminalModal";
+import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import { formatUptime } from "@/lib/formatting/uptime";
 import { formatRelativeTime } from "@/lib/formatting/relativeTime";
 import { diskPercent, memoryPercent } from "@/lib/formatting/deviceMetrics";
@@ -57,12 +57,17 @@ interface DeviceCardProps {
   device: Device;
   snapshot?: DeviceSnapshot;
   refreshing: boolean;
-  onOpenDetail: () => void;
-  onOpenServices: () => void;
-  onRefresh: () => void;
+  onOpenDetail: (id: string) => void;
+  onOpenServices: (id: string) => void;
+  onRefresh: (id: string) => void;
 }
 
-export function DeviceCard({
+// The dashboard can hold many devices, each on its own independent refresh
+// timer -- without memo, one device's snapshot update re-renders every
+// other card too. This only pays off because DashboardScreen passes
+// referentially-stable callbacks (useCallback, keyed by device id passed
+// as an argument rather than baked into a fresh closure per card).
+export const DeviceCard = memo(function DeviceCard({
   device,
   snapshot,
   refreshing,
@@ -75,7 +80,7 @@ export function DeviceCard({
   const metrics = snapshot?.metrics;
   const mem = metrics ? memoryPercent(metrics) : undefined;
   const disk = metrics ? diskPercent(metrics) : undefined;
-  const [terminalOpen, setTerminalOpen] = useState(false);
+  const { openTerminal } = useTerminalSessions();
 
   function stopPropagation(event: MouseEvent) {
     event.stopPropagation();
@@ -83,12 +88,12 @@ export function DeviceCard({
 
   return (
     <div
-      onClick={onOpenDetail}
+      onClick={() => onOpenDetail(device.id)}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
-          onOpenDetail();
+          onOpenDetail(device.id);
         }
       }}
       className={cn(
@@ -202,7 +207,7 @@ export function DeviceCard({
           title="Open an in-app SSH terminal"
           onClick={(event) => {
             stopPropagation(event);
-            setTerminalOpen(true);
+            openTerminal(device.id, device.name);
           }}
         >
           <TerminalSquare /> Terminal
@@ -212,7 +217,7 @@ export function DeviceCard({
           size="sm"
           onClick={(event) => {
             stopPropagation(event);
-            onOpenServices();
+            onOpenServices(device.id);
           }}
         >
           <Grid2x2 /> Services
@@ -226,7 +231,7 @@ export function DeviceCard({
           disabled={refreshing}
           onClick={(event) => {
             stopPropagation(event);
-            onRefresh();
+            onRefresh(device.id);
           }}
         >
           {refreshing ? (
@@ -236,15 +241,6 @@ export function DeviceCard({
           )}
         </Button>
       </div>
-      {terminalOpen ? (
-        <Suspense fallback={null}>
-          <LazyTerminalModal
-            deviceId={device.id}
-            deviceName={device.name}
-            onClose={() => setTerminalOpen(false)}
-          />
-        </Suspense>
-      ) : null}
     </div>
   );
-}
+});
