@@ -66,7 +66,8 @@
           "WU021",
           "WU022",
           "WU023",
-          "WU024"
+          "WU024",
+          "WU025"
         ]
       }
     ],
@@ -976,6 +977,42 @@
         "dependencies": [],
         "createdAt": "2026-08-03T05:46:58.430Z",
         "updatedAt": "2026-08-03T05:54:31.898Z"
+      },
+      {
+        "id": "WU025",
+        "milestoneId": "M005",
+        "title": "In-app update checking and installation",
+        "objective": "Let the user update Pi-Hub from inside the app (checking a GitHub Releases-hosted manifest, downloading, and installing a newer signed build) instead of always needing a manually rebuilt and reinstalled MSI/NSIS package.",
+        "scope": [
+          "tauri-plugin-updater integration, with an update signing keypair (private key kept out of the repository)",
+          "GitHub Releases as the update artifact/manifest host, with a documented (or scripted) process for publishing a signed release",
+          "Global settings: a real 'Check for updates' control replacing the disabled placeholder, with checking/downloading/ready-to-restart states"
+        ],
+        "outOfScope": [
+          "Automated CI/CD build pipeline (e.g. GitHub Actions) for producing releases -- releases are built and published the same way every other build in this project has been, not by a new automated pipeline",
+          "Auto-check on a background schedule -- MVP is a manual, user-triggered check only"
+        ],
+        "acceptanceCriteria": [
+          "Clicking 'Check for updates' with no newer release available reports that clearly, without error",
+          "A published newer release can be downloaded and installed from inside the app, and the app relaunches on the new version",
+          "The update artifact's signature is verified before installing; an unsigned or tampered artifact is rejected"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/tauri.conf.json",
+          "src-tauri/Cargo.toml",
+          "src/features/settings/GlobalSettingsScreen.tsx"
+        ],
+        "validationCommands": [
+          "cargo build --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T08:23:10.283Z",
+        "updatedAt": "2026-08-03T08:23:10.283Z"
       }
     ],
     "dependencies": [
@@ -2894,8 +2931,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt review",
-  "lastUpdatedAt": "2026-08-03T06:47:36.642Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T08:23:10.283Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
