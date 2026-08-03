@@ -1,6 +1,6 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
-    tray::{TrayIconBuilder, TrayIconEvent},
+    tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     AppHandle, Manager, Wry,
 };
 
@@ -31,7 +31,21 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         .tooltip("Pi-Hub")
         .on_menu_event(handle_menu_event)
         .on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::Click { .. } = event {
+            // `Click` fires for every button (left/right/middle) on both
+            // mouse-down and mouse-up -- matching it unconditionally meant
+            // a right-click also force-focused the main window via
+            // show_main_window(), which steals foreground focus right as
+            // the native context menu is opening. TrackPopupMenu dismisses
+            // itself the instant its owning window loses the foreground,
+            // so the menu would flash and immediately vanish. Only a left
+            // mouse-up should open the window; the right-click's own menu
+            // display is handled natively by the tray-icon crate.
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
                 show_main_window(tray.app_handle());
             }
         })
