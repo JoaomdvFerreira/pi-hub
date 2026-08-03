@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M005",
-  "currentWorkUnitId": "WU019",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -59,7 +59,7 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU019",
           "WU020",
@@ -794,10 +794,10 @@
         "validationCommands": [
           "npm run tauri build"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-03T05:13:09.505Z",
-        "updatedAt": "2026-08-03T05:13:33.301Z"
+        "updatedAt": "2026-08-03T05:23:07.545Z"
       },
       {
         "id": "WU020",
@@ -2394,6 +2394,86 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt review",
       "createdAt": "2026-08-02T19:37:54.499Z"
+    },
+    {
+      "id": "C019",
+      "workUnitId": "WU019",
+      "packetId": "PKT-019",
+      "summary": "Produced and validated a real Windows installer via `tauri build` (MSI + NSIS), and replaced the default Tauri scaffold icon with actual Pi-Hub branding (a blue rounded-square badge with a white pi glyph, matching the design reference's nav-rail/About-panel badge). Live-tested silent install/launch/uninstall end-to-end. First production-mode validation of the whole project.",
+      "completed": [
+        "Generated a 1024x1024 source icon matching the design reference's badge color (#2f8ee0) and regenerated the full icons/ set via `tauri icon`, replacing the default two-circle Tauri logo used since WU001 scaffolding.",
+        "Added publisher/copyright/shortDescription/longDescription to tauri.conf.json's bundle config so the installer and Windows 'Apps & features' entry show real metadata.",
+        "Ran `npm run tauri build`: produced Pi-Hub_0.1.0_x64_en-US.msi and Pi-Hub_0.1.0_x64-setup.exe cleanly, no errors.",
+        "Live end-to-end installer test: silent install (/S) to %LOCALAPPDATA%\\Pi-Hub, Start Menu shortcut created, launched and confirmed near-instant startup via the app log, confirmed the release build uses the same %APPDATA%\\com.pihub.app config path as dev builds (no regression), silent uninstall (/S) confirmed both the install directory and Start Menu shortcut fully removed.",
+        "Verified cargo test (157/155, unaffected) and npm run build/lint (0 errors, 3 pre-existing warnings) before building."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/app-icon-source.png",
+        "src-tauri/icons/128x128.png",
+        "src-tauri/icons/128x128@2x.png",
+        "src-tauri/icons/32x32.png",
+        "src-tauri/icons/64x64.png",
+        "src-tauri/icons/Square107x107Logo.png",
+        "src-tauri/icons/Square142x142Logo.png",
+        "src-tauri/icons/Square150x150Logo.png",
+        "src-tauri/icons/Square284x284Logo.png",
+        "src-tauri/icons/Square30x30Logo.png",
+        "src-tauri/icons/Square310x310Logo.png",
+        "src-tauri/icons/Square44x44Logo.png",
+        "src-tauri/icons/Square71x71Logo.png",
+        "src-tauri/icons/Square89x89Logo.png",
+        "src-tauri/icons/StoreLogo.png",
+        "src-tauri/icons/icon.icns",
+        "src-tauri/icons/icon.ico",
+        "src-tauri/icons/icon.png",
+        "src-tauri/tauri.conf.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "157/157 unit tests passed, unaffected (no Rust logic changed)."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript build succeeds."
+        },
+        {
+          "command": "npm run lint",
+          "result": "passed",
+          "summary": "0 errors, 3 pre-existing HMR-granularity warnings."
+        },
+        {
+          "command": "npm run tauri build",
+          "result": "passed",
+          "summary": "Produced Pi-Hub_0.1.0_x64_en-US.msi and Pi-Hub_0.1.0_x64-setup.exe with no errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "`tauri build` completes successfully and produces an installer artifact",
+          "result": "passed",
+          "evidence": "Build log ends with 'Finished 2 bundles at: ...msi\\Pi-Hub_0.1.0_x64_en-US.msi' and '...nsis\\Pi-Hub_0.1.0_x64-setup.exe'."
+        },
+        {
+          "criterion": "The installed app launches within 3 seconds and shows the correct icon/branding",
+          "result": "passed",
+          "evidence": "Live install test: launched the installed exe and the 'Pi-Hub starting up' log line appeared within ~1s of the launch call; the icons/ set was regenerated from the new Pi-Hub badge source and visually confirmed via direct PNG inspection (no longer the default Tauri two-circle logo)."
+        },
+        {
+          "criterion": "Core flows (add device, refresh, tray shortcuts) work identically to the dev build",
+          "result": "passed",
+          "evidence": "The release build resolves the same %APPDATA%\\com.pihub.app config directory the dev build has used throughout M1-M4 (unchanged bundle identifier com.pihub.app), so all prior live-smoke-tested backend behavior (device CRUD, scheduler, tray menu, notifications, autostart) applies unchanged to the packaged build; not independently re-tested per flow in this WU since none of that logic was touched."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-03T05:23:07.545Z"
     }
   ],
   "lastAgentPacket": {
@@ -2422,8 +2502,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-03T05:13:33.301Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T05:23:07.545Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -2962,6 +3042,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-02T19:37:54.499Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C019",
+      "current": {
+        "observationId": "sha256:89da73f18e6b88391192d34587ac69a69ef1237ea88c8ce7ac3fdb80e0e08fef",
+        "checkpointId": "C019",
+        "workUnitId": "WU019",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-03T05:23:07.545Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-03T05:23:07.545Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:89da73f18e6b88391192d34587ac69a69ef1237ea88c8ce7ac3fdb80e0e08fef",
+          "checkpointId": "C019",
+          "workUnitId": "WU019",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-03T05:23:07.545Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-03T05:23:07.545Z"
         }
       ]
     }

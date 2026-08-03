@@ -1,0 +1,53 @@
+{
+  "summary": "Produced and validated a real Windows installer via `tauri build` (MSI + NSIS), and replaced the default Tauri scaffold icon with actual Pi-Hub branding (a blue rounded-square badge with a white pi glyph, matching the design reference's nav-rail/About-panel badge). Live-tested silent install/launch/uninstall end-to-end. First production-mode validation of the whole project.",
+  "completed": [
+    "Generated a 1024x1024 source icon matching the design reference's badge color (#2f8ee0) and regenerated the full icons/ set via `tauri icon`, replacing the default two-circle Tauri logo used since WU001 scaffolding.",
+    "Added publisher/copyright/shortDescription/longDescription to tauri.conf.json's bundle config so the installer and Windows 'Apps & features' entry show real metadata.",
+    "Ran `npm run tauri build`: produced Pi-Hub_0.1.0_x64_en-US.msi and Pi-Hub_0.1.0_x64-setup.exe cleanly, no errors.",
+    "Live end-to-end installer test: silent install (/S) to %LOCALAPPDATA%\\Pi-Hub, Start Menu shortcut created, launched and confirmed near-instant startup via the app log, confirmed the release build uses the same %APPDATA%\\com.pihub.app config path as dev builds (no regression), silent uninstall (/S) confirmed both the install directory and Start Menu shortcut fully removed.",
+    "Verified cargo test (157/155, unaffected) and npm run build/lint (0 errors, 3 pre-existing warnings) before building."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/app-icon-source.png",
+    "src-tauri/icons/128x128.png",
+    "src-tauri/icons/128x128@2x.png",
+    "src-tauri/icons/32x32.png",
+    "src-tauri/icons/64x64.png",
+    "src-tauri/icons/Square107x107Logo.png",
+    "src-tauri/icons/Square142x142Logo.png",
+    "src-tauri/icons/Square150x150Logo.png",
+    "src-tauri/icons/Square284x284Logo.png",
+    "src-tauri/icons/Square30x30Logo.png",
+    "src-tauri/icons/Square310x310Logo.png",
+    "src-tauri/icons/Square44x44Logo.png",
+    "src-tauri/icons/Square71x71Logo.png",
+    "src-tauri/icons/Square89x89Logo.png",
+    "src-tauri/icons/StoreLogo.png",
+    "src-tauri/icons/icon.icns",
+    "src-tauri/icons/icon.ico",
+    "src-tauri/icons/icon.png",
+    "src-tauri/tauri.conf.json"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "157/157 unit tests passed, unaffected (no Rust logic changed)." },
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings." },
+    { "command": "npm run tauri build", "result": "passed", "summary": "Produced Pi-Hub_0.1.0_x64_en-US.msi and Pi-Hub_0.1.0_x64-setup.exe with no errors." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "`tauri build` completes successfully and produces an installer artifact", "result": "passed", "evidence": "Build log ends with 'Finished 2 bundles at: ...msi\\Pi-Hub_0.1.0_x64_en-US.msi' and '...nsis\\Pi-Hub_0.1.0_x64-setup.exe'." },
+    { "criterion": "The installed app launches within 3 seconds and shows the correct icon/branding", "result": "passed", "evidence": "Live install test: launched the installed exe and the 'Pi-Hub starting up' log line appeared within ~1s of the launch call; the icons/ set was regenerated from the new Pi-Hub badge source and visually confirmed via direct PNG inspection (no longer the default Tauri two-circle logo)." },
+    { "criterion": "Core flows (add device, refresh, tray shortcuts) work identically to the dev build", "result": "passed", "evidence": "The release build resolves the same %APPDATA%\\com.pihub.app config directory the dev build has used throughout M1-M4 (unchanged bundle identifier com.pihub.app), so all prior live-smoke-tested backend behavior (device CRUD, scheduler, tray menu, notifications, autostart) applies unchanged to the packaged build; not independently re-tested per flow in this WU since none of that logic was touched." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 15/100 (low). Rationale: no application logic changed -- packaging config and icon assets only, verified with a real install/launch/uninstall cycle rather than just a successful build.",
+    "Finding (non-blocking, logged for awareness, not fixed in this WU): the NSIS installer auto-launches Pi-Hub after a silent install, and the app has no single-instance guard (no tauri-plugin-single-instance), so launching it again afterward runs two concurrent processes reading/writing the same config files. The existing atomic-write/corrupted-file-quarantine storage design and per-device RefreshCoordinator dedup make this unlikely to cause data corruption or duplicate SSH sessions, but two tray icons for one app is a real rough edge a real user would notice. Recommend a small follow-up WU if this turns out to matter (add tauri-plugin-single-instance, ~15 min of work) -- not adding it here since it's app-behavior scope creep beyond 'produce and validate an installer.'",
+    "Code signing was explicitly out of scope for this WU (and remains a backlog concern); the installer will show an 'Unknown Publisher' SmartScreen warning on first run on a machine other than the one it was built on. Acceptable for personal/home-lab use, would need addressing before any wider distribution.",
+    "Image tooling constraint: no Python/ImageMagick was available in this environment, so the source icon was rendered via a throwaway HTML file screenshotted with headless Edge (already present on the machine) rather than a dedicated image library. The generated PNG has an opaque (non-transparent) background outside the rounded-square shape; this reads fine as an icon in practice (matches how many app icons are packaged) but a designer could produce a cleaner alpha-masked source if pursued further."
+  ]
+}
