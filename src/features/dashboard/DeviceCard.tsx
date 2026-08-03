@@ -1,9 +1,9 @@
-import { useState, type MouseEvent } from "react";
-import { Grid2x2, Loader2, RefreshCw, TerminalSquare, WifiOff } from "lucide-react";
+import { Suspense, useState, type MouseEvent } from "react";
+import { Grid2x2, RefreshCw, TerminalSquare, WifiOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { openDeviceTerminal } from "@/lib/tauri/devices";
+import { LazyTerminalModal } from "@/features/terminal/LazyTerminalModal";
 import { formatUptime } from "@/lib/formatting/uptime";
 import { formatRelativeTime } from "@/lib/formatting/relativeTime";
 import { diskPercent, memoryPercent } from "@/lib/formatting/deviceMetrics";
@@ -75,24 +75,10 @@ export function DeviceCard({
   const metrics = snapshot?.metrics;
   const mem = metrics ? memoryPercent(metrics) : undefined;
   const disk = metrics ? diskPercent(metrics) : undefined;
-  const [openingTerminal, setOpeningTerminal] = useState(false);
-  const [terminalError, setTerminalError] = useState<string | null>(null);
+  const [terminalOpen, setTerminalOpen] = useState(false);
 
   function stopPropagation(event: MouseEvent) {
     event.stopPropagation();
-  }
-
-  async function handleOpenTerminal(event: MouseEvent) {
-    stopPropagation(event);
-    setOpeningTerminal(true);
-    setTerminalError(null);
-    try {
-      await openDeviceTerminal(device.id);
-    } catch {
-      setTerminalError("Could not open a terminal for this device.");
-    } finally {
-      setOpeningTerminal(false);
-    }
   }
 
   return (
@@ -213,11 +199,13 @@ export function DeviceCard({
         <Button
           variant="outline"
           size="sm"
-          disabled={openingTerminal}
-          title="Open an SSH session in Windows Terminal"
-          onClick={handleOpenTerminal}
+          title="Open an in-app SSH terminal"
+          onClick={(event) => {
+            stopPropagation(event);
+            setTerminalOpen(true);
+          }}
         >
-          {openingTerminal ? <Loader2 className="animate-spin" /> : <TerminalSquare />} Terminal
+          <TerminalSquare /> Terminal
         </Button>
         <Button
           variant="outline"
@@ -248,7 +236,15 @@ export function DeviceCard({
           )}
         </Button>
       </div>
-      {terminalError ? <p className="text-[11px] text-destructive">{terminalError}</p> : null}
+      {terminalOpen ? (
+        <Suspense fallback={null}>
+          <LazyTerminalModal
+            deviceId={device.id}
+            deviceName={device.name}
+            onClose={() => setTerminalOpen(false)}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

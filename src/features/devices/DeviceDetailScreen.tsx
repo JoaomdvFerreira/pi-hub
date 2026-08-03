@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2, RefreshCw, Settings, TerminalSquare } from "lucide-react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ExternalLink, Loader2, RefreshCw, Settings, TerminalSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ import {
   formatPorts,
 } from "@/lib/formatting/containerStatus";
 import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
+import { LazyTerminalModal } from "@/features/terminal/LazyTerminalModal";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
 
@@ -69,7 +70,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [openingServiceId, setOpeningServiceId] = useState<string | null>(null);
   const [serviceOpenError, setServiceOpenError] = useState<string | null>(null);
-  const [openingTerminal, setOpeningTerminal] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
+  const [openingExternalTerminal, setOpeningExternalTerminal] = useState(false);
   const [terminalError, setTerminalError] = useState<string | null>(null);
 
   const deviceIds = useMemo(() => [deviceId], [deviceId]);
@@ -104,8 +106,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
     }
   }
 
-  async function handleOpenTerminal() {
-    setOpeningTerminal(true);
+  async function handleOpenExternalTerminal() {
+    setOpeningExternalTerminal(true);
     setTerminalError(null);
     try {
       await openDeviceTerminal(deviceId);
@@ -114,7 +116,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
         isApplicationError(err) ? err.message : "Could not open a terminal for this device.",
       );
     } finally {
-      setOpeningTerminal(false);
+      setOpeningExternalTerminal(false);
     }
   }
 
@@ -181,13 +183,19 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           </span>
         ) : null}
         <div className="flex-1" />
-        <Button
-          disabled={openingTerminal}
-          title="Open an SSH session in Windows Terminal"
-          onClick={handleOpenTerminal}
-        >
-          {openingTerminal ? <Loader2 className="animate-spin" /> : <TerminalSquare />}
+        <Button title="Open an in-app SSH terminal" onClick={() => setTerminalOpen(true)}>
+          <TerminalSquare />
           Open Terminal
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-[30px]"
+          disabled={openingExternalTerminal}
+          title="Open in an external terminal (Windows Terminal/PowerShell)"
+          onClick={handleOpenExternalTerminal}
+        >
+          {openingExternalTerminal ? <Loader2 className="animate-spin" /> : <ExternalLink />}
         </Button>
         <Button
           variant="outline"
@@ -454,6 +462,16 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           <p className="mt-2 text-sm text-destructive">{serviceOpenError}</p>
         ) : null}
       </section>
+
+      {terminalOpen ? (
+        <Suspense fallback={null}>
+          <LazyTerminalModal
+            deviceId={deviceId}
+            deviceName={device.name}
+            onClose={() => setTerminalOpen(false)}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

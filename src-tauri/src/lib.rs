@@ -54,11 +54,16 @@ pub fn run() {
             commands::monitoring::refresh_device,
             commands::monitoring::refresh_all_devices,
             commands::monitoring::get_latest_snapshot,
-            commands::containers::perform_container_action
+            commands::containers::perform_container_action,
+            commands::terminal::open_terminal_session,
+            commands::terminal::write_terminal_input,
+            commands::terminal::resize_terminal_session,
+            commands::terminal::close_terminal_session
         ])
         .manage(monitoring::concurrency::RefreshCoordinator::new(
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
         ))
+        .manage(platform::pty::PtySessionManager::default())
         .setup(|app| {
             log::info!("Pi-Hub starting up");
 
