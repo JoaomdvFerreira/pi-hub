@@ -69,16 +69,17 @@ pub async fn refresh_one(
     device_id: &str,
 ) -> Result<DeviceSnapshot, ApplicationError> {
     let coordinator = app.state::<RefreshCoordinator>();
-    if !coordinator.try_claim(device_id) {
+    let Some(_claim) = coordinator.try_claim(device_id) else {
         let repo = snapshot_repository(app)?;
         return repo
             .get(device_id)
             .ok_or_else(|| not_found_error(device_id));
-    }
+    };
 
-    let result = do_refresh(app, device_id).await;
-    coordinator.release(device_id);
-    result
+    // `_claim` releases the device on drop -- at the end of this scope,
+    // regardless of how do_refresh returns (Ok, Err, or a panic unwinding
+    // through here) -- so there is no separate release call to forget.
+    do_refresh(app, device_id).await
 }
 
 async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, ApplicationError> {

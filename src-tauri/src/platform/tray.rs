@@ -6,6 +6,7 @@ use tauri::{
 
 use crate::domain::device::Device;
 use crate::monitoring::scheduler;
+use crate::platform::pty::PtySessionManager;
 use crate::platform::terminal;
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 
@@ -155,7 +156,7 @@ fn handle_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
                 }
             });
         }
-        "exit" => app.exit(0),
+        "exit" => exit_app(app),
         "no_devices" => {}
         _ if id.starts_with(TERMINAL_ID_PREFIX) => {
             let device_id = &id[TERMINAL_ID_PREFIX.len()..];
@@ -202,4 +203,29 @@ pub fn show_main_window(app: &AppHandle) {
         let _ = window.unminimize();
         let _ = window.set_focus();
     }
+}
+
+/// Explicit, deliberate shutdown -- as opposed to `app.exit(0)` on its own,
+/// which relies on the runtime's own (usually-but-not-guaranteed graceful)
+/// teardown to release everything. Two things specifically need to happen
+/// *before* the process goes away, not "eventually" as a side effect of
+/// exiting:
+/// 1. Every live terminal session's ssh.exe must be killed here, while the
+///    app can still act -- once the process is gone, nothing can ask a
+///    child process spawned by it to close, and it survives as an orphan
+///    exactly like the hang/leak bug this whole module exists to avoid,
+///    just reached by quitting instead of a stuck session.
+/// 2. The tray icon is removed explicitly via `remove_tray_by_id` rather
+///    than left to whatever the runtime's shutdown path does with it --
+///    Windows only reliably retires a tray icon when the owning process
+///    calls Shell_NotifyIcon(NIM_DELETE) (which dropping the `TrayIcon`
+///    here triggers) or when the shell itself later notices the process
+///    is gone (which is what produces the "ghost icon that disappears
+///    once you open the tray" most users have seen from *some* app at one
+///    point). Doing it here guarantees the icon is gone immediately for
+///    every deliberate exit through this menu, not just eventually.
+fn exit_app(app: &AppHandle) {
+    app.state::<PtySessionManager>().close_all();
+    let _ = app.remove_tray_by_id(TRAY_ID);
+    app.exit(0);
 }

@@ -1,8 +1,22 @@
+use std::time::Duration;
+
 use tauri::{AppHandle, Manager};
 
 use crate::error::ApplicationError;
 use crate::platform::pty::PtySessionManager;
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
+
+/// Bounds the *whole* session-open operation, not just SSH's own TCP
+/// connect phase (which `-o ConnectTimeout=5` in platform/pty.rs already
+/// covers). Generous relative to that 5s, since it also has to cover
+/// authentication -- but unlike ConnectTimeout, nothing bounds a device
+/// that legitimately blocks on stdin after connecting (e.g. password auth
+/// instead of key auth) or any future, still-unknown way a session could
+/// stall. Without this, such a session would sit open forever with only a
+/// manual close as a way out, unlike every other SSH-backed operation in
+/// this app (infrastructure/ssh/process.rs's run_with_timeout), which
+/// always has a hard, enforced ceiling.
+const OPEN_TIMEOUT: Duration = Duration::from_secs(15);
 
 fn repository(app: &AppHandle) -> Result<JsonDeviceRepository, ApplicationError> {
     let config_dir = app
@@ -61,25 +75,53 @@ pub async fn open_terminal_session(
         })?;
 
     let app_for_task = app.clone();
-    tauri::async_runtime::spawn_blocking(move || {
-        app_for_task
-            .state::<PtySessionManager>()
-            .open(
-                &app_for_task,
-                &device.id,
-                &device.host,
-                device.ssh_port,
-                &device.ssh_username,
-            )
-            .map_err(pty_error)
-    })
-    .await
-    .map_err(|err| ApplicationError {
-        code: "PlatformIntegrationError".into(),
-        message: format!("opening the terminal session did not complete: {err}"),
-        remediation: Some("Try again.".into()),
-        retryable: true,
-    })?
+    let mut join_handle = tauri::async_runtime::spawn_blocking(move || {
+        app_for_task.state::<PtySessionManager>().open(
+            &app_for_task,
+            &device.id,
+            &device.host,
+            device.ssh_port,
+            &device.ssh_username,
+        )
+    });
+
+    tokio::select! {
+        result = &mut join_handle => {
+            result
+                .map_err(|err| ApplicationError {
+                    code: "PlatformIntegrationError".into(),
+                    message: format!("opening the terminal session did not complete: {err}"),
+                    remediation: Some("Try again.".into()),
+                    retryable: true,
+                })?
+                .map_err(pty_error)
+        }
+        _ = tokio::time::sleep(OPEN_TIMEOUT) => {
+            // The blocking task can't be cancelled (spawn_blocking never
+            // can be), so it may still complete later and hand back a
+            // real, live session -- one the frontend has already given up
+            // on and will never learn the id of. Keep `join_handle` alive
+            // in a background reaper instead of dropping it here, so that
+            // if that happens, the orphaned session gets closed instead
+            // of leaking indefinitely (the exact failure mode this
+            // timeout exists to prevent, just arriving late).
+            let app_for_reaper = app.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(Ok(session_id)) = join_handle.await {
+                    log::warn!(
+                        "a terminal session ({session_id}) finished opening only after its own {OPEN_TIMEOUT:?} timeout had already been reported to the frontend; closing it immediately instead of leaving it orphaned"
+                    );
+                    let _ = app_for_reaper.state::<PtySessionManager>().close(&session_id);
+                }
+            });
+            Err(ApplicationError {
+                code: "PlatformIntegrationError".into(),
+                message: format!("opening the terminal session timed out after {OPEN_TIMEOUT:?}"),
+                remediation: Some("Check that the device is reachable and try again.".into()),
+                retryable: true,
+            })
+        }
+    }
 }
 
 #[tauri::command]

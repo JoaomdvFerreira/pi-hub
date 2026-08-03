@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 
 use portable_pty::{
     Child, ChildKiller, CommandBuilder, MasterPty, NativePtySystem, PtySize, PtySystem,
@@ -72,6 +72,19 @@ struct TerminalExitPayload {
 }
 
 impl PtySessionManager {
+    /// A poisoned `Mutex` (some thread panicked while holding the lock)
+    /// would otherwise permanently break every terminal operation for the
+    /// rest of the app's lifetime, since every call site here used to be a
+    /// bare `.lock().unwrap()`. There is nothing about a panic elsewhere
+    /// that makes this `HashMap` itself unsafe to keep using -- recovering
+    /// the guard (rather than propagating the poison) just means "carry on
+    /// with whatever the map looked like at the moment of the panic,"
+    /// which is a perfectly fine tradeoff for a session registry where the
+    /// worst case is a stale/missing entry, not silent data corruption.
+    fn lock_sessions(&self) -> MutexGuard<'_, HashMap<String, ActiveSession>> {
+        self.sessions.lock().unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     /// Spawns a new `ssh.exe` session in a pseudo-console and starts a
     /// background reader thread that streams its output to the frontend
     /// via the stable `terminal://output` event (payload carries the
@@ -137,7 +150,7 @@ impl PtySessionManager {
 
         let session_id = Uuid::new_v4().to_string();
 
-        self.sessions.lock().unwrap().insert(
+        self.lock_sessions().insert(
             session_id.clone(),
             ActiveSession {
                 device_id: device_id.to_string(),
@@ -159,22 +172,30 @@ impl PtySessionManager {
     /// nothing of this device's is left running," not "assert that a kill
     /// call succeeded."
     fn close_all_for_device(&self, device_id: &str) {
-        let sessions = self.sessions.lock().unwrap();
+        let sessions = self.lock_sessions();
         for (id, session) in sessions.iter() {
             if session.device_id != device_id {
                 continue;
             }
-            let mut killer = session.killer.clone_killer();
-            if let Err(err) = killer.kill() {
-                log::warn!(
-                    "failed to kill a superseded terminal session {id} for device {device_id}: {err}"
-                );
-            }
+            kill_and_log(id, &mut session.killer.clone_killer());
+        }
+    }
+
+    /// Kills every live session regardless of device, for app shutdown
+    /// (see `platform::tray`'s "exit" handler): without this, closing
+    /// Pi-Hub from the tray while a terminal is open would orphan its
+    /// ssh.exe child exactly like the hang/leak this whole module was
+    /// fixed for, just via a different path (app exit instead of a stuck
+    /// session).
+    pub fn close_all(&self) {
+        let sessions = self.lock_sessions();
+        for (id, session) in sessions.iter() {
+            kill_and_log(id, &mut session.killer.clone_killer());
         }
     }
 
     pub fn write(&self, session_id: &str, data: &str) -> Result<(), PtyError> {
-        let mut sessions = self.sessions.lock().unwrap();
+        let mut sessions = self.lock_sessions();
         let session = sessions
             .get_mut(session_id)
             .ok_or_else(|| PtyError("terminal session not found".into()))?;
@@ -185,7 +206,7 @@ impl PtySessionManager {
     }
 
     pub fn resize(&self, session_id: &str, cols: u16, rows: u16) -> Result<(), PtyError> {
-        let sessions = self.sessions.lock().unwrap();
+        let sessions = self.lock_sessions();
         let session = sessions
             .get(session_id)
             .ok_or_else(|| PtyError("terminal session not found".into()))?;
@@ -204,11 +225,17 @@ impl PtySessionManager {
     /// EOF/exit handling removes the session from the map and emits the
     /// exit event -- this only needs to trigger that, not duplicate it.
     pub fn close(&self, session_id: &str) -> Result<(), PtyError> {
-        let mut sessions = self.sessions.lock().unwrap();
+        let mut sessions = self.lock_sessions();
         let session = sessions
             .get_mut(session_id)
             .ok_or_else(|| PtyError("terminal session not found".into()))?;
         session.killer.kill().map_err(|err| PtyError(err.to_string()))
+    }
+}
+
+fn kill_and_log(session_id: &str, killer: &mut Box<dyn ChildKiller + Send + Sync>) {
+    if let Err(err) = killer.kill() {
+        log::warn!("failed to kill terminal session {session_id}: {err}");
     }
 }
 
@@ -260,7 +287,7 @@ fn spawn_waiter_thread(app: AppHandle, session_id: String, mut child: Box<dyn Ch
         );
 
         if let Some(manager) = app.try_state::<PtySessionManager>() {
-            manager.sessions.lock().unwrap().remove(&session_id);
+            manager.lock_sessions().remove(&session_id);
         }
     });
 }
