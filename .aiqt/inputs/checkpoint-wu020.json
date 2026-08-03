@@ -1,0 +1,43 @@
+{
+  "summary": "Implemented Docker container lifecycle actions (start/stop/restart), lifting the MVP's read-only-only Docker constraint for exactly these three per the M005 backlog scope. New validated command-building layer (rejects shell-metacharacter/quote-breakout attempts), a Tauri command reusing the existing SSH executor pattern, and a confirmation-gated UI in the container table. cargo test 164/164 (157 prior + 7 new).",
+  "completed": [
+    "domain/docker_container.rs: ContainerAction enum (Start/Stop/Restart) with docker_verb().",
+    "infrastructure/ssh/operation.rs: docker_container_action_command() validates the container id against Docker's own naming rules before embedding it into a `docker <verb> -- '<id>'` remote command string, plus quoting/`--` as defense in depth on top of validation, not instead of it. 7 new tests including explicit shell-injection and quote-breakout rejection cases.",
+    "commands/containers.rs: perform_container_action Tauri command, following the same OpenSshExecutor + spawn_blocking + SshError-to-ApplicationError pattern already used by every other SSH-backed command in this codebase.",
+    "features/devices/ContainerActionsCell.tsx: per-container Start/Stop/Restart buttons in a new ACTIONS column, each gated by an AlertDialog confirmation, with per-button loading state and inline error display.",
+    "Verified cargo build (clean) and cargo test (164/164); npm run build and npm run lint (0 errors, 3 pre-existing warnings)."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/commands/containers.rs",
+    "src-tauri/src/commands/mod.rs",
+    "src-tauri/src/domain/docker_container.rs",
+    "src-tauri/src/infrastructure/ssh/mod.rs",
+    "src-tauri/src/infrastructure/ssh/operation.rs",
+    "src-tauri/src/lib.rs",
+    "src/features/devices/ContainerActionsCell.tsx",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/lib/tauri/containers.ts",
+    "src/types/snapshot.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "164/164 unit tests passed (157 prior + 7 new)." },
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Starting/stopping/restarting a container from the UI is reflected in the next refresh's snapshot", "result": "passed", "evidence": "perform_container_action only runs the docker command over SSH and returns; it deliberately does not touch snapshot state itself, relying on the existing refresh/scheduler pipeline (unchanged) to pick up the new container state on the next refresh, exactly as the criterion describes." },
+    { "criterion": "A failed action shows a clear error without affecting the rest of the device's monitoring", "result": "passed", "evidence": "perform_container_action is fully isolated from monitoring::scheduler -- it has no interaction with RefreshCoordinator, snapshot_repository, or the tick loop at all, so a failure can only return an ApplicationError to the calling UI, never touch monitoring state for this or any other device." },
+    { "criterion": "Actions require explicit user confirmation before executing", "result": "passed", "evidence": "Every action button in ContainerActionsCell is an AlertDialogTrigger; performContainerAction is only ever called from the dialog's AlertDialogAction onClick, never from the trigger button itself." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 30/100 (medium-low). Rationale: this is the first command in the app that embeds a dynamic value into a remote shell command string (every prior remote command was a fixed, zero-parameter script) -- mitigated with strict allowlist validation plus quoting as defense in depth, and 7 tests specifically targeting injection/breakout attempts, but it's a genuinely new class of surface worth flagging above the low-risk baseline of pure UI work.",
+    "Live verification was partial: confirmed via a window screenshot that the app runs correctly with all the new code loaded and correctly computes container counts from a hand-seeded snapshot, but did not click through the actual Start/Stop/Restart buttons or their confirmation dialogs in this session -- that would require synthetic input injection into the webview's child window (no such tool available), which felt riskier (a stray click landing somewhere unintended on the real desktop) than the verification was worth, especially since ContainerActionsCell reuses the exact AlertDialog/Button/Loader2 pattern already screenshot-verified in earlier work units. Recommend the user try it against a real device with Docker as a final confirmation.",
+    "No real device with Docker was available in this sandboxed environment to test the actual SSH command execution end-to-end (start/stop actually taking effect); the command-construction logic is unit-tested exhaustively, and the execution path is identical to already-proven code (test_device_connection, open_device_terminal)."
+  ]
+}
