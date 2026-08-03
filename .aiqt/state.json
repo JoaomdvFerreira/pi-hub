@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M005",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU020",
   "workGraph": {
     "milestones": [
       {
@@ -59,7 +59,7 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU019",
           "WU020",
@@ -835,10 +835,10 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm run build"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [],
         "createdAt": "2026-08-03T05:13:09.505Z",
-        "updatedAt": "2026-08-03T05:13:09.505Z"
+        "updatedAt": "2026-08-03T05:54:55.832Z"
       },
       {
         "id": "WU021",
@@ -2658,12 +2658,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-021",
-    "workUnitId": "WU024",
+    "id": "PKT-022",
+    "workUnitId": "WU020",
     "milestoneId": "M005",
-    "createdAt": "2026-08-03T05:47:05.119Z",
+    "createdAt": "2026-08-03T05:54:55.832Z",
     "format": "markdown",
-    "contentHash": "sha256:f8c63ed5069e1c37d41a07aef739b22d35b4696618ac06cb0611a7f05c73b1b6",
+    "contentHash": "sha256:b0e5a94d006e551f3fa4b3e6145ada8fd1cd6a31289aef9e393b935335e19d58",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -2671,20 +2671,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-03T05:54:31.898Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-03T05:54:55.832Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

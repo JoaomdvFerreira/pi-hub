@@ -5,6 +5,28 @@
 
 use serde::{Deserialize, Serialize};
 
+/// A container lifecycle action a user can trigger from the UI (spec:
+/// Phase 2 lifts the MVP's read-only-only Docker constraint for exactly
+/// these three). Container creation/removal, exec, logs, and compose
+/// editing remain out of scope.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum ContainerAction {
+    Start,
+    Stop,
+    Restart,
+}
+
+impl ContainerAction {
+    pub fn docker_verb(&self) -> &'static str {
+        match self {
+            ContainerAction::Start => "start",
+            ContainerAction::Stop => "stop",
+            ContainerAction::Restart => "restart",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum DockerContainerState {

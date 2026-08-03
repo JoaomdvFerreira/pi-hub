@@ -26,6 +26,7 @@ import {
   containerStateLabel,
   formatPorts,
 } from "@/lib/formatting/containerStatus";
+import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
 
@@ -351,7 +352,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           </p>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] border-collapse text-sm">
+            <table className="w-full min-w-[760px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] font-bold tracking-wide text-muted-foreground">
                   <th className="px-2 py-1.5 text-left">NAME</th>
@@ -360,6 +361,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
                   <th className="px-2 py-1.5 text-left">UPTIME</th>
                   <th className="px-2 py-1.5 text-left">HEALTH</th>
                   <th className="px-2 py-1.5 text-left">PORT</th>
+                  <th className="px-2 py-1.5 text-left">ACTIONS</th>
                 </tr>
               </thead>
               <tbody>
@@ -390,6 +392,14 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
                     </td>
                     <td className="px-2 py-2 font-mono text-xs text-muted-foreground">
                       {formatPorts(c.ports)}
+                    </td>
+                    <td className="px-2 py-2">
+                      <ContainerActionsCell
+                        deviceId={deviceId}
+                        containerId={c.id}
+                        containerName={c.name}
+                        state={c.state}
+                      />
                     </td>
                   </tr>
                 ))}

@@ -1,3 +1,56 @@
+use crate::domain::docker_container::ContainerAction;
+
+#[derive(Debug)]
+pub struct InvalidContainerIdError(pub String);
+
+impl std::fmt::Display for InvalidContainerIdError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// Docker restricts container ids/names to this character set (hex ids,
+/// or `[a-zA-Z0-9][a-zA-Z0-9_.-]*` names). Re-validated here rather than
+/// trusted, since the id passed in ultimately came from a previous
+/// `docker ps` response and is about to be embedded into a remote shell
+/// command -- unlike the local `ssh.exe` invocation (where host/user/etc
+/// are always passed as separate process arguments), a single SSH command
+/// is always sent as one string, so this is the one place in the app that
+/// legitimately builds a command by embedding a value into it.
+fn validate_container_id(id: &str) -> Result<(), InvalidContainerIdError> {
+    let valid = !id.is_empty()
+        && id.len() <= 128
+        && id.chars().next().is_some_and(|c| c.is_ascii_alphanumeric())
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '.' || c == '-');
+    if valid {
+        Ok(())
+    } else {
+        Err(InvalidContainerIdError(format!(
+            "'{id}' is not a valid Docker container id/name"
+        )))
+    }
+}
+
+/// Builds the fixed `docker <verb> -- '<id>'` remote command for a
+/// container lifecycle action. The validated character set can never
+/// contain a shell metacharacter or an unescaped single quote, and `--`
+/// stops the id from ever being interpreted as a docker flag even if a
+/// future change to Docker's own naming rules allowed a leading `-`; the
+/// surrounding quotes are still applied as defense in depth on top of
+/// the validation, not in place of it.
+pub fn docker_container_action_command(
+    action: ContainerAction,
+    container_id: &str,
+) -> Result<String, InvalidContainerIdError> {
+    validate_container_id(container_id)?;
+    Ok(format!(
+        "docker {} -- '{container_id}'",
+        action.docker_verb()
+    ))
+}
+
 /// The fixed set of remote operations Pi-Hub is ever allowed to run. The
 /// frontend cannot supply arbitrary commands: every command string
 /// executed over SSH is one of these predefined variants.
@@ -152,5 +205,56 @@ mod tests {
     #[test]
     fn system_identity_is_reserved_and_undefined_for_now() {
         assert_eq!(RemoteOperation::SystemIdentity.command(), None);
+    }
+
+    #[test]
+    fn docker_action_command_uses_the_right_verb_per_action() {
+        assert_eq!(
+            docker_container_action_command(ContainerAction::Start, "homeassistant").unwrap(),
+            "docker start -- 'homeassistant'"
+        );
+        assert_eq!(
+            docker_container_action_command(ContainerAction::Stop, "homeassistant").unwrap(),
+            "docker stop -- 'homeassistant'"
+        );
+        assert_eq!(
+            docker_container_action_command(ContainerAction::Restart, "homeassistant").unwrap(),
+            "docker restart -- 'homeassistant'"
+        );
+    }
+
+    #[test]
+    fn docker_action_command_accepts_a_full_length_hex_container_id() {
+        let id = "a".repeat(64);
+        assert!(docker_container_action_command(ContainerAction::Stop, &id).is_ok());
+    }
+
+    #[test]
+    fn docker_action_command_rejects_shell_metacharacters() {
+        let attempt = "homeassistant; rm -rf /";
+        assert!(docker_container_action_command(ContainerAction::Stop, attempt).is_err());
+    }
+
+    #[test]
+    fn docker_action_command_rejects_a_quote_breakout_attempt() {
+        let attempt = "x' ; docker rm -f other-container #";
+        assert!(docker_container_action_command(ContainerAction::Restart, attempt).is_err());
+    }
+
+    #[test]
+    fn docker_action_command_rejects_an_empty_id() {
+        assert!(docker_container_action_command(ContainerAction::Start, "").is_err());
+    }
+
+    #[test]
+    fn docker_action_command_rejects_an_id_not_starting_alphanumeric() {
+        assert!(docker_container_action_command(ContainerAction::Start, "-x").is_err());
+        assert!(docker_container_action_command(ContainerAction::Start, "_x").is_err());
+    }
+
+    #[test]
+    fn docker_action_command_rejects_an_overly_long_id() {
+        let too_long = "a".repeat(129);
+        assert!(docker_container_action_command(ContainerAction::Start, &too_long).is_err());
     }
 }

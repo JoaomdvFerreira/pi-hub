@@ -16,6 +16,8 @@ export type DockerHealthStatus =
   | "none"
   | "unknown";
 
+export type ContainerAction = "start" | "stop" | "restart";
+
 export interface DockerPortBinding {
   hostIp?: string;
   hostPort?: number;

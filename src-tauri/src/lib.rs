@@ -53,7 +53,8 @@ pub fn run() {
             commands::launch::open_device_terminal,
             commands::monitoring::refresh_device,
             commands::monitoring::refresh_all_devices,
-            commands::monitoring::get_latest_snapshot
+            commands::monitoring::get_latest_snapshot,
+            commands::containers::perform_container_action
         ])
         .manage(monitoring::concurrency::RefreshCoordinator::new(
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
