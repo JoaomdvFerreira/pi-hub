@@ -54,6 +54,18 @@
           "WU017",
           "WU018"
         ]
+      },
+      {
+        "id": "M005",
+        "title": "M5 — Post-MVP backlog (Phase 2)",
+        "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU019",
+          "WU020",
+          "WU021",
+          "WU022"
+        ]
       }
     ],
     "workUnits": [
@@ -749,6 +761,151 @@
         ],
         "createdAt": "2026-08-02T15:26:16.573Z",
         "updatedAt": "2026-08-02T19:37:54.499Z"
+      },
+      {
+        "id": "WU019",
+        "milestoneId": "M005",
+        "title": "Production build and packaging",
+        "objective": "Produce and validate a distributable Windows installer via `tauri build`, replacing the dev-only workflow used throughout the MVP.",
+        "scope": [
+          "Run `tauri build` and resolve any release-profile-only build errors/warnings",
+          "Configure/verify the app icon set and bundle identifier/metadata in tauri.conf.json",
+          "Verify the generated MSI/NSIS installer installs, launches, and uninstalls cleanly on Windows",
+          "Verify the packaged app's tray, autostart, and notification behavior match the dev-mode build"
+        ],
+        "outOfScope": [
+          "Code signing / certificate acquisition",
+          "Auto-update mechanism (explicit MVP non-goal)",
+          "CI/CD pipeline for automated releases"
+        ],
+        "acceptanceCriteria": [
+          "`tauri build` completes successfully and produces an installer artifact",
+          "The installed app launches within 3 seconds and shows the correct icon/branding",
+          "Core flows (add device, refresh, tray shortcuts) work identically to the dev build"
+        ],
+        "agentContextRefs": [
+          "project.objective",
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/tauri.conf.json",
+          "src-tauri/icons/"
+        ],
+        "validationCommands": [
+          "npm run tauri build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T05:13:09.505Z",
+        "updatedAt": "2026-08-03T05:13:09.505Z"
+      },
+      {
+        "id": "WU020",
+        "milestoneId": "M005",
+        "title": "Docker container lifecycle actions",
+        "objective": "Allow starting, stopping, and restarting a device's Docker containers from the container table, with explicit confirmation, lifting the MVP's read-only-only Docker constraint for these three actions.",
+        "scope": [
+          "New SSH-backed remote operations for start/stop/restart of a named container",
+          "Tauri commands with device/container id validation and confirmation-required semantics",
+          "Container table UI: action buttons with loading/error states and an AlertDialog confirmation"
+        ],
+        "outOfScope": [
+          "Container creation/removal",
+          "docker exec / interactive shell into a container",
+          "Container logs viewer",
+          "docker-compose editing"
+        ],
+        "acceptanceCriteria": [
+          "Starting/stopping/restarting a container from the UI is reflected in the next refresh's snapshot",
+          "A failed action shows a clear error without affecting the rest of the device's monitoring",
+          "Actions require explicit user confirmation before executing"
+        ],
+        "agentContextRefs": [
+          "context.constraints",
+          "context.nonGoals"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/ssh/operation.rs",
+          "src-tauri/src/commands/",
+          "src/features/devices/DeviceDetailScreen.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T05:13:09.505Z",
+        "updatedAt": "2026-08-03T05:13:09.505Z"
+      },
+      {
+        "id": "WU021",
+        "milestoneId": "M005",
+        "title": "Embedded terminal UI",
+        "objective": "Add an in-app SSH terminal pane (matching the Pi Control design's terminal modal) as an alternative to shelling out to an external terminal application.",
+        "scope": [
+          "In-app terminal modal/panel rendering a live SSH session",
+          "Reuse the existing Windows OpenSSH client as the backing process rather than an embedded SSH library",
+          "Keep the existing external-terminal launch (wt.exe/PowerShell/cmd fallback chain) available as an alternative"
+        ],
+        "outOfScope": [
+          "A full terminal emulator feature set (tabs, split panes, themes)"
+        ],
+        "acceptanceCriteria": [
+          "Opening a device's terminal from the dashboard/detail screen shows a live, interactive SSH session in-app",
+          "Closing the terminal panel cleanly terminates the underlying SSH process",
+          "No SSH password or private key is ever requested, stored, or logged"
+        ],
+        "agentContextRefs": [
+          "context.constraints",
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/platform/terminal.rs",
+          "src/features/terminal/"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T05:13:09.505Z",
+        "updatedAt": "2026-08-03T05:13:09.505Z"
+      },
+      {
+        "id": "WU022",
+        "milestoneId": "M005",
+        "title": "Per-event-type notification controls",
+        "objective": "Replace the single per-device notificationsEnabled toggle with separate, independently-backed rules for offline transitions, container failures, and high resource usage, matching the design mockup's three switches with real behavior behind each.",
+        "scope": [
+          "Extend the notification domain model with per-category enable flags",
+          "Gate WU012's transition rules by the relevant category instead of one global per-device flag",
+          "Device settings UI: three real toggles instead of the current single simplified one"
+        ],
+        "outOfScope": [
+          "Custom user-defined notification rules beyond the three built-in categories"
+        ],
+        "acceptanceCriteria": [
+          "Disabling only the offline-transition category suppresses device online/offline notifications but not container ones, and vice versa",
+          "Existing dedup guarantees (WU012) continue to hold per category"
+        ],
+        "agentContextRefs": [
+          "context.businessRules"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/notification_rule.rs",
+          "src-tauri/src/domain/device.rs",
+          "src/features/devices/DeviceForm.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm run build"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-03T05:13:09.505Z",
+        "updatedAt": "2026-08-03T05:13:09.505Z"
       }
     ],
     "dependencies": [
@@ -2263,8 +2420,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt review",
-  "lastUpdatedAt": "2026-08-02T19:37:54.499Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T05:13:09.505Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
