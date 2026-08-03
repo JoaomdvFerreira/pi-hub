@@ -1,0 +1,37 @@
+{
+  "summary": "Diagnosed the browser-error-page the user observed as a testing artifact (a raw debug binary launched without the paired Vite dev server, never reachable in the actual production build) and, per the user's request, still implemented a real fix: a WebView2 NavigationCompleted hook that swaps in a Pi-Hub-branded fallback page whenever the webview's content fails to load for any reason, instead of leaving WebView2's native error chrome visible. Verified live in both directions (failure and success) with screenshots. cargo test 157/157, unaffected.",
+  "completed": [
+    "src-tauri/fallback.html: static branded fallback page (dark theme, pi badge, Retry button) matching the app's design tokens.",
+    "platform/webview_fallback.rs (Windows-only): registers a WebView2 NavigationCompleted handler via Tauri's with_webview escape hatch; on a failed navigation, calls NavigateToString to show the bundled fallback page instead of WebView2's own error page.",
+    "lib.rs: installs the handler as the first action in setup(), before the window is shown, so it's attached before the OS message loop can deliver even the first (startup) navigation's completion.",
+    "Added webview2-com and windows as Windows-only target dependencies (both already transitive at these exact versions, so no version conflict).",
+    "Verified cargo build (clean) and cargo test (157/157, unaffected); npm run build unaffected."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/Cargo.lock",
+    "src-tauri/Cargo.toml",
+    "src-tauri/fallback.html",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/platform/mod.rs",
+    "src-tauri/src/platform/webview_fallback.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "157/157 unit tests passed, unaffected." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Simulating a load failure (unreachable devUrl on a debug build) shows the branded fallback page, not WebView2's native error page", "result": "passed", "evidence": "Live test: launched target/debug/pi-hub.exe with no Vite dev server running (reproducing exactly what the user saw) and screenshotted the window -- the 'Pi-Hub couldn't load its interface' branded page appeared, titlebar icon confirming it was the same app window, not a separate browser." },
+    { "criterion": "A normal successful load (dev and release) is completely unaffected by the hook", "result": "passed", "evidence": "Live test: started `npm run dev` and relaunched the same debug binary -- screenshotted the real dashboard (nav rail, empty state, Add Device button) loading normally, confirming the NavigationCompleted hook takes no action on a successful navigation." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 20/100 (low). Rationale: Windows-only raw COM interop is inherently a bit more delicate than typical Rust code, but it's additive (only acts on failure), scoped to a single event handler, and verified with real screenshots in both the failure and success paths rather than just a code read-through.",
+    "Root cause clarification for the record: this was never a defect in the shipped application. `tauri build` (verified end-to-end in WU019) embeds the built frontend as local files -- there is no network URL for it to fail to reach. The observed error page came from the agent testing a raw debug binary directly without pairing it with `npm run dev`, which only ever matters for development workflow, never for the installed app a real user runs.",
+    "This closes the user's direct request before resuming the M005 Phase 2 backlog (WU020 container actions, WU021 embedded terminal, WU022 notification categories)."
+  ]
+}
