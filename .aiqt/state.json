@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M005",
-  "currentWorkUnitId": "WU021",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -59,7 +59,7 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU019",
           "WU020",
@@ -870,10 +870,10 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm run build"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-03T05:13:09.505Z",
-        "updatedAt": "2026-08-03T06:04:20.664Z"
+        "updatedAt": "2026-08-03T06:36:20.940Z"
       },
       {
         "id": "WU022",
@@ -2726,6 +2726,83 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-03T06:04:00.606Z"
+    },
+    {
+      "id": "C023",
+      "workUnitId": "WU021",
+      "packetId": "PKT-023",
+      "summary": "Implemented an in-app SSH terminal (xterm.js frontend + a Windows ConPTY-backed ssh.exe session via portable-pty), matching the Pi Control design's terminal modal, while keeping the WU016 external-launch fallback chain available as a secondary action. Discovered and fixed a real deadlock in the reader/waiter thread design during development (documented in code and tests). cargo test 164/164 + 1 intentionally-ignored slow regression test proving ConPTY genuinely works in this environment.",
+      "completed": [
+        "platform/pty.rs: PtySessionManager spawns `ssh.exe -tt [-p <port>] <user>@<host>` in a ConPTY via portable-pty, with a reader thread (streams output) and a separate waiter thread (blocks on child exit, then removes the session -- which drops the pty master and is what actually unblocks the reader's read on Windows, since ConPTY only delivers EOF once the console object itself is torn down, not merely once the child exits).",
+        "commands/terminal.rs: open_terminal_session / write_terminal_input / resize_terminal_session / close_terminal_session Tauri commands.",
+        "features/terminal/TerminalModal.tsx: xterm.js terminal UI matching the design's dark terminal-modal chrome, portaled to document.body to avoid React's tree-based event bubbling reaching a card's onClick.",
+        "features/terminal/LazyTerminalModal.tsx: React.lazy() code-splits xterm.js into its own chunk, only fetched when a terminal is opened -- confirmed via build output (~330KB separate chunk, main bundle unaffected).",
+        "DeviceCard.tsx / DeviceDetailScreen.tsx: primary Open Terminal action now opens the embedded modal; DeviceDetailScreen keeps a secondary icon button for the WU016 external-launch path.",
+        "1 new #[ignore]'d regression test (native_pty_spawns_a_process_and_captures_its_output) proving the ConPTY/portable-pty mechanism genuinely works on this machine; ignored by default since a real console spawn took 30+ seconds in this environment (default suite stays sub-second).",
+        "Verified cargo build (clean) and cargo test (164/164, 1 ignored); npm run build and npm run lint (0 errors, 3 pre-existing warnings)."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "package-lock.json",
+        "package.json",
+        "src-tauri/Cargo.lock",
+        "src-tauri/Cargo.toml",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/commands/terminal.rs",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/platform/mod.rs",
+        "src-tauri/src/platform/pty.rs",
+        "src/features/dashboard/DeviceCard.tsx",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/terminal/LazyTerminalModal.tsx",
+        "src/features/terminal/TerminalModal.tsx",
+        "src/lib/tauri/terminal.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "164/164 passed, 1 intentionally ignored (slow ConPTY regression test, run manually via --ignored)."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript build succeeds; xterm.js confirmed split into its own lazy-loaded chunk."
+        },
+        {
+          "command": "npm run lint",
+          "result": "passed",
+          "summary": "0 errors, 3 pre-existing HMR-granularity warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "In-app terminal modal/panel rendering a live SSH session",
+          "result": "passed",
+          "evidence": "TerminalModal renders an xterm.js Terminal wired to open_terminal_session/terminal://output/write_terminal_input; PtySessionManager's underlying spawn/read/write/wait mechanism is proven working on this machine via the (manually run) native_pty_spawns_a_process_and_captures_its_output test."
+        },
+        {
+          "criterion": "Reuse the existing Windows OpenSSH client as the backing process rather than an embedded SSH library",
+          "result": "passed",
+          "evidence": "CommandBuilder::new(\"ssh.exe\") in platform/pty.rs -- same ssh.exe every other feature in this app shells out to, just attached to a ConPTY instead of plain pipes; no SSH protocol library involved."
+        },
+        {
+          "criterion": "Keep the existing external-terminal launch (wt.exe/PowerShell/cmd fallback chain) available as an alternative",
+          "result": "passed",
+          "evidence": "DeviceDetailScreen retains a secondary icon button (ExternalLink) calling the unchanged WU016 open_device_terminal command; nothing about that command or platform/terminal.rs was touched."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-03T06:36:20.940Z"
     }
   ],
   "lastAgentPacket": {
@@ -2754,8 +2831,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-03T06:04:20.664Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T06:36:20.940Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -3414,6 +3491,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-03T06:04:00.606Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C023",
+      "current": {
+        "observationId": "sha256:6b6e8fcc8a666d580363b95400f8a84adebbaa43b0a55eba2f5a16f844c86dbc",
+        "checkpointId": "C023",
+        "workUnitId": "WU021",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-03T06:36:20.940Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-03T06:36:20.940Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:6b6e8fcc8a666d580363b95400f8a84adebbaa43b0a55eba2f5a16f844c86dbc",
+          "checkpointId": "C023",
+          "workUnitId": "WU021",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-03T06:36:20.940Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-03T06:36:20.940Z"
         }
       ]
     }
