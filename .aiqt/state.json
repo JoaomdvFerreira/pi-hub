@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M005",
-  "currentWorkUnitId": "WU023",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -59,7 +59,7 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU019",
           "WU020",
@@ -937,10 +937,10 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "cargo build --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-03T05:29:49.609Z",
-        "updatedAt": "2026-08-03T05:30:14.746Z"
+        "updatedAt": "2026-08-03T05:36:24.421Z"
       }
     ],
     "dependencies": [
@@ -2509,6 +2509,60 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-03T05:23:07.545Z"
+    },
+    {
+      "id": "C020",
+      "workUnitId": "WU023",
+      "packetId": "PKT-020",
+      "summary": "Fixed the two 'invisible background app' gaps found while measuring Pi-Hub's resource footprint at the user's request: added tauri-plugin-single-instance so a second launch can never spawn a second process, and made the main window start with visible:false so a --minimized autostart launch never paints a visible frame before settling into the tray. Both verified live via real process/window inspection, not just code review. cargo test 157/157, unaffected.",
+      "completed": [
+        "Registered tauri-plugin-single-instance as the first plugin in the builder chain; its callback focuses the existing instance via platform::tray::show_main_window (made pub) instead of allowing a second process.",
+        "tauri.conf.json: main window now created with visible:false. setup() only ever calls show() for a normal (non---minimized) launch; a --minimized launch never calls show(), eliminating the previous create-visible-then-hide sequence that could paint a frame before hide() ran.",
+        "Verified cargo build (clean) and cargo test (157/157, unaffected -- no pure logic changed); npm run build unaffected."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/Cargo.lock",
+        "src-tauri/Cargo.toml",
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/platform/tray.rs",
+        "src-tauri/tauri.conf.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo build --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Clean build, no warnings."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "157/157 unit tests passed, unaffected by this WU."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Unaffected (no frontend changes)."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Launching Pi-Hub while it is already running never results in two pi-hub.exe processes; the existing instance's window is shown/focused instead",
+          "result": "passed",
+          "evidence": "Live test: launched the debug build (PID 15564, confirmed window titled 'Pi-Hub' via Get-Process), launched it again -- tasklist still showed exactly one pi-hub.exe process afterward, and the second launch's log file was empty (exited immediately via the single-instance guard)."
+        },
+        {
+          "criterion": "An autostart (--minimized) launch never shows the main window, even momentarily, before it settles into the tray",
+          "result": "passed",
+          "evidence": "Live test with --minimized: Get-Process's MainWindowTitle heuristic misleadingly reported a different window ('com.pihub.app-siw', the single-instance plugin's own hidden message-only window), so verified directly via a P/Invoke EnumWindows/IsWindowVisible script through PowerShell -- the window actually titled 'Pi-Hub' had visible=False for the entire observed lifetime of the process."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-03T05:36:24.421Z"
     }
   ],
   "lastAgentPacket": {
@@ -2535,8 +2589,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-03T05:30:14.746Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-03T05:36:24.421Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -3105,6 +3159,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-03T05:23:07.545Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C020",
+      "current": {
+        "observationId": "sha256:bf893eea58294876975d641f20cd80d0dd5aebc9528b5d7e134435680c341f70",
+        "checkpointId": "C020",
+        "workUnitId": "WU023",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-03T05:36:24.421Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-03T05:36:24.421Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:bf893eea58294876975d641f20cd80d0dd5aebc9528b5d7e134435680c341f70",
+          "checkpointId": "C020",
+          "workUnitId": "WU023",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-03T05:36:24.421Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-03T05:36:24.421Z"
         }
       ]
     }

@@ -1,0 +1,34 @@
+{
+  "summary": "Fixed the two 'invisible background app' gaps found while measuring Pi-Hub's resource footprint at the user's request: added tauri-plugin-single-instance so a second launch can never spawn a second process, and made the main window start with visible:false so a --minimized autostart launch never paints a visible frame before settling into the tray. Both verified live via real process/window inspection, not just code review. cargo test 157/157, unaffected.",
+  "completed": [
+    "Registered tauri-plugin-single-instance as the first plugin in the builder chain; its callback focuses the existing instance via platform::tray::show_main_window (made pub) instead of allowing a second process.",
+    "tauri.conf.json: main window now created with visible:false. setup() only ever calls show() for a normal (non---minimized) launch; a --minimized launch never calls show(), eliminating the previous create-visible-then-hide sequence that could paint a frame before hide() ran.",
+    "Verified cargo build (clean) and cargo test (157/157, unaffected -- no pure logic changed); npm run build unaffected."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/Cargo.lock",
+    "src-tauri/Cargo.toml",
+    "src-tauri/src/lib.rs",
+    "src-tauri/src/platform/tray.rs",
+    "src-tauri/tauri.conf.json"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "157/157 unit tests passed, unaffected by this WU." },
+    { "command": "npm run build", "result": "passed", "summary": "Unaffected (no frontend changes)." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Launching Pi-Hub while it is already running never results in two pi-hub.exe processes; the existing instance's window is shown/focused instead", "result": "passed", "evidence": "Live test: launched the debug build (PID 15564, confirmed window titled 'Pi-Hub' via Get-Process), launched it again -- tasklist still showed exactly one pi-hub.exe process afterward, and the second launch's log file was empty (exited immediately via the single-instance guard)." },
+    { "criterion": "An autostart (--minimized) launch never shows the main window, even momentarily, before it settles into the tray", "result": "passed", "evidence": "Live test with --minimized: Get-Process's MainWindowTitle heuristic misleadingly reported a different window ('com.pihub.app-siw', the single-instance plugin's own hidden message-only window), so verified directly via a P/Invoke EnumWindows/IsWindowVisible script through PowerShell -- the window actually titled 'Pi-Hub' had visible=False for the entire observed lifetime of the process." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 15/100 (low). Rationale: small, well-isolated change (a widely-used official Tauri plugin plus one config flag), verified with real process/window inspection rather than assumed from code reading.",
+    "Interesting verification detail worth recording: .NET's Process.MainWindowTitle/MainWindowHandle is not a reliable way to check 'is my app's window visible' once other windows (like a plugin's internal IPC window) exist on the same process -- it picked the single-instance plugin's hidden window instead of the real one. Used raw EnumWindows + IsWindowVisible instead for a trustworthy answer.",
+    "This closes out the user's direct request to confirm/improve CPU, memory, and background-invisibility characteristics before continuing into the rest of the M005 Phase 2 backlog (WU020 container actions, WU021 embedded terminal, WU022 notification categories)."
+  ]
+}
