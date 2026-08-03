@@ -26,6 +26,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "João Ferreira",
+    "copyright": "Copyright © 2026 João Ferreira",
+    "shortDescription": "Monitor and access your self-hosted infrastructure",
+    "longDescription": "Pi-Hub is a Windows system-tray control center for monitoring and quickly accessing personal self-hosted infrastructure (Raspberry Pi devices, Docker containers, and web services) over SSH and Tailscale.",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
