@@ -31,9 +31,11 @@ fn pty_error(err: crate::platform::pty::PtyError) -> ApplicationError {
 
 /// Opens a new in-app terminal session (an `ssh.exe` process attached to a
 /// pseudo-console) for the device and returns its session id. The frontend
-/// then listens for `terminal://output:<sessionId>` /
-/// `terminal://exit:<sessionId>` and calls write_terminal_input /
-/// resize_terminal_session / close_terminal_session with that id.
+/// must already be subscribed to the stable `terminal://output` /
+/// `terminal://exit` events (filtering by session id in the payload)
+/// *before* calling this -- output can start flowing the instant the
+/// child process is spawned, well before this command returns, so
+/// subscribing afterward can silently miss it.
 ///
 /// `async` + `spawn_blocking` here is load-bearing, not a style choice: a
 /// plain (non-async) `#[tauri::command]` runs on the main thread, and
@@ -64,6 +66,7 @@ pub async fn open_terminal_session(
             .state::<PtySessionManager>()
             .open(
                 &app_for_task,
+                &device.id,
                 &device.host,
                 device.ssh_port,
                 &device.ssh_username,

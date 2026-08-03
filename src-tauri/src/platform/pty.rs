@@ -23,6 +23,7 @@ impl std::fmt::Display for PtyError {
 }
 
 struct ActiveSession {
+    device_id: String,
     writer: Box<dyn Write + Send>,
     master: Box<dyn MasterPty + Send>,
     killer: Box<dyn ChildKiller + Send + Sync>,
@@ -39,8 +40,33 @@ pub struct PtySessionManager {
     sessions: Mutex<HashMap<String, ActiveSession>>,
 }
 
+pub const OUTPUT_EVENT: &str = "terminal://output";
+pub const EXIT_EVENT: &str = "terminal://exit";
+
+/// `terminal://output` and `terminal://exit` are single, stable event
+/// names (not one dynamic name per session) specifically so the frontend
+/// can subscribe *before* it knows its own session id -- i.e. before ever
+/// calling `open_terminal_session` at all. A pty starts producing output
+/// the instant the child process is spawned, on the Rust side, well
+/// before the `open_terminal_session` command can return that session's
+/// id back over IPC; a per-session dynamic event name would create an
+/// unavoidable window where early output (which can include a
+/// terminal-capability query the remote side blocks on getting an answer
+/// to) is emitted with nobody subscribed yet and is silently lost --
+/// which is exactly what caused terminal sessions to hang indefinitely
+/// before this was one stable, always-subscribable event carrying the
+/// session id in its payload instead.
+#[derive(Clone, Serialize)]
+struct TerminalOutputPayload {
+    #[serde(rename = "sessionId")]
+    session_id: String,
+    data: String,
+}
+
 #[derive(Clone, Serialize)]
 struct TerminalExitPayload {
+    #[serde(rename = "sessionId")]
+    session_id: String,
     #[serde(rename = "exitCode")]
     exit_code: Option<u32>,
 }
@@ -48,16 +74,26 @@ struct TerminalExitPayload {
 impl PtySessionManager {
     /// Spawns a new `ssh.exe` session in a pseudo-console and starts a
     /// background reader thread that streams its output to the frontend
-    /// via a per-session `terminal://output:<sessionId>` event, and emits
-    /// `terminal://exit:<sessionId>` once the process ends (from either
-    /// side: the user closing the session or the remote side hanging up).
+    /// via the stable `terminal://output` event (payload carries the
+    /// session id), and emits `terminal://exit` once the process ends
+    /// (from either side: the user closing the session or the remote side
+    /// hanging up).
     pub fn open(
         &self,
         app: &AppHandle,
+        device_id: &str,
         host: &str,
         port: u16,
         username: &str,
     ) -> Result<String, PtyError> {
+        // Enforce at most one live session per device, regardless of how a
+        // second `open` for the same device happened -- a duplicate click,
+        // a re-opened modal, or (in dev builds) React StrictMode mounting
+        // an effect twice. Killing any prior session first is what
+        // guarantees "opening a terminal only ever opens one" rather than
+        // relying on the frontend to always clean up after itself first.
+        self.close_all_for_device(device_id);
+
         let pty_system = NativePtySystem::default();
         let pair = pty_system
             .openpty(PtySize {
@@ -104,6 +140,7 @@ impl PtySessionManager {
         self.sessions.lock().unwrap().insert(
             session_id.clone(),
             ActiveSession {
+                device_id: device_id.to_string(),
                 writer,
                 master: pair.master,
                 killer,
@@ -114,6 +151,26 @@ impl PtySessionManager {
         spawn_waiter_thread(app.clone(), session_id.clone(), child);
 
         Ok(session_id)
+    }
+
+    /// Kills every currently-tracked session belonging to a device. Best-
+    /// effort: `kill()` failing (e.g. the process already exited on its
+    /// own) is logged, not propagated -- the goal here is "make sure
+    /// nothing of this device's is left running," not "assert that a kill
+    /// call succeeded."
+    fn close_all_for_device(&self, device_id: &str) {
+        let sessions = self.sessions.lock().unwrap();
+        for (id, session) in sessions.iter() {
+            if session.device_id != device_id {
+                continue;
+            }
+            let mut killer = session.killer.clone_killer();
+            if let Err(err) = killer.kill() {
+                log::warn!(
+                    "failed to kill a superseded terminal session {id} for device {device_id}: {err}"
+                );
+            }
+        }
     }
 
     pub fn write(&self, session_id: &str, data: &str) -> Result<(), PtyError> {
@@ -165,14 +222,19 @@ impl PtySessionManager {
 /// be milliseconds apart, but they are not the same event).
 fn spawn_reader_thread(app: AppHandle, session_id: String, mut reader: Box<dyn Read + Send>) {
     std::thread::spawn(move || {
-        let output_event = format!("terminal://output:{session_id}");
         let mut buffer = [0u8; 4096];
         loop {
             match reader.read(&mut buffer) {
                 Ok(0) => break,
                 Ok(n) => {
                     let text = String::from_utf8_lossy(&buffer[..n]).into_owned();
-                    let _ = app.emit(&output_event, text);
+                    let _ = app.emit(
+                        OUTPUT_EVENT,
+                        TerminalOutputPayload {
+                            session_id: session_id.clone(),
+                            data: text,
+                        },
+                    );
                 }
                 Err(_) => break,
             }
@@ -190,8 +252,11 @@ fn spawn_waiter_thread(app: AppHandle, session_id: String, mut child: Box<dyn Ch
     std::thread::spawn(move || {
         let exit_code = child.wait().ok().map(|status| status.exit_code());
         let _ = app.emit(
-            &format!("terminal://exit:{session_id}"),
-            TerminalExitPayload { exit_code },
+            EXIT_EVENT,
+            TerminalExitPayload {
+                session_id: session_id.clone(),
+                exit_code,
+            },
         );
 
         if let Some(manager) = app.try_state::<PtySessionManager>() {
