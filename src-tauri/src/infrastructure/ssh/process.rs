@@ -1,6 +1,9 @@
 use std::process::{Child, Command, Stdio};
 use std::time::{Duration, Instant};
 
+#[cfg(windows)]
+const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RawProcessOutcome {
     pub exit_code: Option<i32>,
@@ -22,6 +25,16 @@ pub fn run_with_timeout(
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+
+    // Without this, spawning a console subprocess (ssh.exe) from a GUI app
+    // that has no console of its own makes Windows allocate and briefly
+    // flash a brand new console window for it -- visible on every periodic
+    // background refresh, not just user-triggered actions.
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
 
     let started = Instant::now();
     let mut child = command.spawn()?;

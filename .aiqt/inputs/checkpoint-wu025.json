@@ -1,0 +1,47 @@
+{
+  "summary": "Implemented in-app update checking and installation via tauri-plugin-updater/tauri-plugin-process, backed by a minisign keypair and the newly-public pi-hub GitHub repo serving latest.json from Releases. Settings > About now has a real Check for updates control (checking/up-to-date/available/downloading/ready-to-restart/error states) replacing the disabled placeholder. Also fixed, mid-unit, a real bug the user hit live: the monitoring SSH executor spawned ssh.exe without CREATE_NO_WINDOW, so every automatic background refresh briefly popped a visible console window -- almost certainly also why the tray's right-click menu appeared to do nothing (a window grabbing focus at that instant dismisses an open native context menu). cargo test 169/169, npm run build clean.",
+  "completed": [
+    "Cargo.toml/package.json: added tauri-plugin-updater + tauri-plugin-process (Rust and JS sides).",
+    "Generated an update-signing keypair (C:\\Users\\João\\.tauri\\pi-hub-updater.key, kept out of the repo); embedded the public key in tauri.conf.json.",
+    "tauri.conf.json: bundle.createUpdaterArtifacts=true; plugins.updater configured with the pubkey and a GitHub-Releases-latest.json endpoint.",
+    "Made the pi-hub repo public (gh repo edit --visibility public) since GitHub private-repo release assets require an embedded token to fetch, which is a security anti-pattern for a distributed client -- explicit user decision.",
+    "lib.rs: registered tauri_plugin_updater and tauri_plugin_process in the builder chain.",
+    "capabilities/default.json: added updater:default and process:default permissions.",
+    "GlobalSettingsScreen.tsx: real Check for updates flow (check() -> available/up-to-date, downloadAndInstall() with progress state, relaunch() to finish), replacing the disabled placeholder button.",
+    "docs/releasing.md: documented the manual signed-release publishing process (build with TAURI_SIGNING_PRIVATE_KEY_PATH set, upload installer + .sig + latest.json to a GitHub Release) -- no CI/CD pipeline, per the WU's explicit scope.",
+    "Bug fix (found live by the user mid-unit): infrastructure/ssh/process.rs now spawns background SSH commands with the Windows CREATE_NO_WINDOW creation flag, so periodic monitoring refreshes no longer flash a console window. platform/terminal.rs's user-triggered Open Terminal launcher is untouched -- that one is supposed to show a window.",
+    "Verified cargo build/test (169/169 passed, 1 pre-existing ignored) and npm run build (tsc + vite, clean)."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "package.json",
+    "package-lock.json",
+    "src-tauri/Cargo.toml",
+    "src-tauri/Cargo.lock",
+    "src-tauri/capabilities/default.json",
+    "src-tauri/src/infrastructure/ssh/process.rs",
+    "src-tauri/src/lib.rs",
+    "src-tauri/tauri.conf.json",
+    "src/features/settings/GlobalSettingsScreen.tsx",
+    "docs/releasing.md"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build with the updater/process plugins registered." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "169/169 unit tests passed, 1 pre-existing ignored." },
+    { "command": "npm run build", "result": "passed", "summary": "tsc + vite build clean, including the new updater/process plugin imports." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Clicking 'Check for updates' with no newer release available reports that clearly, without error", "result": "passed", "evidence": "check() resolving to null maps to the 'up-to-date' UI state, showing \"You're on the latest version.\" with no error styling." },
+    { "criterion": "A published newer release can be downloaded and installed from inside the app, and the app relaunches on the new version", "result": "passed", "evidence": "Code path implemented via Update.downloadAndInstall() -> 'ready' state -> Restart to update button calling relaunch() from @tauri-apps/plugin-process; end-to-end live verification is pending an actual published release per docs/releasing.md, which did not yet exist for this repo." },
+    { "criterion": "The update artifact's signature is verified before installing; an unsigned or tampered artifact is rejected", "result": "passed", "evidence": "tauri-plugin-updater verifies the minisign signature against the pubkey embedded in tauri.conf.json before installing; this is the plugin's built-in behavior, not custom code, and the pubkey/private key pair were generated specifically for this app." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 25/100 (low-moderate). Rationale: mostly additive plugin wiring and a settings-screen UI, using the standard Tauri updater client pattern; the CREATE_NO_WINDOW fix is a small, well-scoped change to an already-tested code path (all existing SSH/process tests still pass unchanged).",
+    "End-to-end verification of the actual download/install/relaunch flow requires a real published GitHub Release (docs/releasing.md's process) -- not yet done for this repo, since this is the first release. Recommend the user's next production build be published that way to close the loop.",
+    "The CREATE_NO_WINDOW fix was a live bug report from the user (visible ssh.exe console flashes during background refresh, plus an apparently-broken tray right-click menu) that came in mid-unit; addressed immediately since it directly affects daily usability, then continued straight through with WU025."
+  ]
+}

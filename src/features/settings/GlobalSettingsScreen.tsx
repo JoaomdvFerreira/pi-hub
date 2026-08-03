@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Check, Loader2 } from "lucide-react";
+import { check as checkForUpdate, type Update } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -34,10 +36,20 @@ function isApplicationError(err: unknown): err is ApplicationError {
 
 type SaveState = "idle" | "saving" | "saved" | "error";
 
+type UpdateState =
+  | { kind: "idle" }
+  | { kind: "checking" }
+  | { kind: "up-to-date" }
+  | { kind: "available"; update: Update }
+  | { kind: "downloading"; update: Update }
+  | { kind: "ready"; update: Update }
+  | { kind: "error"; message: string };
+
 export function GlobalSettingsScreen() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [updateState, setUpdateState] = useState<UpdateState>({ kind: "idle" });
 
   const load = useCallback(async () => {
     try {
@@ -65,6 +77,32 @@ export function GlobalSettingsScreen() {
     } catch (err) {
       setSaveState("error");
       setError(isApplicationError(err) ? err.message : "Could not save settings.");
+    }
+  }
+
+  async function handleCheckForUpdates() {
+    setUpdateState({ kind: "checking" });
+    try {
+      const update = await checkForUpdate();
+      setUpdateState(update ? { kind: "available", update } : { kind: "up-to-date" });
+    } catch (err) {
+      setUpdateState({
+        kind: "error",
+        message: err instanceof Error ? err.message : "Could not check for updates.",
+      });
+    }
+  }
+
+  async function handleDownloadAndInstall(update: Update) {
+    setUpdateState({ kind: "downloading", update });
+    try {
+      await update.downloadAndInstall();
+      setUpdateState({ kind: "ready", update });
+    } catch (err) {
+      setUpdateState({
+        kind: "error",
+        message: err instanceof Error ? err.message : "Could not download the update.",
+      });
     }
   }
 
@@ -201,10 +239,44 @@ export function GlobalSettingsScreen() {
               <div className="text-xs text-muted-foreground">Version {pkg.version}</div>
             </div>
             <div className="flex-1" />
-            <Button variant="outline" size="sm" disabled title="Not available in this build">
-              Check for updates
-            </Button>
+            {updateState.kind === "ready" ? (
+              <Button size="sm" onClick={() => relaunch()}>
+                Restart to update
+              </Button>
+            ) : updateState.kind === "available" ? (
+              <Button size="sm" onClick={() => handleDownloadAndInstall(updateState.update)}>
+                Update to {updateState.update.version}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={updateState.kind === "checking" || updateState.kind === "downloading"}
+                onClick={handleCheckForUpdates}
+              >
+                {updateState.kind === "checking" ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" /> Checking…
+                  </>
+                ) : updateState.kind === "downloading" ? (
+                  <>
+                    <Loader2 className="size-3.5 animate-spin" /> Downloading…
+                  </>
+                ) : (
+                  "Check for updates"
+                )}
+              </Button>
+            )}
           </div>
+          {updateState.kind === "up-to-date" ? (
+            <p className="mt-2 text-xs text-muted-foreground">You're on the latest version.</p>
+          ) : updateState.kind === "ready" ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Update downloaded. Restart Pi-Hub to finish installing.
+            </p>
+          ) : updateState.kind === "error" ? (
+            <p className="mt-2 text-xs text-destructive">{updateState.message}</p>
+          ) : null}
         </section>
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
