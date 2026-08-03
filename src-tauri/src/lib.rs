@@ -13,6 +13,15 @@ use tauri::{Manager, WindowEvent};
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        // Must be registered before other plugins/setup logic: if a second
+        // instance is launched (e.g. a manual double-click while Pi-Hub is
+        // already running in the tray), this callback runs in the *first*
+        // instance and the second process exits immediately, so there's
+        // never a second pi-hub.exe -- and therefore never a second tray
+        // icon, a second scheduler, or doubled resource usage.
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            platform::tray::show_main_window(app);
+        }))
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)
@@ -54,13 +63,15 @@ pub fn run() {
             platform::tray::build(app.handle())?;
             monitoring::scheduler::start(app.handle().clone());
 
-            // Autostart launches with `--minimized` (registered above) so
-            // Pi-Hub opens straight to the tray on sign-in instead of
-            // popping the main window in front of the user every boot.
-            if std::env::args().any(|arg| arg == "--minimized") {
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.hide();
-                }
+            // The main window is created hidden (tauri.conf.json's
+            // `visible: false`) specifically so there is nothing to hide:
+            // a normal launch shows it once, right here; an autostart
+            // launch (`--minimized`, registered below) never calls show()
+            // at all, so it settles straight into the tray with no
+            // flash -- a create-visible-then-hide sequence would have
+            // painted at least one frame of the window first.
+            if !std::env::args().any(|arg| arg == "--minimized") {
+                platform::tray::show_main_window(app.handle());
             }
 
             // Desktop platforms (Windows in particular, our only target)
