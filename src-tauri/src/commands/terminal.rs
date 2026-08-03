@@ -34,8 +34,21 @@ fn pty_error(err: crate::platform::pty::PtyError) -> ApplicationError {
 /// then listens for `terminal://output:<sessionId>` /
 /// `terminal://exit:<sessionId>` and calls write_terminal_input /
 /// resize_terminal_session / close_terminal_session with that id.
+///
+/// `async` + `spawn_blocking` here is load-bearing, not a style choice: a
+/// plain (non-async) `#[tauri::command]` runs on the main thread, and
+/// creating a Windows ConPTY console (inside `PtySessionManager::open`)
+/// has been observed taking upwards of 30 seconds in this environment
+/// (most likely antivirus scanning the freshly-spawned child process) --
+/// long enough that a synchronous command here previously froze the
+/// entire window and got it killed by Windows as unresponsive. Moving the
+/// blocking work onto a worker thread keeps the UI (and every other
+/// command) responsive while this is in flight.
 #[tauri::command]
-pub fn open_terminal_session(app: AppHandle, device_id: String) -> Result<String, ApplicationError> {
+pub async fn open_terminal_session(
+    app: AppHandle,
+    device_id: String,
+) -> Result<String, ApplicationError> {
     let device = repository(&app)?
         .get(&device_id)
         .ok_or_else(|| ApplicationError {
@@ -45,9 +58,25 @@ pub fn open_terminal_session(app: AppHandle, device_id: String) -> Result<String
             retryable: false,
         })?;
 
-    app.state::<PtySessionManager>()
-        .open(&app, &device.host, device.ssh_port, &device.ssh_username)
-        .map_err(pty_error)
+    let app_for_task = app.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        app_for_task
+            .state::<PtySessionManager>()
+            .open(
+                &app_for_task,
+                &device.host,
+                device.ssh_port,
+                &device.ssh_username,
+            )
+            .map_err(pty_error)
+    })
+    .await
+    .map_err(|err| ApplicationError {
+        code: "PlatformIntegrationError".into(),
+        message: format!("opening the terminal session did not complete: {err}"),
+        remediation: Some("Try again.".into()),
+        retryable: true,
+    })?
 }
 
 #[tauri::command]

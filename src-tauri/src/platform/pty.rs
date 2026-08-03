@@ -70,6 +70,13 @@ impl PtySessionManager {
 
         let mut cmd = CommandBuilder::new("ssh.exe");
         cmd.arg("-tt");
+        // Matches the same 5s connect timeout every other SSH-backed
+        // feature in this app uses (infrastructure/ssh/openssh.rs); without
+        // it, an unreachable device leaves the session sitting on the OS's
+        // own (much longer, sometimes multi-minute) TCP connect timeout
+        // with the terminal showing nothing but "Connecting...".
+        cmd.arg("-o");
+        cmd.arg("ConnectTimeout=5");
         if port != DEFAULT_SSH_PORT {
             cmd.arg("-p");
             cmd.arg(port.to_string());
