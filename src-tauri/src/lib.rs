@@ -60,6 +60,16 @@ pub fn run() {
         ))
         .setup(|app| {
             log::info!("Pi-Hub starting up");
+
+            // Registered before anything else touches the window: WebView2
+            // only delivers NavigationCompleted once the OS message loop
+            // starts pumping (i.e. once .run() gets going, after setup()
+            // returns), so attaching the handler here reliably catches
+            // even the very first navigation -- including a startup
+            // failure, which is exactly the case this exists to catch.
+            #[cfg(windows)]
+            platform::webview_fallback::install(app.handle());
+
             platform::tray::build(app.handle())?;
             monitoring::scheduler::start(app.handle().clone());
 

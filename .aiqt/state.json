@@ -2,7 +2,7 @@
   "version": "0.5.0",
   "projectStatus": "in_progress",
   "currentMilestoneId": "M005",
-  "currentWorkUnitId": null,
+  "currentWorkUnitId": "WU024",
   "workGraph": {
     "milestones": [
       {
@@ -59,13 +59,14 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU019",
           "WU020",
           "WU021",
           "WU022",
-          "WU023"
+          "WU023",
+          "WU024"
         ]
       }
     ],
@@ -941,6 +942,40 @@
         "dependencies": [],
         "createdAt": "2026-08-03T05:29:49.609Z",
         "updatedAt": "2026-08-03T05:36:24.421Z"
+      },
+      {
+        "id": "WU024",
+        "milestoneId": "M005",
+        "title": "Branded fallback page for webview load failures",
+        "objective": "Replace WebView2's native browser-style network-error page with a small Pi-Hub-branded fallback if the main window's content ever fails to load, so a load failure never looks like a stray browser error inside the app.",
+        "scope": [
+          "A minimal static fallback.html matching the app's dark theme and pi badge, with a Retry button",
+          "Hook WebView2's NavigationCompleted event (Windows-only) via Tauri's with_webview escape hatch; on a failed navigation, navigate to the fallback page instead of leaving WebView2's own error chrome visible"
+        ],
+        "outOfScope": [
+          "Automatic retry/reconnect logic beyond the user-triggered Retry button",
+          "Any fix to the underlying cause of a specific load failure (out of scope: this is a presentation-layer safety net, not a root-cause fix)"
+        ],
+        "acceptanceCriteria": [
+          "Simulating a load failure (unreachable devUrl on a debug build) shows the branded fallback page, not WebView2's native error page",
+          "A normal successful load (dev and release) is completely unaffected by the hook"
+        ],
+        "agentContextRefs": [
+          "context.technologyPreferences"
+        ],
+        "suggestedFiles": [
+          "src-tauri/fallback.html",
+          "src-tauri/src/lib.rs",
+          "src-tauri/Cargo.toml"
+        ],
+        "validationCommands": [
+          "cargo build --manifest-path src-tauri/Cargo.toml",
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "in_progress",
+        "dependencies": [],
+        "createdAt": "2026-08-03T05:46:58.430Z",
+        "updatedAt": "2026-08-03T05:47:05.119Z"
       }
     ],
     "dependencies": [
@@ -2566,12 +2601,12 @@
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-020",
-    "workUnitId": "WU023",
+    "id": "PKT-021",
+    "workUnitId": "WU024",
     "milestoneId": "M005",
-    "createdAt": "2026-08-03T05:30:14.746Z",
+    "createdAt": "2026-08-03T05:47:05.119Z",
     "format": "markdown",
-    "contentHash": "sha256:184805560e0a72a1a78b911c2e354d606788fd77d86c980437545992e9a697d2",
+    "contentHash": "sha256:f8c63ed5069e1c37d41a07aef739b22d35b4696618ac06cb0611a7f05c73b1b6",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -2579,18 +2614,20 @@
       "constraints",
       "acceptance",
       "validation",
+      "designGuidance",
+      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": false,
+      "includesDesignGuidance": true,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": false,
+      "includesComponentSystemGuidance": true,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-03T05:36:24.421Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-03T05:47:05.119Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

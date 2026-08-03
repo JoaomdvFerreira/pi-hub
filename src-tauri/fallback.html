@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Pi-Hub</title>
+<style>
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: #0b0b0c;
+    color: #e6e6e6;
+    font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 340px;
+    text-align: center;
+    padding: 28px;
+  }
+  .badge {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: #2f8ee0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 26px;
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f5f5f5;
+    margin: 0;
+  }
+  p {
+    font-size: 13px;
+    color: #9a9a9a;
+    line-height: 1.5;
+    margin: 0;
+  }
+  button {
+    margin-top: 6px;
+    padding: 8px 18px;
+    background: #2f8ee0;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover {
+    background: #4aa3f0;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">&pi;</div>
+    <h1>Pi-Hub couldn't load its interface</h1>
+    <p>Something prevented the application window from loading correctly. This usually resolves itself on a retry.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>
