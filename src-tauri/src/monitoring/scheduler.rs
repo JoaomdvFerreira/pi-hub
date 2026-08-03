@@ -142,8 +142,7 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         );
     }
 
-    let notifications =
-        evaluate_snapshot_transition(&snapshot_repo, device_id, previous.as_ref(), &snapshot);
+    let notifications = evaluate_snapshot_transition(&snapshot_repo, &device, previous.as_ref(), &snapshot);
     if !notifications.is_empty() {
         let _ = app.emit("notification://ready", &notifications);
         dispatch_notifications(app, &device, &notifications);
@@ -154,14 +153,14 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     Ok(snapshot)
 }
 
-/// Shows a native notification for each event, gated by both the global
-/// and the per-device `notificationsEnabled` preference (spec: "can be
-/// disabled globally or per device"). A settings-load failure defaults to
-/// enabled rather than silently suppressing notifications.
+/// Shows a native notification for each event, gated by the global
+/// `notificationsEnabled` kill switch. Per-category gating (offline/
+/// container-failure/container-unhealthy) already happened inside
+/// `evaluate_snapshot_transition` -- `events` here only ever contains
+/// categories this device has enabled, so there is nothing left to check
+/// per-device. A settings-load failure defaults to enabled rather than
+/// silently suppressing notifications.
 fn dispatch_notifications(app: &AppHandle, device: &Device, events: &[NotificationEvent]) {
-    if !device.notifications_enabled {
-        return;
-    }
     let global_enabled = settings_repository(app)
         .map(|repo| repo.load().notifications_enabled)
         .unwrap_or(true);

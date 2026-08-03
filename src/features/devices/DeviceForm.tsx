@@ -52,7 +52,9 @@ function toFormState(device?: Device): DeviceInput {
     deviceType: device?.deviceType ?? "raspberry-pi",
     monitoringEnabled: device?.monitoringEnabled ?? true,
     refreshIntervalSeconds: device?.refreshIntervalSeconds,
-    notificationsEnabled: device?.notificationsEnabled ?? true,
+    notifyOnDeviceOffline: device?.notifyOnDeviceOffline ?? true,
+    notifyOnContainerFailure: device?.notifyOnContainerFailure ?? true,
+    notifyOnContainerUnhealthy: device?.notifyOnContainerUnhealthy ?? true,
     services: device?.services ?? [],
   };
 }
@@ -242,12 +244,34 @@ export function DeviceForm({ mode, device, onSaved, onCancel }: DeviceFormProps)
             onCheckedChange={(checked) => update("monitoringEnabled", checked)}
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+        <h2 className="text-xs font-bold tracking-wide text-muted-foreground">NOTIFICATIONS</h2>
         <div className="flex items-center justify-between">
-          <Label htmlFor="device-notifications">Notifications enabled</Label>
+          <Label htmlFor="device-notify-offline">Notify when device goes offline</Label>
           <Switch
-            id="device-notifications"
-            checked={form.notificationsEnabled}
-            onCheckedChange={(checked) => update("notificationsEnabled", checked)}
+            id="device-notify-offline"
+            checked={form.notifyOnDeviceOffline}
+            onCheckedChange={(checked) => update("notifyOnDeviceOffline", checked)}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="device-notify-container-failure">Notify on container failure</Label>
+          <Switch
+            id="device-notify-container-failure"
+            checked={form.notifyOnContainerFailure}
+            onCheckedChange={(checked) => update("notifyOnContainerFailure", checked)}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="device-notify-container-unhealthy">
+            Notify when a container becomes unhealthy
+          </Label>
+          <Switch
+            id="device-notify-container-unhealthy"
+            checked={form.notifyOnContainerUnhealthy}
+            onCheckedChange={(checked) => update("notifyOnContainerUnhealthy", checked)}
           />
         </div>
       </div>

@@ -37,10 +37,24 @@ pub struct Device {
     pub monitoring_enabled: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub refresh_interval_seconds: Option<u32>,
-    pub notifications_enabled: bool,
+    /// Per-category notification gates (spec Phase 2: replaces a single
+    /// per-device on/off switch), each corresponding 1:1 to one of the
+    /// three transition-detection rules in `notification_rule.rs`.
+    /// Defaulted to enabled when absent so devices persisted before this
+    /// field existed keep notifying rather than silently going quiet.
+    #[serde(default = "default_true")]
+    pub notify_on_device_offline: bool,
+    #[serde(default = "default_true")]
+    pub notify_on_container_failure: bool,
+    #[serde(default = "default_true")]
+    pub notify_on_container_unhealthy: bool,
     pub services: Vec<DeviceService>,
     pub created_at: String,
     pub updated_at: String,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug)]
@@ -166,7 +180,9 @@ mod tests {
             device_type: DeviceType::RaspberryPi,
             monitoring_enabled: true,
             refresh_interval_seconds: None,
-            notifications_enabled: true,
+            notify_on_device_offline: true,
+            notify_on_container_failure: true,
+            notify_on_container_unhealthy: true,
             services: Vec::new(),
             created_at: "2026-01-01T00:00:00Z".into(),
             updated_at: "2026-01-01T00:00:00Z".into(),

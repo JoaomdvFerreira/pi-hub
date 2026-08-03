@@ -24,7 +24,9 @@ export interface Device {
   deviceType: DeviceType;
   monitoringEnabled: boolean;
   refreshIntervalSeconds?: number;
-  notificationsEnabled: boolean;
+  notifyOnDeviceOffline: boolean;
+  notifyOnContainerFailure: boolean;
+  notifyOnContainerUnhealthy: boolean;
   services: DeviceService[];
   createdAt: string;
   updatedAt: string;
@@ -40,7 +42,9 @@ export interface DeviceInput {
   deviceType: DeviceType;
   monitoringEnabled: boolean;
   refreshIntervalSeconds?: number;
-  notificationsEnabled: boolean;
+  notifyOnDeviceOffline: boolean;
+  notifyOnContainerFailure: boolean;
+  notifyOnContainerUnhealthy: boolean;
   services: DeviceService[];
 }
 

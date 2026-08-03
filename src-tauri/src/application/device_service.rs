@@ -20,7 +20,9 @@ pub struct DeviceInput {
     pub device_type: DeviceType,
     pub monitoring_enabled: bool,
     pub refresh_interval_seconds: Option<u32>,
-    pub notifications_enabled: bool,
+    pub notify_on_device_offline: bool,
+    pub notify_on_container_failure: bool,
+    pub notify_on_container_unhealthy: bool,
     pub services: Vec<DeviceServiceEntry>,
 }
 
@@ -58,7 +60,9 @@ pub fn create_device(
         device_type: input.device_type,
         monitoring_enabled: input.monitoring_enabled,
         refresh_interval_seconds: input.refresh_interval_seconds,
-        notifications_enabled: input.notifications_enabled,
+        notify_on_device_offline: input.notify_on_device_offline,
+        notify_on_container_failure: input.notify_on_container_failure,
+        notify_on_container_unhealthy: input.notify_on_container_unhealthy,
         services: input.services,
         created_at: now.clone(),
         updated_at: now,
@@ -92,7 +96,9 @@ pub fn update_device(
         device_type: input.device_type,
         monitoring_enabled: input.monitoring_enabled,
         refresh_interval_seconds: input.refresh_interval_seconds,
-        notifications_enabled: input.notifications_enabled,
+        notify_on_device_offline: input.notify_on_device_offline,
+        notify_on_container_failure: input.notify_on_container_failure,
+        notify_on_container_unhealthy: input.notify_on_container_unhealthy,
         services: input.services,
         created_at: devices[index].created_at.clone(),
         updated_at: chrono::Utc::now().to_rfc3339(),
@@ -134,7 +140,9 @@ mod tests {
             device_type: DeviceType::RaspberryPi,
             monitoring_enabled: true,
             refresh_interval_seconds: None,
-            notifications_enabled: true,
+            notify_on_device_offline: true,
+            notify_on_container_failure: true,
+            notify_on_container_unhealthy: true,
             services: Vec::new(),
         }
     }
