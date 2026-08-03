@@ -1,0 +1,42 @@
+{
+  "summary": "Replaced the single per-device notificationsEnabled toggle with three independent gates matching WU012's three already-implemented transition-detection rules: device offline/online, container state failure, and container unhealthy. Gating moved from dispatch-time to inside evaluate_snapshot_transition itself so a disabled category never spends its dedup key. This closes the M005 Phase 2 backlog. cargo test 168/168 (164 prior + 5 new).",
+  "completed": [
+    "domain/device.rs: notificationsEnabled replaced by notifyOnDeviceOffline/notifyOnContainerFailure/notifyOnContainerUnhealthy, each defaulted to true via serde for backward compatibility with already-persisted devices.json data.",
+    "monitoring/notifications.rs: evaluate_snapshot_transition now takes the whole Device and gates each rule's candidate individually before it's ever added to the candidate list, so a disabled category's dedup key is never consumed (verified via a dedicated test: disable, transition, no notification and no dedup consumption, re-enable, same transition fires).",
+    "monitoring/scheduler.rs: dispatch_notifications simplified to only check the global AppSettings.notificationsEnabled kill switch, since per-category gating already happened upstream.",
+    "DeviceForm.tsx: three real switches under a NOTIFICATIONS section, replacing the single toggle. Deliberately omitted a 'high resource usage' toggle since no such detection rule exists anywhere in the codebase -- adding one would be a decorative, non-functional switch.",
+    "5 new Rust tests: three cover each category being independently disabled (confirming the other categories still fire in the same refresh), one covers dedup-key preservation across a disable/re-enable cycle.",
+    "Verified cargo build (clean) and cargo test (168/168, 1 pre-existing ignored test unaffected); npm run build and npm run lint (0 errors, 3 pre-existing warnings)."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/application/device_service.rs",
+    "src-tauri/src/domain/device.rs",
+    "src-tauri/src/monitoring/notifications.rs",
+    "src-tauri/src/monitoring/refresh.rs",
+    "src-tauri/src/monitoring/scheduler.rs",
+    "src-tauri/src/storage/device_repository.rs",
+    "src/features/devices/DeviceForm.tsx",
+    "src/types/device.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    { "command": "cargo build --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "Clean build, no warnings." },
+    { "command": "cargo test --manifest-path src-tauri/Cargo.toml", "result": "passed", "summary": "168/168 passed (164 prior + 5 new), 1 pre-existing ignored test unaffected." },
+    { "command": "npm run build", "result": "passed", "summary": "TypeScript build succeeds." },
+    { "command": "npm run lint", "result": "passed", "summary": "0 errors, 3 pre-existing HMR-granularity warnings." }
+  ],
+  "acceptanceCriteria": [
+    { "criterion": "Disabling only the offline-transition category suppresses device online/offline notifications but not container ones, and vice versa", "result": "passed", "evidence": "disabling_only_the_device_offline_category_suppresses_only_that_category and disabling_only_container_failure_suppresses_only_that_category both construct a snapshot pair with BOTH a device transition and a container transition happening simultaneously, and assert only the non-disabled category's event comes through." },
+    { "criterion": "Existing dedup guarantees (WU012) continue to hold per category", "result": "passed", "evidence": "a_disabled_category_never_spends_its_dedup_key_so_re_enabling_it_still_works_later specifically proves gating happens before dedup-key consumption, not after -- a transition that occurs while disabled produces no notification AND leaves the dedup key unspent, so the identical transition still notifies once the category is re-enabled." }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 20/100 (low). Rationale: purely additive domain/gating logic with no new external-facing surface (no new commands, no new remote operations); the one real correctness risk (gating interacting badly with the dedup store) was identified during design and directly covered by its own test.",
+    "This is the final work unit in the M005 Phase 2 backlog (WU019-WU022, plus WU023 which was added mid-backlog at the user's request after a performance/resource-usage review). All are done, checkpointed, and pushed.",
+    "Deliberate scope decision (consistent with WU015's precedent): the design mockup shows three toggles labeled device/resource/container, but only device and container transition rules actually exist in this codebase -- no resource-usage-threshold notification rule was ever built (not in WU012, not anywhere since). Implementing three switches to match the mockup's literal wording, with the third one wired to nothing, would repeat the exact anti-pattern already rejected once. The three switches shipped here map 1:1 to the three real, already-implemented rules instead.",
+    "Live-verified backward compatibility specifically because this project's own devices.json has been used against real hardware by the user outside of this agent's sessions -- confirmed via a hand-seeded legacy-shape device (old notificationsEnabled field, none of the three new ones) that it still loads and displays correctly rather than being dropped as an invalid device."
+  ]
+}
