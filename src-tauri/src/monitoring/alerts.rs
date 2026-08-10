@@ -29,15 +29,34 @@ struct Condition {
     consecutive_samples: Option<u32>,
 }
 
+#[cfg(test)]
 pub fn evaluate(
     file: &mut AlertFile,
     device: &Device,
     snapshot: &DeviceSnapshot,
     policy: &ThresholdPolicy,
 ) -> Vec<AlertTransition> {
+    evaluate_with_expected_disruption(file, device, snapshot, policy, false)
+}
+
+/// M10 may suppress only the operation-attributable device-offline path.
+/// Existing alerts remain untouched and all health/service conditions still
+/// flow through M8, which stays the lifecycle authority.
+pub fn evaluate_with_expected_disruption(
+    file: &mut AlertFile,
+    device: &Device,
+    snapshot: &DeviceSnapshot,
+    policy: &ThresholdPolicy,
+    suppress_device_offline: bool,
+) -> Vec<AlertTransition> {
     let timestamp = snapshot.captured_at.clone();
-    let mut conditions = conditions(device, snapshot, policy);
+    let mut conditions = conditions(device, snapshot, policy, suppress_device_offline);
     let mut present = HashSet::new();
+    if suppress_device_offline {
+        // Do not resolve an unrelated pre-existing offline alert merely
+        // because a controlled operation temporarily suppresses evaluation.
+        present.insert(format!("device|{}|device|offline", device.id));
+    }
     let mut transitions = Vec::new();
     for condition in conditions.drain(..) {
         let mature = mature(file, &condition, &timestamp);
@@ -152,17 +171,20 @@ fn conditions(
     device: &Device,
     snapshot: &DeviceSnapshot,
     policy: &ThresholdPolicy,
+    suppress_device_offline: bool,
 ) -> Vec<Condition> {
     let key = |category: &str, entity: &str, code: &str| {
         format!("{category}|{}|{entity}|{code}", device.id)
     };
     let mut result = Vec::new();
-    if !matches!(
-        snapshot.connection_status,
-        DeviceConnectionStatus::Online
-            | DeviceConnectionStatus::Checking
-            | DeviceConnectionStatus::Unknown
-    ) {
+    if !suppress_device_offline
+        && !matches!(
+            snapshot.connection_status,
+            DeviceConnectionStatus::Online
+                | DeviceConnectionStatus::Checking
+                | DeviceConnectionStatus::Unknown
+        )
+    {
         result.push(Condition {
             key: key("device", "device", "offline"),
             category: AlertCategory::Device,
@@ -425,5 +447,26 @@ mod tests {
             &policy,
         );
         assert_ne!(again[0].alert.id, id);
+    }
+
+    #[test]
+    fn expected_disruption_suppresses_only_new_device_offline_alerts() {
+        let mut file = AlertFile::default();
+        let mut offline = snapshot("2026-01-01T00:00:00Z", ServiceHealthState::Unavailable);
+        offline.connection_status = DeviceConnectionStatus::Offline;
+        offline.health = crate::domain::health::assess_health(&offline.connection_status, None);
+        let transitions = evaluate_with_expected_disruption(
+            &mut file,
+            &device(),
+            &offline,
+            &ThresholdPolicy::default(),
+            true,
+        );
+        assert!(transitions
+            .iter()
+            .all(|transition| transition.alert.rule_code != "offline"));
+        assert!(transitions
+            .iter()
+            .any(|transition| transition.alert.rule_code == "service_health"));
     }
 }

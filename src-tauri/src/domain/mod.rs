@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod administration;
 pub mod alert;
 pub mod connection_status;
 pub mod device;
@@ -6,7 +7,7 @@ pub mod diagnostics;
 pub mod docker_container;
 pub mod health;
 pub mod notification_rule;
-pub mod settings;
 pub mod service_health;
+pub mod settings;
 pub mod snapshot;
 pub mod system_metrics;

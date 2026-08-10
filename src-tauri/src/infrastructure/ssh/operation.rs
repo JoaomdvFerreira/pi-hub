@@ -51,9 +51,15 @@ pub fn docker_container_action_command(
     ))
 }
 
-pub fn docker_container_logs_command(mode: ContainerLogMode, container_id: &str) -> Result<String, InvalidContainerIdError> {
+pub fn docker_container_logs_command(
+    mode: ContainerLogMode,
+    container_id: &str,
+) -> Result<String, InvalidContainerIdError> {
     validate_container_id(container_id)?;
-    Ok(format!("docker logs --timestamps {} -- '{container_id}'", mode.docker_arguments()))
+    Ok(format!(
+        "docker logs --timestamps {} -- '{container_id}'",
+        mode.docker_arguments()
+    ))
 }
 
 /// The fixed set of remote operations Pi-Hub is ever allowed to run. The
@@ -78,10 +84,21 @@ pub enum RemoteOperation {
     #[allow(dead_code)]
     DockerContainers,
     Diagnostics,
+    RestartDevice,
+    ShutdownDevice,
+    RestartDocker,
+    RestartTailscale,
 }
 
 pub const PROBE_COMMAND: &str = "printf 'PIHUB_OK'";
 pub const DIAGNOSTICS_COMMAND: &str = "printf 'PIHUB_DIAG_DOCKER='; command -v docker >/dev/null 2>&1 && printf 1 || printf 0; printf '\\nPIHUB_DIAG_TAILSCALE='; command -v tailscale >/dev/null 2>&1 && printf 1 || printf 0";
+/// M10's complete privileged command catalogue. These are deliberately
+/// fixed literals using `sudo -n`: no frontend value can become a command,
+/// unit name, password prompt, or shell fragment.
+pub const RESTART_DEVICE_COMMAND: &str = "sudo -n systemctl reboot";
+pub const SHUTDOWN_DEVICE_COMMAND: &str = "sudo -n systemctl poweroff";
+pub const RESTART_DOCKER_COMMAND: &str = "sudo -n systemctl restart docker";
+pub const RESTART_TAILSCALE_COMMAND: &str = "sudo -n systemctl restart tailscaled";
 
 /// Collects CPU usage (via a two-sample `/proc/stat` delta over a bounded
 /// interval, per spec section 12.2), memory (`/proc/meminfo`), disk usage
@@ -202,6 +219,10 @@ impl RemoteOperation {
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
+            RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
+            RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),
+            RemoteOperation::RestartDocker => Some(RESTART_DOCKER_COMMAND),
+            RemoteOperation::RestartTailscale => Some(RESTART_TAILSCALE_COMMAND),
             RemoteOperation::SystemIdentity => None,
         }
     }
@@ -255,10 +276,22 @@ mod tests {
 
     #[test]
     fn docker_log_command_has_only_the_four_bounded_modes() {
-        assert_eq!(docker_container_logs_command(ContainerLogMode::Last100, "homeassistant").unwrap(), "docker logs --timestamps --tail 100 -- 'homeassistant'");
-        assert_eq!(docker_container_logs_command(ContainerLogMode::Last500, "homeassistant").unwrap(), "docker logs --timestamps --tail 500 -- 'homeassistant'");
-        assert_eq!(docker_container_logs_command(ContainerLogMode::Last15Minutes, "homeassistant").unwrap(), "docker logs --timestamps --since 15m -- 'homeassistant'");
-        assert!(docker_container_logs_command(ContainerLogMode::Last1Hour, "bad; rm -rf /").is_err());
+        assert_eq!(
+            docker_container_logs_command(ContainerLogMode::Last100, "homeassistant").unwrap(),
+            "docker logs --timestamps --tail 100 -- 'homeassistant'"
+        );
+        assert_eq!(
+            docker_container_logs_command(ContainerLogMode::Last500, "homeassistant").unwrap(),
+            "docker logs --timestamps --tail 500 -- 'homeassistant'"
+        );
+        assert_eq!(
+            docker_container_logs_command(ContainerLogMode::Last15Minutes, "homeassistant")
+                .unwrap(),
+            "docker logs --timestamps --since 15m -- 'homeassistant'"
+        );
+        assert!(
+            docker_container_logs_command(ContainerLogMode::Last1Hour, "bad; rm -rf /").is_err()
+        );
     }
 
     #[test]
@@ -294,5 +327,33 @@ mod tests {
     fn docker_action_command_rejects_an_overly_long_id() {
         let too_long = "a".repeat(129);
         assert!(docker_container_action_command(ContainerAction::Start, &too_long).is_err());
+    }
+
+    #[test]
+    fn administration_commands_are_closed_and_noninteractive() {
+        assert_eq!(
+            RemoteOperation::RestartDevice.command(),
+            Some(RESTART_DEVICE_COMMAND)
+        );
+        assert_eq!(
+            RemoteOperation::ShutdownDevice.command(),
+            Some(SHUTDOWN_DEVICE_COMMAND)
+        );
+        assert_eq!(
+            RemoteOperation::RestartDocker.command(),
+            Some(RESTART_DOCKER_COMMAND)
+        );
+        assert_eq!(
+            RemoteOperation::RestartTailscale.command(),
+            Some(RESTART_TAILSCALE_COMMAND)
+        );
+        for command in [
+            RESTART_DEVICE_COMMAND,
+            SHUTDOWN_DEVICE_COMMAND,
+            RESTART_DOCKER_COMMAND,
+            RESTART_TAILSCALE_COMMAND,
+        ] {
+            assert!(command.starts_with("sudo -n systemctl "));
+        }
     }
 }

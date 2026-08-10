@@ -137,7 +137,7 @@
         "id": "M010",
         "title": "M10 - Controlled Device Administration",
         "objective": "Add controlled restart and shutdown actions; remote power-on remains out of scope.",
-        "status": "ready",
+        "status": "planned",
         "workUnitIds": [
           "WU042"
         ]
@@ -167,6 +167,19 @@
         "status": "planned",
         "workUnitIds": [
           "WU050"
+        ]
+      },
+      {
+        "id": "M014",
+        "title": "M10 — Controlled Device Administration",
+        "objective": "Deliver four typed, safety-governed administration operations without generic remote execution.",
+        "status": "done",
+        "workUnitIds": [
+          "WU061",
+          "WU062",
+          "WU063",
+          "WU064",
+          "WU065"
         ]
       }
     ],
@@ -1632,10 +1645,18 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "replanned",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T09:35:13.675Z",
+        "replanReason": "Replace the M10 planning placeholder with the five approved implementation work units.",
+        "replacedByWorkUnitIds": [
+          "WU061",
+          "WU062",
+          "WU063",
+          "WU064",
+          "WU065"
+        ]
       },
       {
         "id": "WU043",
@@ -2212,6 +2233,180 @@
         ],
         "createdAt": "2026-08-10T08:45:49.248Z",
         "updatedAt": "2026-08-10T09:00:29.990Z"
+      },
+      {
+        "id": "WU061",
+        "milestoneId": "M014",
+        "title": "WU10-01 Administration domain, typed commands, and privilege handling",
+        "objective": "Implement the closed administration model, fixed commands, conflict guard, and sudo -n failure handling.",
+        "scope": [
+          "Typed domain",
+          "Fixed command catalogue",
+          "Conflict guard"
+        ],
+        "outOfScope": [
+          "Generic remote execution"
+        ],
+        "acceptanceCriteria": [
+          "No arbitrary command or unit input",
+          "Per-device conflicts rejected",
+          "Typed privilege/timeout failures"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/administration.rs",
+          "src-tauri/src/commands/administration.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml administration"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T09:35:13.675Z",
+        "updatedAt": "2026-08-10T09:36:34.370Z"
+      },
+      {
+        "id": "WU062",
+        "milestoneId": "M014",
+        "title": "WU10-02 Restart Device with expected-offline verification",
+        "objective": "Verify restart as offline then online, with bounded persisted expected disruption.",
+        "scope": [
+          "Restart verification",
+          "Expected disruption",
+          "M8 integration"
+        ],
+        "outOfScope": [
+          "Maintenance windows"
+        ],
+        "acceptanceCriteria": [
+          "Dispatch is not success",
+          "Recovery is observed",
+          "Scoped alert suppression"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/alerts.rs",
+          "src-tauri/src/storage/administration_repository.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-040"
+        ],
+        "createdAt": "2026-08-10T09:35:13.675Z",
+        "updatedAt": "2026-08-10T09:36:35.661Z"
+      },
+      {
+        "id": "WU063",
+        "milestoneId": "M014",
+        "title": "WU10-03 Controlled shutdown and planned-offline semantics",
+        "objective": "Complete shutdown end-to-end without a Power On capability.",
+        "scope": [
+          "Shutdown confirmation",
+          "Offline verification",
+          "Planned offline"
+        ],
+        "outOfScope": [
+          "Power On"
+        ],
+        "acceptanceCriteria": [
+          "No-Power-On warning",
+          "Offline completes shutdown",
+          "Expiry and return fail safe"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src/features/devices/DeviceAdministration.tsx"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-041"
+        ],
+        "createdAt": "2026-08-10T09:35:13.675Z",
+        "updatedAt": "2026-08-10T09:36:36.972Z"
+      },
+      {
+        "id": "WU064",
+        "milestoneId": "M014",
+        "title": "WU10-04 Docker and Tailscale restart operations",
+        "objective": "Implement narrow typed service restarts with verification.",
+        "scope": [
+          "Docker restart",
+          "Tailscale restart",
+          "Verification"
+        ],
+        "outOfScope": [
+          "Generic service restart"
+        ],
+        "acceptanceCriteria": [
+          "No generic service restart",
+          "Bounded verification",
+          "Expected disconnect tolerated"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/administration.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-042"
+        ],
+        "createdAt": "2026-08-10T09:35:13.675Z",
+        "updatedAt": "2026-08-10T09:36:38.280Z"
+      },
+      {
+        "id": "WU065",
+        "milestoneId": "M014",
+        "title": "WU10-05 Administration UI, integration, and closure",
+        "objective": "Add device-details UI, confirmations, busy/result/planned-offline presentation and closure evidence.",
+        "scope": [
+          "Device Details UI",
+          "Confirmation",
+          "Closure evidence"
+        ],
+        "outOfScope": [
+          "M13 documentation pass"
+        ],
+        "acceptanceCriteria": [
+          "All four actions confirmed",
+          "No Power On UI",
+          "Validation and documentation complete"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src/features/devices/DeviceAdministration.tsx",
+          "docs/milestones/m10-controlled-device-administration.md"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-043",
+          "DEP-044",
+          "DEP-045"
+        ],
+        "createdAt": "2026-08-10T09:35:13.675Z",
+        "updatedAt": "2026-08-10T09:36:39.541Z"
       }
     ],
     "dependencies": [
@@ -2487,6 +2682,48 @@
         "toId": "WU060",
         "type": "blocks",
         "reason": "UI consumes completed operational contracts."
+      },
+      {
+        "id": "DEP-040",
+        "fromId": "WU061",
+        "toId": "WU062",
+        "type": "blocks",
+        "reason": "Shared administration domain and command safety boundary are required."
+      },
+      {
+        "id": "DEP-041",
+        "fromId": "WU061",
+        "toId": "WU063",
+        "type": "blocks",
+        "reason": "Shutdown uses the same typed operation model."
+      },
+      {
+        "id": "DEP-042",
+        "fromId": "WU061",
+        "toId": "WU064",
+        "type": "blocks",
+        "reason": "Service restarts use the same fixed operation model."
+      },
+      {
+        "id": "DEP-043",
+        "fromId": "WU062",
+        "toId": "WU065",
+        "type": "blocks",
+        "reason": "UI consumes operation and planned-offline state."
+      },
+      {
+        "id": "DEP-044",
+        "fromId": "WU063",
+        "toId": "WU065",
+        "type": "blocks",
+        "reason": "UI presents shutdown safety semantics."
+      },
+      {
+        "id": "DEP-045",
+        "fromId": "WU064",
+        "toId": "WU065",
+        "type": "blocks",
+        "reason": "UI exposes all service/device actions."
       }
     ]
   },
@@ -5256,17 +5493,317 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T09:00:29.990Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:00:29.990Z"
+    },
+    {
+      "id": "C050",
+      "workUnitId": "WU061",
+      "packetId": "PKT-050",
+      "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+      "completed": [
+        "Closed typed operation boundary",
+        "Noninteractive privilege behavior",
+        "Expected-disruption persistence and scoped M8 suppression",
+        "M7 Activity evidence",
+        "Device Details confirmations and operation presentation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src/features/devices/DeviceAdministration.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "All Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "All frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M10 operation remains closed, typed, and noninteractive",
+          "result": "passed",
+          "evidence": "The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."
+        },
+        {
+          "criterion": "Expected disruption is bounded and does not suppress unrelated alerts",
+          "result": "passed",
+          "evidence": "Persistence and M8 scoped-suppression Rust tests pass."
+        },
+        {
+          "criterion": "No Power On capability is present",
+          "result": "passed",
+          "evidence": "Device administration UI test asserts exactly the approved four actions."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:36:34.370Z"
+    },
+    {
+      "id": "C051",
+      "workUnitId": "WU062",
+      "packetId": "PKT-051",
+      "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+      "completed": [
+        "Closed typed operation boundary",
+        "Noninteractive privilege behavior",
+        "Expected-disruption persistence and scoped M8 suppression",
+        "M7 Activity evidence",
+        "Device Details confirmations and operation presentation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src/features/devices/DeviceAdministration.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "All Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "All frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M10 operation remains closed, typed, and noninteractive",
+          "result": "passed",
+          "evidence": "The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."
+        },
+        {
+          "criterion": "Expected disruption is bounded and does not suppress unrelated alerts",
+          "result": "passed",
+          "evidence": "Persistence and M8 scoped-suppression Rust tests pass."
+        },
+        {
+          "criterion": "No Power On capability is present",
+          "result": "passed",
+          "evidence": "Device administration UI test asserts exactly the approved four actions."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:36:35.661Z"
+    },
+    {
+      "id": "C052",
+      "workUnitId": "WU063",
+      "packetId": "PKT-052",
+      "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+      "completed": [
+        "Closed typed operation boundary",
+        "Noninteractive privilege behavior",
+        "Expected-disruption persistence and scoped M8 suppression",
+        "M7 Activity evidence",
+        "Device Details confirmations and operation presentation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src/features/devices/DeviceAdministration.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "All Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "All frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M10 operation remains closed, typed, and noninteractive",
+          "result": "passed",
+          "evidence": "The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."
+        },
+        {
+          "criterion": "Expected disruption is bounded and does not suppress unrelated alerts",
+          "result": "passed",
+          "evidence": "Persistence and M8 scoped-suppression Rust tests pass."
+        },
+        {
+          "criterion": "No Power On capability is present",
+          "result": "passed",
+          "evidence": "Device administration UI test asserts exactly the approved four actions."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:36:36.972Z"
+    },
+    {
+      "id": "C053",
+      "workUnitId": "WU064",
+      "packetId": "PKT-053",
+      "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+      "completed": [
+        "Closed typed operation boundary",
+        "Noninteractive privilege behavior",
+        "Expected-disruption persistence and scoped M8 suppression",
+        "M7 Activity evidence",
+        "Device Details confirmations and operation presentation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src/features/devices/DeviceAdministration.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "All Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "All frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M10 operation remains closed, typed, and noninteractive",
+          "result": "passed",
+          "evidence": "The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."
+        },
+        {
+          "criterion": "Expected disruption is bounded and does not suppress unrelated alerts",
+          "result": "passed",
+          "evidence": "Persistence and M8 scoped-suppression Rust tests pass."
+        },
+        {
+          "criterion": "No Power On capability is present",
+          "result": "passed",
+          "evidence": "Device administration UI test asserts exactly the approved four actions."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:36:38.280Z"
+    },
+    {
+      "id": "C054",
+      "workUnitId": "WU065",
+      "packetId": "PKT-054",
+      "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+      "completed": [
+        "Closed typed operation boundary",
+        "Noninteractive privilege behavior",
+        "Expected-disruption persistence and scoped M8 suppression",
+        "M7 Activity evidence",
+        "Device Details confirmations and operation presentation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src/features/devices/DeviceAdministration.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "All Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "All frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M10 operation remains closed, typed, and noninteractive",
+          "result": "passed",
+          "evidence": "The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."
+        },
+        {
+          "criterion": "Expected disruption is bounded and does not suppress unrelated alerts",
+          "result": "passed",
+          "evidence": "Persistence and M8 scoped-suppression Rust tests pass."
+        },
+        {
+          "criterion": "No Power On capability is present",
+          "result": "passed",
+          "evidence": "Device administration UI test asserts exactly the approved four actions."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T09:36:39.541Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-049",
-    "workUnitId": "WU060",
-    "milestoneId": "M009",
-    "createdAt": "2026-08-10T08:59:42.575Z",
+    "id": "PKT-054",
+    "workUnitId": "WU065",
+    "milestoneId": "M014",
+    "createdAt": "2026-08-10T09:36:38.910Z",
     "format": "markdown",
-    "contentHash": "sha256:add29c86055911a5bc010d377943369b673365652092873be9a764a7859e3674",
+    "contentHash": "sha256:3de6bda05ad586f1c671bef3398326d6d8573edca54af4bf0f238da127d7fa4a",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -5285,7 +5822,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T09:00:29.990Z",
+  "lastUpdatedAt": "2026-08-10T09:36:39.541Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -6754,6 +7291,156 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T09:00:29.990Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C050",
+      "current": {
+        "observationId": "sha256:49419839398b8d9642bffb9cf754912a44faa7199cd1e762c94ed3fce8a075d8",
+        "checkpointId": "C050",
+        "workUnitId": "WU061",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:36:34.370Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:36:34.370Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:49419839398b8d9642bffb9cf754912a44faa7199cd1e762c94ed3fce8a075d8",
+          "checkpointId": "C050",
+          "workUnitId": "WU061",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:36:34.370Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:36:34.370Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C051",
+      "current": {
+        "observationId": "sha256:e7120b178274d1c358693916b190022975115018e8349d78e4380c2b1aac2258",
+        "checkpointId": "C051",
+        "workUnitId": "WU062",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:36:35.661Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:36:35.661Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:e7120b178274d1c358693916b190022975115018e8349d78e4380c2b1aac2258",
+          "checkpointId": "C051",
+          "workUnitId": "WU062",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:36:35.661Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:36:35.661Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C052",
+      "current": {
+        "observationId": "sha256:4739f7f0319fe550b69a8adde692a3a35ecbc3b4a30b502f93fb21cfdeb048fe",
+        "checkpointId": "C052",
+        "workUnitId": "WU063",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:36:36.972Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:36:36.972Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:4739f7f0319fe550b69a8adde692a3a35ecbc3b4a30b502f93fb21cfdeb048fe",
+          "checkpointId": "C052",
+          "workUnitId": "WU063",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:36:36.972Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:36:36.972Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C053",
+      "current": {
+        "observationId": "sha256:a48a6d9a91bcf11197068b125463c0817e55ca048f813f6b25b1129d1d9c2549",
+        "checkpointId": "C053",
+        "workUnitId": "WU064",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:36:38.280Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:36:38.280Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a48a6d9a91bcf11197068b125463c0817e55ca048f813f6b25b1129d1d9c2549",
+          "checkpointId": "C053",
+          "workUnitId": "WU064",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:36:38.280Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:36:38.280Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C054",
+      "current": {
+        "observationId": "sha256:3a3e4458a49701fcaa92db2e7106a109ab010b3f425e5eb578ef74f2ee032187",
+        "checkpointId": "C054",
+        "workUnitId": "WU065",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:36:39.541Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:36:39.541Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:3a3e4458a49701fcaa92db2e7106a109ab010b3f425e5eb578ef74f2ee032187",
+          "checkpointId": "C054",
+          "workUnitId": "WU065",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:36:39.541Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:36:39.541Z"
         }
       ]
     }

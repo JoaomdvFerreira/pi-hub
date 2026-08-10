@@ -1,0 +1,13 @@
+{
+  "summary": "Implemented the approved M10 controlled administration capability with deterministic automated validation.",
+  "completed": ["Closed typed operation boundary", "Noninteractive privilege behavior", "Expected-disruption persistence and scoped M8 suppression", "M7 Activity evidence", "Device Details confirmations and operation presentation"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/commands/administration.rs", "src-tauri/src/domain/administration.rs", "src-tauri/src/storage/administration_repository.rs", "src/features/devices/DeviceAdministration.tsx"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml","result":"passed","summary":"All Rust tests passed."},{"command":"npm test","result":"passed","summary":"All frontend tests passed."},{"command":"npm run build","result":"passed","summary":"Production frontend build passed."}],
+  "acceptanceCriteria": [{"criterion":"M10 operation remains closed, typed, and noninteractive","result":"passed","evidence":"The fixed RemoteOperation catalogue permits only reboot, poweroff, docker, and tailscaled restarts through sudo -n."},{"criterion":"Expected disruption is bounded and does not suppress unrelated alerts","result":"passed","evidence":"Persistence and M8 scoped-suppression Rust tests pass."},{"criterion":"No Power On capability is present","result":"passed","evidence":"Device administration UI test asserts exactly the approved four actions."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["No live disruptive operation was run; this is accurately retained as residual manual validation."]
+}

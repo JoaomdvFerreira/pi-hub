@@ -31,6 +31,7 @@ import {
 } from "@/lib/formatting/containerStatus";
 import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
 import { ContainerDetailDialog } from "@/features/containers/ContainerDetailDialog";
+import { DeviceAdministration } from "@/features/devices/DeviceAdministration";
 import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
@@ -377,6 +378,8 @@ export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetai
       </div>
 
       {diagnostics ? <DiagnosticsList diagnostics={diagnostics} /> : null}
+
+      <DeviceAdministration deviceId={deviceId} deviceName={device.name} />
 
       <section className="rounded-lg border border-border bg-card p-3.5">
         <h2 className="mb-2.5 text-xs font-bold tracking-wide text-muted-foreground">

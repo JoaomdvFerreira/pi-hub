@@ -65,6 +65,8 @@ pub fn run() {
             commands::monitoring::get_activity,
             commands::containers::perform_container_action,
             commands::containers::get_container_logs,
+            commands::administration::perform_administration_operation,
+            commands::administration::get_expected_disruption,
             commands::terminal::open_terminal_session,
             commands::terminal::write_terminal_input,
             commands::terminal::resize_terminal_session,
