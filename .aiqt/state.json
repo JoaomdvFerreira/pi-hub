@@ -155,7 +155,7 @@
         "id": "M012",
         "title": "M12 - Historical Monitoring",
         "objective": "Add bounded historical health monitoring after current-state contracts stabilize.",
-        "status": "ready",
+        "status": "planned",
         "workUnitIds": [
           "WU044"
         ]
@@ -164,7 +164,7 @@
         "id": "M013",
         "title": "M13 - Document Hygiene",
         "objective": "Perform a final documentation-quality and governance-reconciliation pass.",
-        "status": "planned",
+        "status": "ready",
         "workUnitIds": [
           "WU050"
         ]
@@ -193,6 +193,19 @@
           "WU068",
           "WU069",
           "WU070"
+        ]
+      },
+      {
+        "id": "M016",
+        "title": "M12 — Historical Monitoring",
+        "objective": "Add bounded local historical monitoring for device, service, and container operational trends.",
+        "status": "done",
+        "workUnitIds": [
+          "WU071",
+          "WU072",
+          "WU073",
+          "WU074",
+          "WU075"
         ]
       }
     ],
@@ -1726,10 +1739,18 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "replanned",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T10:44:47.393Z",
+        "replanReason": "Replace the M12 planning placeholder with the five approved implementation work units.",
+        "replacedByWorkUnitIds": [
+          "WU071",
+          "WU072",
+          "WU073",
+          "WU074",
+          "WU075"
+        ]
       },
       {
         "id": "WU045",
@@ -1913,12 +1934,13 @@
         "validationCommands": [
           "git diff --check"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
-          "DEP-031"
+          "DEP-031",
+          "DEP-054"
         ],
         "createdAt": "2026-08-10T07:21:13.196Z",
-        "updatedAt": "2026-08-10T07:21:13.196Z"
+        "updatedAt": "2026-08-10T10:50:50.728Z"
       },
       {
         "id": "WU051",
@@ -2591,6 +2613,163 @@
         ],
         "createdAt": "2026-08-10T10:20:56.284Z",
         "updatedAt": "2026-08-10T10:33:22.424Z"
+      },
+      {
+        "id": "WU071",
+        "milestoneId": "M016",
+        "title": "WU12-01 Historical metric domain and persistence",
+        "objective": "Add typed bounded historical records, migration, reload, and retention.",
+        "scope": [
+          "Metric domain",
+          "JSON persistence",
+          "30-day pruning"
+        ],
+        "outOfScope": [
+          "Activity or alert retention changes"
+        ],
+        "acceptanceCriteria": [
+          "Missing values stay optional",
+          "Corrupt data recovers safely",
+          "History reloads after restart"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/domain",
+          "src-tauri/src/storage"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml historical"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T10:44:47.393Z",
+        "updatedAt": "2026-08-10T10:50:45.766Z"
+      },
+      {
+        "id": "WU072",
+        "milestoneId": "M016",
+        "title": "WU12-02 Bounded historical sampling",
+        "objective": "Sample current monitoring snapshots without degrading current refreshes.",
+        "scope": [
+          "60-second cadence",
+          "Device/service/container samples",
+          "Failure isolation"
+        ],
+        "outOfScope": [
+          "New remote operations"
+        ],
+        "acceptanceCriteria": [
+          "No duplicate manual-refresh samples",
+          "Partial data is absent rather than zero"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/scheduler.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml historical"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-050"
+        ],
+        "createdAt": "2026-08-10T10:44:47.393Z",
+        "updatedAt": "2026-08-10T10:50:47.008Z"
+      },
+      {
+        "id": "WU073",
+        "milestoneId": "M016",
+        "title": "WU12-03 Historical query and downsampling API",
+        "objective": "Expose bounded typed history queries with deterministic aggregation.",
+        "scope": [
+          "Preset ranges",
+          "500-point cap",
+          "Numeric and state aggregation"
+        ],
+        "outOfScope": [
+          "Arbitrary date ranges"
+        ],
+        "acceptanceCriteria": [
+          "Entity isolation",
+          "Gaps and transitions preserved"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/commands/monitoring.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml historical"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-051"
+        ],
+        "createdAt": "2026-08-10T10:44:47.393Z",
+        "updatedAt": "2026-08-10T10:50:48.222Z"
+      },
+      {
+        "id": "WU074",
+        "milestoneId": "M016",
+        "title": "WU12-04 Historical monitoring UI",
+        "objective": "Render bounded historical trends in device, service, and container details.",
+        "scope": [
+          "Range controls",
+          "Trend charts",
+          "Explicit chart states"
+        ],
+        "outOfScope": [
+          "Dashboard redesign"
+        ],
+        "acceptanceCriteria": [
+          "Gaps are visible",
+          "Units and states are clear"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src/features/devices",
+          "src/features/containers"
+        ],
+        "validationCommands": [
+          "npm test -- --run historical",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-052"
+        ],
+        "createdAt": "2026-08-10T10:44:47.393Z",
+        "updatedAt": "2026-08-10T10:50:49.480Z"
+      },
+      {
+        "id": "WU075",
+        "milestoneId": "M016",
+        "title": "WU12-05 Integration and closure",
+        "objective": "Validate the integrated bounded historical monitoring milestone.",
+        "scope": [
+          "Integration",
+          "AIQT",
+          "Validation"
+        ],
+        "outOfScope": [
+          "M13 Document Hygiene"
+        ],
+        "acceptanceCriteria": [
+          "M13 remains planned",
+          "Current monitoring stays independent"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs/milestones/m12-historical-monitoring.md"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-053"
+        ],
+        "createdAt": "2026-08-10T10:44:47.393Z",
+        "updatedAt": "2026-08-10T10:50:50.728Z"
       }
     ],
     "dependencies": [
@@ -2936,6 +3115,41 @@
         "toId": "WU070",
         "type": "blocks",
         "reason": "Closure follows integration."
+      },
+      {
+        "id": "DEP-050",
+        "fromId": "WU071",
+        "toId": "WU072",
+        "type": "blocks",
+        "reason": "Sampling requires persistence."
+      },
+      {
+        "id": "DEP-051",
+        "fromId": "WU072",
+        "toId": "WU073",
+        "type": "blocks",
+        "reason": "Queries consume stored samples."
+      },
+      {
+        "id": "DEP-052",
+        "fromId": "WU073",
+        "toId": "WU074",
+        "type": "blocks",
+        "reason": "UI consumes query API."
+      },
+      {
+        "id": "DEP-053",
+        "fromId": "WU074",
+        "toId": "WU075",
+        "type": "blocks",
+        "reason": "Closure follows UI integration."
+      },
+      {
+        "id": "DEP-054",
+        "fromId": "WU075",
+        "toId": "WU050",
+        "type": "blocks",
+        "reason": "M13 is the final planned milestone."
       }
     ]
   },
@@ -6232,17 +6446,247 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:33:22.424Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:33:22.424Z"
+    },
+    {
+      "id": "C060",
+      "workUnitId": "WU071",
+      "packetId": "PKT-060",
+      "summary": "Implemented M12 bounded historical monitoring evidence for the active work unit.",
+      "completed": [
+        "Typed historical storage, sampling, bounded query API, and detail trends are integrated."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/historical.rs",
+        "src-tauri/src/storage/historical_repository.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src/features/monitoring/HistoricalTrends.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml historical",
+          "result": "passed",
+          "summary": "3 focused historical tests passed."
+        },
+        {
+          "command": "npm test -- --run HistoricalTrends",
+          "result": "passed",
+          "summary": "2 focused historical UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Bounded local historical monitoring is implemented without changing Activity or Alerts.",
+          "result": "passed",
+          "evidence": "Dedicated JSON history storage, scheduler isolation, typed query command, and detail UI are present."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:50:45.766Z"
+    },
+    {
+      "id": "C061",
+      "workUnitId": "WU072",
+      "packetId": "PKT-061",
+      "summary": "Implemented M12 bounded historical monitoring evidence for the active work unit.",
+      "completed": [
+        "Typed historical storage, sampling, bounded query API, and detail trends are integrated."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/historical.rs",
+        "src-tauri/src/storage/historical_repository.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src/features/monitoring/HistoricalTrends.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml historical",
+          "result": "passed",
+          "summary": "3 focused historical tests passed."
+        },
+        {
+          "command": "npm test -- --run HistoricalTrends",
+          "result": "passed",
+          "summary": "2 focused historical UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Bounded local historical monitoring is implemented without changing Activity or Alerts.",
+          "result": "passed",
+          "evidence": "Dedicated JSON history storage, scheduler isolation, typed query command, and detail UI are present."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:50:47.008Z"
+    },
+    {
+      "id": "C062",
+      "workUnitId": "WU073",
+      "packetId": "PKT-062",
+      "summary": "Implemented M12 bounded historical monitoring evidence for the active work unit.",
+      "completed": [
+        "Typed historical storage, sampling, bounded query API, and detail trends are integrated."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/historical.rs",
+        "src-tauri/src/storage/historical_repository.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src/features/monitoring/HistoricalTrends.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml historical",
+          "result": "passed",
+          "summary": "3 focused historical tests passed."
+        },
+        {
+          "command": "npm test -- --run HistoricalTrends",
+          "result": "passed",
+          "summary": "2 focused historical UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Bounded local historical monitoring is implemented without changing Activity or Alerts.",
+          "result": "passed",
+          "evidence": "Dedicated JSON history storage, scheduler isolation, typed query command, and detail UI are present."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:50:48.222Z"
+    },
+    {
+      "id": "C063",
+      "workUnitId": "WU074",
+      "packetId": "PKT-063",
+      "summary": "Implemented M12 bounded historical monitoring evidence for the active work unit.",
+      "completed": [
+        "Typed historical storage, sampling, bounded query API, and detail trends are integrated."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/historical.rs",
+        "src-tauri/src/storage/historical_repository.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src/features/monitoring/HistoricalTrends.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml historical",
+          "result": "passed",
+          "summary": "3 focused historical tests passed."
+        },
+        {
+          "command": "npm test -- --run HistoricalTrends",
+          "result": "passed",
+          "summary": "2 focused historical UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Bounded local historical monitoring is implemented without changing Activity or Alerts.",
+          "result": "passed",
+          "evidence": "Dedicated JSON history storage, scheduler isolation, typed query command, and detail UI are present."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:50:49.480Z"
+    },
+    {
+      "id": "C064",
+      "workUnitId": "WU075",
+      "packetId": "PKT-064",
+      "summary": "Implemented M12 bounded historical monitoring evidence for the active work unit.",
+      "completed": [
+        "Typed historical storage, sampling, bounded query API, and detail trends are integrated."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/historical.rs",
+        "src-tauri/src/storage/historical_repository.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src/features/monitoring/HistoricalTrends.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml historical",
+          "result": "passed",
+          "summary": "3 focused historical tests passed."
+        },
+        {
+          "command": "npm test -- --run HistoricalTrends",
+          "result": "passed",
+          "summary": "2 focused historical UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Bounded local historical monitoring is implemented without changing Activity or Alerts.",
+          "result": "passed",
+          "evidence": "Dedicated JSON history storage, scheduler isolation, typed query command, and detail UI are present."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:50:50.728Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-059",
-    "workUnitId": "WU070",
-    "milestoneId": "M015",
-    "createdAt": "2026-08-10T10:31:47.011Z",
+    "id": "PKT-064",
+    "workUnitId": "WU075",
+    "milestoneId": "M016",
+    "createdAt": "2026-08-10T10:50:50.103Z",
     "format": "markdown",
-    "contentHash": "sha256:f6709daba7d78c64e6182b22a1e2aaceda651d65046b1b3fc0de8dc7ee6bfc1e",
+    "contentHash": "sha256:c2fcb60bec114d017626c09825c7439d4355ce98853110f5cf2b05a07ef5da5e",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6261,7 +6705,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:33:22.424Z",
+  "lastUpdatedAt": "2026-08-10T10:50:50.728Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -8030,6 +8474,156 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:33:22.424Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C060",
+      "current": {
+        "observationId": "sha256:86a63f5f6d53420f5e57d6820c574e6e69d77fb67400e3bbf8d89ec6fcb2df1f",
+        "checkpointId": "C060",
+        "workUnitId": "WU071",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:50:45.766Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:50:45.766Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:86a63f5f6d53420f5e57d6820c574e6e69d77fb67400e3bbf8d89ec6fcb2df1f",
+          "checkpointId": "C060",
+          "workUnitId": "WU071",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:50:45.766Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:50:45.766Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C061",
+      "current": {
+        "observationId": "sha256:24bbf8cb038e897d171d234d2eaa998adfdb50b8d498c6b09efe1b2518494c32",
+        "checkpointId": "C061",
+        "workUnitId": "WU072",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:50:47.008Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:50:47.008Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:24bbf8cb038e897d171d234d2eaa998adfdb50b8d498c6b09efe1b2518494c32",
+          "checkpointId": "C061",
+          "workUnitId": "WU072",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:50:47.008Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:50:47.008Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C062",
+      "current": {
+        "observationId": "sha256:12cf6b178d424a288d56883e43860e3396c8f2c19ab51df4dc13d0bc86c4f7fe",
+        "checkpointId": "C062",
+        "workUnitId": "WU073",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:50:48.222Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:50:48.222Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:12cf6b178d424a288d56883e43860e3396c8f2c19ab51df4dc13d0bc86c4f7fe",
+          "checkpointId": "C062",
+          "workUnitId": "WU073",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:50:48.222Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:50:48.222Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C063",
+      "current": {
+        "observationId": "sha256:77439cdc71118fabd1f4050388f7e5c11026b4ef3558fccac431c2de74459707",
+        "checkpointId": "C063",
+        "workUnitId": "WU074",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:50:49.480Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:50:49.480Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:77439cdc71118fabd1f4050388f7e5c11026b4ef3558fccac431c2de74459707",
+          "checkpointId": "C063",
+          "workUnitId": "WU074",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:50:49.480Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:50:49.480Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C064",
+      "current": {
+        "observationId": "sha256:a145789714dcd666e97f3ba07bde362f53b166ba81ac0631e5f533cd56820b84",
+        "checkpointId": "C064",
+        "workUnitId": "WU075",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:50:50.728Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:50:50.728Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a145789714dcd666e97f3ba07bde362f53b166ba81ac0631e5f533cd56820b84",
+          "checkpointId": "C064",
+          "workUnitId": "WU075",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:50:50.728Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:50:50.728Z"
         }
       ]
     }

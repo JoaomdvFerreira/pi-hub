@@ -5,6 +5,7 @@ pub mod atomic;
 pub mod config_repository;
 pub mod device_repository;
 pub mod snapshot_repository;
+pub mod historical_repository;
 
 use std::fmt;
 
