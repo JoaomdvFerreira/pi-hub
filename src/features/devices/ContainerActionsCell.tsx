@@ -99,8 +99,8 @@ export function ContainerActionsCell({
                     {ACTION_LABEL[action]} "{containerName}"?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    This runs `docker {action}` for this container on the device over SSH. The
-                    dashboard will reflect the result on the next refresh.
+                    This runs `docker {action}` for this container on the device over SSH. Pi-Hub
+                    refreshes the device afterwards to verify the observed result.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

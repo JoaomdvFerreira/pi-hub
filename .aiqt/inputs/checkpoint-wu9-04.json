@@ -1,0 +1,13 @@
+{
+  "summary": "Hardened Start, Stop, and Restart with per-container duplicate prevention, state-aware UI controls, post-command refresh verification, and concise non-sensitive Activity evidence.",
+  "completed": ["Serialized conflicting actions for each device/container pair", "Added in-progress UI behavior", "Refreshed after command success before reporting completion", "Recorded requested, completed, failed, and verification-failed Activity events"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/commands/containers.rs", "src/features/devices/ContainerActionsCell.tsx"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml docker","result":"passed","summary":"Docker command validation and parser suite passed."},{"command":"npm run build","result":"passed","summary":"State-aware action UI builds successfully."}],
+  "acceptanceCriteria": [{"criterion":"Actions are state-aware and verified","result":"passed","evidence":"UI only exposes applicable actions and backend runs refresh_one after a successful command."},{"criterion":"Failures and verification mismatches are explicit","result":"passed","evidence":"ActionConflict and PostActionVerificationFailed map to user-presentable ApplicationErrors; Activity records concise outcome evidence."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["Pause/Unpause is intentionally deferred under M9 section 3.2 because no existing typed lifecycle operation supports it cleanly."]
+}

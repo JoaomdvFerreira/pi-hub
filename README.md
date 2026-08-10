@@ -6,7 +6,7 @@ See [`docs/pi-hub-functional-specification.md`](docs/pi-hub-functional-specifica
 
 ## Roadmap
 
-Approved planning lives in [`docs/roadmap/post-mvp-product-roadmap.md`](docs/roadmap/post-mvp-product-roadmap.md). M6, M7, and M8 implementation scope is documented in [`docs/milestones/m6-device-health-and-diagnostics.md`](docs/milestones/m6-device-health-and-diagnostics.md), [`docs/milestones/m7-service-health-and-operational-activity.md`](docs/milestones/m7-service-health-and-operational-activity.md), and [`docs/milestones/m8-alerts-and-threshold-governance.md`](docs/milestones/m8-alerts-and-threshold-governance.md); M10's controlled shutdown requirement is in [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
+Approved planning lives in [`docs/roadmap/post-mvp-product-roadmap.md`](docs/roadmap/post-mvp-product-roadmap.md). M6, M7, M8, and M9 implementation scope is documented in [`docs/milestones/m6-device-health-and-diagnostics.md`](docs/milestones/m6-device-health-and-diagnostics.md), [`docs/milestones/m7-service-health-and-operational-activity.md`](docs/milestones/m7-service-health-and-operational-activity.md), [`docs/milestones/m8-alerts-and-threshold-governance.md`](docs/milestones/m8-alerts-and-threshold-governance.md), and [`docs/milestones/m9-docker-operational-visibility.md`](docs/milestones/m9-docker-operational-visibility.md); M10's controlled shutdown requirement is in [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
 
 ## Stack
 

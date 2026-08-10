@@ -4,6 +4,7 @@ export type Screen =
   | { name: "dashboard" }
   | { name: "addDevice" }
   | { name: "device"; deviceId: string }
+  | { name: "container"; deviceId: string; containerId: string }
   | { name: "deviceSettings"; deviceId: string }
   | { name: "services"; deviceId?: string }
   | { name: "activity" }
@@ -19,6 +20,7 @@ interface RouterContextValue {
   goAlerts: () => void;
   goGlobalSettings: () => void;
   goDevice: (deviceId: string) => void;
+  goContainer: (deviceId: string, containerId: string) => void;
   goDeviceSettings: (deviceId: string) => void;
 }
 
@@ -36,6 +38,7 @@ export function RouterProvider({ children }: { children: ReactNode }) {
     goAlerts: () => setScreen({ name: "alerts" }),
     goGlobalSettings: () => setScreen({ name: "globalSettings" }),
     goDevice: (deviceId) => setScreen({ name: "device", deviceId }),
+    goContainer: (deviceId, containerId) => setScreen({ name: "container", deviceId, containerId }),
     goDeviceSettings: (deviceId) =>
       setScreen({ name: "deviceSettings", deviceId }),
   };

@@ -1,12 +1,14 @@
 import type { DeviceConnectionStatus } from "./device";
 
 export type DockerContainerState =
+  | "created"
   | "running"
   | "stopped"
   | "exited"
   | "restarting"
   | "paused"
   | "dead"
+  | "removing"
   | "unknown";
 
 export type DockerHealthStatus =
@@ -17,6 +19,8 @@ export type DockerHealthStatus =
   | "unknown";
 
 export type ContainerAction = "start" | "stop" | "restart";
+export type ContainerLogMode = "last100" | "last500" | "last15Minutes" | "last1Hour";
+export interface ContainerLogResult { containerId: string; mode: ContainerLogMode; collectedAt: string; content: string; truncated: boolean; }
 
 export interface DockerPortBinding {
   hostIp?: string;
@@ -24,6 +28,10 @@ export interface DockerPortBinding {
   containerPort: number;
   protocol: string;
 }
+export interface DockerMount { mountType: string; source: string; destination: string; readOnly: boolean; }
+export interface DockerNetwork { name: string; ipAddress?: string; aliases: string[]; }
+export interface DockerLabel { key: string; value: string; redacted: boolean; }
+export interface DockerResourceUsage { cpuPercent?: number; memoryUsedBytes?: number; memoryLimitBytes?: number; memoryPercent?: number; }
 
 export interface DockerContainerSummary {
   id: string;
@@ -35,6 +43,14 @@ export interface DockerContainerSummary {
   ports: DockerPortBinding[];
   createdAt?: string;
   startedAt?: string;
+  imageId?: string;
+  restartCount?: number;
+  restartPolicy?: string;
+  restartMaximumRetryCount?: number;
+  mounts: DockerMount[];
+  networks: DockerNetwork[];
+  labels: DockerLabel[];
+  resourceUsage?: DockerResourceUsage;
 }
 
 export interface SystemMetrics {

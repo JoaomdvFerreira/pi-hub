@@ -17,4 +17,4 @@ pub use executor::{RemoteExecutionResult, RemoteExecutor, SshTarget};
 pub use openssh::OpenSshExecutor;
 #[allow(unused_imports)]
 pub use operation::RemoteOperation;
-pub use operation::docker_container_action_command;
+pub use operation::{docker_container_action_command, docker_container_logs_command};

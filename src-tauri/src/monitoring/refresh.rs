@@ -29,6 +29,9 @@ const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 /// containers carried forward from `previous` (per the architecture
 /// spec's failure-isolation rule that a failed refresh must not erase
 /// previously successful data).
+/// Test-only default-policy convenience wrapper. Production refreshes are
+/// coordinated by the scheduler with the effective M8 threshold policy.
+#[cfg(test)]
 pub fn refresh_device_sync(
     executor: &dyn RemoteExecutor,
     device: &Device,
@@ -174,6 +177,14 @@ mod tests {
             ports: Vec::new(),
             created_at: None,
             started_at: None,
+            image_id: None,
+            restart_count: None,
+            restart_policy: None,
+            restart_maximum_retry_count: None,
+            mounts: Vec::new(),
+            networks: Vec::new(),
+            labels: Vec::new(),
+            resource_usage: None,
         }
     }
 

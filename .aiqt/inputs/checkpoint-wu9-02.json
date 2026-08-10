@@ -1,0 +1,13 @@
+{
+  "summary": "Added a bounded single Docker stats collection to enrich running containers with current CPU and memory usage without treating unavailable or malformed stats as zero.",
+  "completed": ["Added one docker stats --no-stream collection for all running containers", "Parsed CPU, memory used, limit, and percentage", "Preserved container metadata when stats are absent or malformed"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/infrastructure/ssh/operation.rs", "src-tauri/src/infrastructure/parsers/docker.rs", "src-tauri/src/domain/docker_container.rs"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml docker","result":"passed","summary":"30 Docker-related Rust tests passed, including multi-container stats parsing."}],
+  "acceptanceCriteria": [{"criterion":"Running container stats are available when supported","result":"passed","evidence":"Stats parser attaches CPU and memory data to matching container IDs."},{"criterion":"Missing or malformed stats do not remove metadata","result":"passed","evidence":"Malformed/unknown stats are ignored per container; metadata remains available."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["No historical container time series is persisted."]
+}

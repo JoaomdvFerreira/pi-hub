@@ -62,6 +62,14 @@ mod tests {
             ports: Vec::new(),
             created_at: None,
             started_at: None,
+            image_id: None,
+            restart_count: None,
+            restart_policy: None,
+            restart_maximum_retry_count: None,
+            mounts: Vec::new(),
+            networks: Vec::new(),
+            labels: Vec::new(),
+            resource_usage: None,
         }
     }
 

@@ -1,0 +1,13 @@
+{
+  "summary": "Delivered typed on-demand bounded container logs with four fixed modes, a ten-second SSH timeout, 512 KiB UTF-8-safe response truncation, and no persistence into Activity or alerts.",
+  "completed": ["Added closed log-mode enum", "Added dedicated Tauri log command", "Enforced 512 KiB return cap", "Added detail UI log controls"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/commands/containers.rs", "src-tauri/src/infrastructure/ssh/operation.rs", "src/lib/tauri/containers.ts", "src/features/containers/ContainerDetailDialog.tsx"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml containers::tests","result":"passed","summary":"UTF-8-safe 512 KiB truncation test passed."},{"command":"npm run build","result":"passed","summary":"Container detail/log UI typechecks and builds."}],
+  "acceptanceCriteria": [{"criterion":"Backend enforces request and output bounds","result":"passed","evidence":"Closed enum only permits four approved modes; output is hard-capped at 512 KiB."},{"criterion":"Log failures are classified","result":"passed","evidence":"SSH errors map through the established ApplicationError codes."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["Logs are one-shot only and are never persisted."]
+}

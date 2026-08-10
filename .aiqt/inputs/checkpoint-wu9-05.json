@@ -1,0 +1,13 @@
+{
+  "summary": "Added a scan-friendly Docker detail surface with metadata sections, on-demand bounded logs, action progress, and direct navigation from registered services to their associated container.",
+  "completed": ["Added container detail dialog", "Kept overview table concise", "Added bounded log controls", "Made service associations navigable"],
+  "notCompleted": [],
+  "filesChanged": ["src/features/containers/ContainerDetailDialog.tsx", "src/features/devices/DeviceDetailScreen.tsx", "src/features/services/ServicesScreen.tsx", "src/app/router.tsx"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"npm test","result":"passed","summary":"8 frontend tests passed."},{"command":"npm run build","result":"passed","summary":"Production frontend build passed."},{"command":"git diff --check","result":"passed","summary":"No whitespace errors."}],
+  "acceptanceCriteria": [{"criterion":"List remains scan-friendly","result":"passed","evidence":"Ports, mounts, networks, labels, and logs are restricted to detail."},{"criterion":"Detail exposes bounded operational data","result":"passed","evidence":"Detail includes overview, ports, storage, networks, labels, services, and on-demand logs."},{"criterion":"Associated services are navigable","result":"passed","evidence":"Service tiles provide View container for a present manual association; missing associations remain visibly missing."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["No automatic service-to-container association was introduced."]
+}

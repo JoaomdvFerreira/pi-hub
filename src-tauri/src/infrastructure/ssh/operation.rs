@@ -1,4 +1,4 @@
-use crate::domain::docker_container::ContainerAction;
+use crate::domain::docker_container::{ContainerAction, ContainerLogMode};
 
 #[derive(Debug)]
 pub struct InvalidContainerIdError(pub String);
@@ -49,6 +49,11 @@ pub fn docker_container_action_command(
         "docker {} -- '{container_id}'",
         action.docker_verb()
     ))
+}
+
+pub fn docker_container_logs_command(mode: ContainerLogMode, container_id: &str) -> Result<String, InvalidContainerIdError> {
+    validate_container_id(container_id)?;
+    Ok(format!("docker logs --timestamps {} -- '{container_id}'", mode.docker_arguments()))
 }
 
 /// The fixed set of remote operations Pi-Hub is ever allowed to run. The
@@ -184,6 +189,9 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 printf 'PIHUB_DOCKER_AVAILABLE=1\n'
 docker ps -a --no-trunc --format '{{json .}}'
+ids=$(docker ps -aq)
+[ -z "$ids" ] || docker inspect --format 'PIHUB_DOCKER_INSPECT={{printf "{\\"id\\":%s,\\"imageId\\":%s,\\"createdAt\\":%s,\\"startedAt\\":%s,\\"restartCount\\":%d,\\"restartPolicy\\":%s,\\"restartMaximumRetryCount\\":%d,\\"mounts\\":%s,\\"networks\\":%s,\\"labels\\":%s}" (json .Id) (json .Image) (json .Created) (json .State.StartedAt) .RestartCount (json .HostConfig.RestartPolicy.Name) .HostConfig.RestartPolicy.MaximumRetryCount (json .Mounts) (json .NetworkSettings.Networks) (json .Config.Labels)}}' $ids
+docker stats --no-stream --format 'PIHUB_DOCKER_STATS={{json .}}' 2>/dev/null || true
 "#;
 
 impl RemoteOperation {
@@ -243,6 +251,14 @@ mod tests {
             docker_container_action_command(ContainerAction::Restart, "homeassistant").unwrap(),
             "docker restart -- 'homeassistant'"
         );
+    }
+
+    #[test]
+    fn docker_log_command_has_only_the_four_bounded_modes() {
+        assert_eq!(docker_container_logs_command(ContainerLogMode::Last100, "homeassistant").unwrap(), "docker logs --timestamps --tail 100 -- 'homeassistant'");
+        assert_eq!(docker_container_logs_command(ContainerLogMode::Last500, "homeassistant").unwrap(), "docker logs --timestamps --tail 500 -- 'homeassistant'");
+        assert_eq!(docker_container_logs_command(ContainerLogMode::Last15Minutes, "homeassistant").unwrap(), "docker logs --timestamps --since 15m -- 'homeassistant'");
+        assert!(docker_container_logs_command(ContainerLogMode::Last1Hour, "bad; rm -rf /").is_err());
     }
 
     #[test]

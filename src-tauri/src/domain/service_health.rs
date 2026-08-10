@@ -4,6 +4,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::device::DeviceService;
+#[cfg(test)]
 use crate::domain::settings::ThresholdPolicy;
 
 pub const SERVICE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
@@ -73,11 +74,10 @@ pub fn apply_check_with_threshold(previous: Option<&ServiceHealthRecord>, servic
     record
 }
 
-pub fn apply_check(previous: Option<&ServiceHealthRecord>, service_id: &str, result: ServiceCheckResult, checked_at: String) -> ServiceHealthRecord { apply_check_with_threshold(previous, service_id, result, checked_at, ThresholdPolicy::default().service_unavailable_failures) }
-
-pub fn check_services(services: &[DeviceService], previous: &HashMap<String, ServiceHealthRecord>) -> HashMap<String, ServiceHealthRecord> {
-    check_services_with_threshold(services, previous, ThresholdPolicy::default().service_unavailable_failures)
-}
+/// Test-only shorthand for the default threshold policy. Production refreshes
+/// must use the persisted effective policy through `apply_check_with_threshold`.
+#[cfg(test)]
+fn apply_check(previous: Option<&ServiceHealthRecord>, service_id: &str, result: ServiceCheckResult, checked_at: String) -> ServiceHealthRecord { apply_check_with_threshold(previous, service_id, result, checked_at, ThresholdPolicy::default().service_unavailable_failures) }
 
 pub fn check_services_with_threshold(services: &[DeviceService], previous: &HashMap<String, ServiceHealthRecord>, unavailable_failures: u32) -> HashMap<String, ServiceHealthRecord> {
     services.iter().filter(|service| service.enabled).map(|service| {
