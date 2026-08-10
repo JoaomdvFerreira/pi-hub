@@ -231,7 +231,17 @@ awk '/^[[:space:]]*nameserver[[:space:]]+/ {print "PIHUB_NET_DNS=" $2}' /etc/res
 "#;
 
 pub const STORAGE_VISIBILITY_COMMAND: &str = r#"
-findmnt -rn -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null | while IFS=' ' read -r source target fstype options; do
+findmnt -rn -P -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null | awk '
+function value(name, prefix) {
+  prefix = name "=\""
+  if (match($0, prefix "[^\"]*\"")) return substr($0, RSTART + length(prefix), RLENGTH - length(prefix) - 1)
+  return ""
+}
+{
+  source = value("SOURCE"); target = value("TARGET"); fstype = value("FSTYPE"); options = value("OPTIONS")
+  if (source != "" && target != "" && fstype != "") printf "%s|%s|%s|%s\\n", source, target, fstype, options
+}
+' | while IFS='|' read -r source target fstype options; do
   [ -n "$target" ] || continue
   df -P -B1 "$target" 2>/dev/null | awk -v source="$source" -v target="$target" -v fstype="$fstype" -v options="$options" 'NR==2 {ro=(options ~ /(^|,)ro(,|$)/ ? "ro" : (options == "" ? "-" : "rw")); gsub(/%/, "", $5); printf "PIHUB_STORAGE=%s|%s|%s|%s|%s|%s|%s|%s|x\\n", source, target, fstype, $2, $3, $4, $5, ro}'
 done
@@ -292,6 +302,13 @@ mod tests {
             RemoteOperation::DockerContainers.command(),
             Some(DOCKER_CONTAINERS_COMMAND)
         );
+    }
+
+    #[test]
+    fn storage_visibility_uses_machine_readable_findmnt_records() {
+        let command = RemoteOperation::StorageVisibility.command().unwrap();
+        assert!(command.contains("findmnt -rn -P -o SOURCE,TARGET,FSTYPE,OPTIONS"));
+        assert!(command.contains("while IFS='|' read -r source target fstype options"));
     }
 
     #[test]
