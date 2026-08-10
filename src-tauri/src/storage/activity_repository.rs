@@ -13,6 +13,7 @@ const RETENTION_DAYS: i64 = 30;
 
 pub trait ActivityRepository: Send + Sync {
     fn load_all(&self) -> Vec<ActivityEvent>;
+    fn load_for_device(&self, device_id: &str) -> Vec<ActivityEvent>;
     fn append(&self, event: ActivityEvent) -> Result<(), StorageError>;
 }
 
@@ -39,6 +40,7 @@ impl JsonActivityRepository {
 }
 impl ActivityRepository for JsonActivityRepository {
     fn load_all(&self) -> Vec<ActivityEvent> { let mut events = self.load_file().events; Self::prune(&mut events); events }
+    fn load_for_device(&self, device_id: &str) -> Vec<ActivityEvent> { self.load_all().into_iter().filter(|event| event.device_id.as_deref() == Some(device_id)).collect() }
     fn append(&self, event: ActivityEvent) -> Result<(), StorageError> {
         let mut file = self.load_file(); file.events.push(event); Self::prune(&mut file.events);
         let bytes = serde_json::to_vec_pretty(&file)?;
@@ -72,5 +74,17 @@ mod tests {
         JsonActivityRepository::prune(&mut events);
         assert_eq!(events.len(), MAX_ACTIVITY_EVENTS);
         assert!(!events.iter().any(|item| item.id == "expired"));
+    }
+
+    #[test]
+    fn device_query_preserves_global_history_and_isolates_device_identity() {
+        let dir = tempdir().unwrap(); let repo = JsonActivityRepository::new(dir.path());
+        let mut device_a = event("2026-08-10T01:00:00Z", "device-a"); device_a.device_id = Some("device-a-id".into());
+        let mut device_b = event("2026-08-10T02:00:00Z", "device-b"); device_b.device_id = Some("device-b-id".into());
+        let mut global = event("2026-08-10T03:00:00Z", "global"); global.device_id = None;
+        repo.append(device_a).unwrap(); repo.append(device_b).unwrap(); repo.append(global).unwrap();
+        assert_eq!(repo.load_all().len(), 3);
+        assert_eq!(repo.load_for_device("device-a-id").iter().map(|event| event.id.as_str()).collect::<Vec<_>>(), vec!["device-a"]);
+        assert!(repo.load_for_device("device-with-no-activity").is_empty());
     }
 }

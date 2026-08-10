@@ -63,6 +63,7 @@ pub fn run() {
             commands::monitoring::refresh_all_devices,
             commands::monitoring::get_latest_snapshot,
             commands::monitoring::get_activity,
+            commands::monitoring::get_device_activity,
             commands::monitoring::get_historical_series,
             commands::containers::perform_container_action,
             commands::containers::get_container_logs,

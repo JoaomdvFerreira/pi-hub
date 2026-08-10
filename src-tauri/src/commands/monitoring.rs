@@ -59,6 +59,12 @@ pub fn get_activity(app: AppHandle) -> Result<Vec<ActivityEvent>, ApplicationErr
 }
 
 #[tauri::command]
+pub fn get_device_activity(app: AppHandle, device_id: String) -> Result<Vec<ActivityEvent>, ApplicationError> {
+    let dir = app.path().app_config_dir().map_err(|err| ApplicationError { code: "ConfigurationError".into(), message: format!("could not resolve the application config directory: {err}"), remediation: None, retryable: false })?;
+    Ok(JsonActivityRepository::new(dir).load_for_device(&device_id))
+}
+
+#[tauri::command]
 pub fn get_historical_series(app: AppHandle, device_id: String, entity_id: Option<String>, metric: HistoricalMetric, range: HistoricalRange) -> Result<HistoricalSeries, ApplicationError> {
     let dir = app.path().app_config_dir().map_err(|err| ApplicationError { code: "ConfigurationError".into(), message: format!("could not resolve the application config directory: {err}"), remediation: None, retryable: false })?;
     Ok(JsonHistoricalRepository::new(dir).query(&device_id, entity_id.as_deref(), metric, range, chrono::Utc::now()))
