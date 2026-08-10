@@ -4,7 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/layout/EmptyState";
 import { useRouter } from "@/app/router";
 import { getDevices, openDeviceService } from "@/lib/tauri/devices";
+import { getLatestSnapshot } from "@/lib/tauri/monitoring";
 import type { Device, DeviceService } from "@/types/device";
+import type { DeviceSnapshot } from "@/types/snapshot";
+import { ServiceHealthBadge, ServiceHealthDetails } from "@/features/services/ServiceHealth";
 
 interface ServicesScreenProps {
   deviceId?: string;
@@ -20,11 +23,14 @@ export function ServicesScreen({ deviceId }: ServicesScreenProps) {
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [snapshots, setSnapshots] = useState<Record<string, DeviceSnapshot | null>>({});
 
   const load = useCallback(async () => {
     try {
       const list = await getDevices();
       setDevices(list);
+      const entries = await Promise.all(list.map(async (device) => [device.id, await getLatestSnapshot(device.id)] as const));
+      setSnapshots(Object.fromEntries(entries));
     } catch {
       setError("Could not load services.");
     }
@@ -102,6 +108,10 @@ export function ServicesScreen({ deviceId }: ServicesScreenProps) {
         <div className="grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-3">
           {tiles.map((tile) => {
             const key = `${tile.device.id}:${tile.service.id}`;
+            const health = snapshots[tile.device.id]?.serviceHealth?.[tile.service.id];
+            const associatedContainer = tile.service.containerName;
+            const containers = snapshots[tile.device.id]?.containers ?? [];
+            const associationMissing = associatedContainer && !containers.some((container) => container.name === associatedContainer);
             return (
               <div
                 key={key}
@@ -124,10 +134,13 @@ export function ServicesScreen({ deviceId }: ServicesScreenProps) {
                       Disabled
                     </Badge>
                   ) : null}
+                  {tile.service.enabled ? <span className="ml-auto shrink-0"><ServiceHealthBadge health={health} /></span> : null}
                 </div>
                 <div className="truncate font-mono text-[11.5px] text-muted-foreground">
                   {tile.service.url}
                 </div>
+                <ServiceHealthDetails health={health} />
+                {associatedContainer ? <p className="text-xs text-muted-foreground">Container: {associatedContainer}{associationMissing ? " (not currently found)" : ""}</p> : null}
                 <button
                   type="button"
                   disabled={!tile.service.enabled || openingKey === key}

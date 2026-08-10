@@ -7,6 +7,7 @@ import { useRouter } from "@/app/router";
 import { diagnoseDeviceConnection, getDevice, openDeviceService, openDeviceTerminal } from "@/lib/tauri/devices";
 import type { ConnectivityDiagnosticReport } from "@/types/snapshot";
 import { DiagnosticsList, HealthDetails, PowerThrottling } from "@/features/devices/HealthDiagnostics";
+import { ServiceHealthBadge, ServiceHealthDetails } from "@/features/services/ServiceHealth";
 import { refreshDevice } from "@/lib/tauri/monitoring";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
 import { useDeviceActivity } from "@/stores/useDeviceActivity";
@@ -461,13 +462,13 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
         ) : (
           <div className="flex flex-wrap gap-2.5">
             {device.services.map((svc) => (
+              <div key={svc.id} className="flex min-w-[260px] flex-col gap-2 rounded-lg border border-border bg-card px-3 py-2.5">
               <button
-                key={svc.id}
                 type="button"
                 disabled={!svc.enabled || openingServiceId === svc.id}
                 title={svc.enabled ? "Open in default browser" : "This service is disabled"}
                 onClick={() => handleOpenService(svc.id)}
-                className="flex min-w-[210px] items-center gap-2.5 rounded-lg border border-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-card"
+                className="flex items-center gap-2.5 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <span className="flex size-[34px] shrink-0 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
                   {svc.name.slice(0, 2).toUpperCase()}
@@ -488,6 +489,9 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
                   </Badge>
                 ) : null}
               </button>
+              {svc.enabled ? <><ServiceHealthDetails health={snapshot?.serviceHealth?.[svc.id]} />{svc.containerName ? <p className="text-xs text-muted-foreground">Container: {svc.containerName}{!containers.some((container) => container.name === svc.containerName) ? " (not currently found)" : ""}</p> : null}</> : null}
+              {svc.enabled ? <ServiceHealthBadge health={snapshot?.serviceHealth?.[svc.id]} /> : null}
+              </div>
             ))}
           </div>
         )}

@@ -134,7 +134,8 @@ mod tests {
             error: None,
             stale: false,
             last_successful_refresh: None,
-            health: crate::domain::health::assess_health(&status, None),
+        health: crate::domain::health::assess_health(&status, None),
+        service_health: std::collections::HashMap::new(),
         }
     }
 

@@ -95,9 +95,14 @@
         "id": "M007",
         "title": "M7 - Service Health and Operational Activity",
         "objective": "Add service health monitoring and bounded operational activity.",
-        "status": "ready",
+        "status": "done",
         "workUnitIds": [
-          "WU039"
+          "WU039",
+          "WU045",
+          "WU046",
+          "WU047",
+          "WU048",
+          "WU049"
         ]
       },
       {
@@ -143,6 +148,15 @@
         "status": "ready",
         "workUnitIds": [
           "WU044"
+        ]
+      },
+      {
+        "id": "M013",
+        "title": "M13 - Document Hygiene",
+        "objective": "Perform a final documentation-quality and governance-reconciliation pass.",
+        "status": "planned",
+        "workUnitIds": [
+          "WU050"
         ]
       }
     ],
@@ -1530,10 +1544,10 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T07:24:53.906Z"
       },
       {
         "id": "WU040",
@@ -1664,6 +1678,195 @@
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
         "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU045",
+        "milestoneId": "M007",
+        "title": "WU7-01 Service health-check domain and execution",
+        "objective": "Add bounded typed HTTP service checks.",
+        "scope": [
+          "HTTP/HTTPS checks",
+          "timeouts",
+          "redirects"
+        ],
+        "outOfScope": [
+          "Authentication",
+          "TLS bypass"
+        ],
+        "acceptanceCriteria": [
+          "Typed success and failure results"
+        ],
+        "agentContextRefs": [
+          "docs/milestones/m7-service-health-and-operational-activity.md"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml service_health"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:24:55.212Z"
+      },
+      {
+        "id": "WU046",
+        "milestoneId": "M007",
+        "title": "WU7-02 Service monitoring state and transitions",
+        "objective": "Persist service health and transition state.",
+        "scope": [
+          "Monitoring state",
+          "persistence"
+        ],
+        "outOfScope": [
+          "Alerts"
+        ],
+        "acceptanceCriteria": [
+          "Failure streaks recover deterministically"
+        ],
+        "agentContextRefs": [
+          "docs/milestones/m7-service-health-and-operational-activity.md"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-026"
+        ],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:24:56.579Z"
+      },
+      {
+        "id": "WU047",
+        "milestoneId": "M007",
+        "title": "WU7-03 Optional service-to-container association",
+        "objective": "Store optional stable container associations.",
+        "scope": [
+          "Service metadata",
+          "editing"
+        ],
+        "outOfScope": [
+          "Automatic matching"
+        ],
+        "acceptanceCriteria": [
+          "Association persists safely"
+        ],
+        "agentContextRefs": [
+          "docs/milestones/m7-service-health-and-operational-activity.md"
+        ],
+        "suggestedFiles": [
+          "src/features/devices"
+        ],
+        "validationCommands": [
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-027"
+        ],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:24:57.926Z"
+      },
+      {
+        "id": "WU048",
+        "milestoneId": "M007",
+        "title": "WU7-04 Persistent operational activity log",
+        "objective": "Persist bounded meaningful activity events.",
+        "scope": [
+          "Activity store",
+          "retention",
+          "deduplication"
+        ],
+        "outOfScope": [
+          "Alert lifecycle"
+        ],
+        "acceptanceCriteria": [
+          "Events survive reload and are retained"
+        ],
+        "agentContextRefs": [
+          "docs/milestones/m7-service-health-and-operational-activity.md"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/storage"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-028"
+        ],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:24:59.247Z"
+      },
+      {
+        "id": "WU049",
+        "milestoneId": "M007",
+        "title": "WU7-05 Service health and activity UI integration",
+        "objective": "Present service health and persistent activity.",
+        "scope": [
+          "Services",
+          "activity view",
+          "dashboard"
+        ],
+        "outOfScope": [
+          "M8 controls"
+        ],
+        "acceptanceCriteria": [
+          "States and activity filters are visible"
+        ],
+        "agentContextRefs": [
+          "docs/milestones/m7-service-health-and-operational-activity.md"
+        ],
+        "suggestedFiles": [
+          "src/features"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-029",
+          "DEP-030"
+        ],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:25:00.572Z"
+      },
+      {
+        "id": "WU050",
+        "milestoneId": "M013",
+        "title": "Document hygiene",
+        "objective": "Reconcile documentation after all product milestones complete.",
+        "scope": [
+          "Canonical documentation"
+        ],
+        "outOfScope": [
+          "Product functionality"
+        ],
+        "acceptanceCriteria": [
+          "Documentation is truthful and linked"
+        ],
+        "agentContextRefs": [
+          "docs/roadmap/post-mvp-product-roadmap.md"
+        ],
+        "suggestedFiles": [
+          "docs"
+        ],
+        "validationCommands": [
+          "git diff --check"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-031"
+        ],
+        "createdAt": "2026-08-10T07:21:13.196Z",
+        "updatedAt": "2026-08-10T07:21:13.196Z"
       }
     ],
     "dependencies": [
@@ -1841,6 +2044,48 @@
         "toId": "WU038",
         "type": "blocks",
         "reason": "UI renders diagnostic reports."
+      },
+      {
+        "id": "DEP-026",
+        "fromId": "WU045",
+        "toId": "WU046",
+        "type": "blocks",
+        "reason": "State consumes checker results."
+      },
+      {
+        "id": "DEP-027",
+        "fromId": "WU046",
+        "toId": "WU047",
+        "type": "blocks",
+        "reason": "Service model established first."
+      },
+      {
+        "id": "DEP-028",
+        "fromId": "WU046",
+        "toId": "WU048",
+        "type": "blocks",
+        "reason": "Activity consumes transitions."
+      },
+      {
+        "id": "DEP-029",
+        "fromId": "WU047",
+        "toId": "WU049",
+        "type": "blocks",
+        "reason": "UI presents associations."
+      },
+      {
+        "id": "DEP-030",
+        "fromId": "WU048",
+        "toId": "WU049",
+        "type": "blocks",
+        "reason": "UI presents activity."
+      },
+      {
+        "id": "DEP-031",
+        "fromId": "WU044",
+        "toId": "WU050",
+        "type": "blocks",
+        "reason": "M13 is the final planned milestone."
       }
     ]
   },
@@ -3864,17 +4109,239 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T06:53:53.804Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:53:53.804Z"
+    },
+    {
+      "id": "C032",
+      "workUnitId": "WU039",
+      "packetId": "PKT-032",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:24:53.906Z"
+    },
+    {
+      "id": "C033",
+      "workUnitId": "WU045",
+      "packetId": "PKT-033",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:24:55.212Z"
+    },
+    {
+      "id": "C034",
+      "workUnitId": "WU046",
+      "packetId": "PKT-034",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:24:56.579Z"
+    },
+    {
+      "id": "C035",
+      "workUnitId": "WU047",
+      "packetId": "PKT-035",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:24:57.926Z"
+    },
+    {
+      "id": "C036",
+      "workUnitId": "WU048",
+      "packetId": "PKT-036",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:24:59.247Z"
+    },
+    {
+      "id": "C037",
+      "workUnitId": "WU049",
+      "packetId": "PKT-037",
+      "summary": "Reconciled the approved M7 plan, canonical milestone documentation, README navigation, roadmap amendment, and AIQT work graph.",
+      "completed": [
+        "Added canonical M7 documentation",
+        "Added M13 as the final planned roadmap/AIQT milestone",
+        "Created M7 execution work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Work graph is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Roadmap and AIQT planning are reconciled",
+          "result": "passed",
+          "evidence": "M13 is present and blocked behind M12."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T07:25:00.572Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-031",
-    "workUnitId": "WU038",
-    "milestoneId": "M006",
-    "createdAt": "2026-08-10T06:53:41.486Z",
+    "id": "PKT-037",
+    "workUnitId": "WU049",
+    "milestoneId": "M007",
+    "createdAt": "2026-08-10T07:24:59.929Z",
     "format": "markdown",
-    "contentHash": "sha256:6095b4e94e592578bd09b3aed67cc2413c5a62174222fc9bc2cc9bd337d13ea2",
+    "contentHash": "sha256:670ea1c39d906a4857ebfaea5d686c8a359943517c890539f8960cd4d7672d46",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -3895,7 +4362,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T06:53:53.804Z",
+  "lastUpdatedAt": "2026-08-10T07:25:00.572Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -4824,6 +5291,186 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T06:53:53.804Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C032",
+      "current": {
+        "observationId": "sha256:b785b5f32cc6ceff211a777dfb143ba1b6c868abfba5e3410b3890fbc51c905a",
+        "checkpointId": "C032",
+        "workUnitId": "WU039",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:24:53.906Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:24:53.906Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:b785b5f32cc6ceff211a777dfb143ba1b6c868abfba5e3410b3890fbc51c905a",
+          "checkpointId": "C032",
+          "workUnitId": "WU039",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:24:53.906Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:24:53.906Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C033",
+      "current": {
+        "observationId": "sha256:54b9a11d649893acc7abb05382e0cc393b8df79b5c3502c4b0fcfdcf75e38581",
+        "checkpointId": "C033",
+        "workUnitId": "WU045",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:24:55.212Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:24:55.212Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:54b9a11d649893acc7abb05382e0cc393b8df79b5c3502c4b0fcfdcf75e38581",
+          "checkpointId": "C033",
+          "workUnitId": "WU045",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:24:55.212Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:24:55.212Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C034",
+      "current": {
+        "observationId": "sha256:81da0b25def51e091d0550b1fe48b7e2f0c4f19eddd96695eb81da8efe52f687",
+        "checkpointId": "C034",
+        "workUnitId": "WU046",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:24:56.579Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:24:56.579Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:81da0b25def51e091d0550b1fe48b7e2f0c4f19eddd96695eb81da8efe52f687",
+          "checkpointId": "C034",
+          "workUnitId": "WU046",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:24:56.579Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:24:56.579Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C035",
+      "current": {
+        "observationId": "sha256:1b0143ac0b42c0e867a26a1375ea9a18bfc3b61dbd2267bb2639b8b4bfd80039",
+        "checkpointId": "C035",
+        "workUnitId": "WU047",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:24:57.926Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:24:57.926Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:1b0143ac0b42c0e867a26a1375ea9a18bfc3b61dbd2267bb2639b8b4bfd80039",
+          "checkpointId": "C035",
+          "workUnitId": "WU047",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:24:57.926Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:24:57.926Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C036",
+      "current": {
+        "observationId": "sha256:dd07d6a9a6aa684c69c3eb4251135d13f6d7b61bbd9b306ab8658a32df8bf683",
+        "checkpointId": "C036",
+        "workUnitId": "WU048",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:24:59.247Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:24:59.247Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:dd07d6a9a6aa684c69c3eb4251135d13f6d7b61bbd9b306ab8658a32df8bf683",
+          "checkpointId": "C036",
+          "workUnitId": "WU048",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:24:59.247Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:24:59.247Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C037",
+      "current": {
+        "observationId": "sha256:d9db399246e69d248b9c7fcaf4498e97ed1d6e39e726743f88314c913475c087",
+        "checkpointId": "C037",
+        "workUnitId": "WU049",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T07:25:00.572Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T07:25:00.572Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:d9db399246e69d248b9c7fcaf4498e97ed1d6e39e726743f88314c913475c087",
+          "checkpointId": "C037",
+          "workUnitId": "WU049",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T07:25:00.572Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T07:25:00.572Z"
         }
       ]
     }

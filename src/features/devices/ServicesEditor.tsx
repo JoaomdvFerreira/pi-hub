@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { DeviceService } from "@/types/device";
 
 function isHttpOrHttpsUrl(raw: string): boolean {
@@ -18,9 +19,10 @@ function isHttpOrHttpsUrl(raw: string): boolean {
 interface ServicesEditorProps {
   services: DeviceService[];
   onChange: (services: DeviceService[]) => void;
+  containerNames: string[];
 }
 
-export function ServicesEditor({ services, onChange }: ServicesEditorProps) {
+export function ServicesEditor({ services, onChange, containerNames }: ServicesEditorProps) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -53,6 +55,7 @@ export function ServicesEditor({ services, onChange }: ServicesEditorProps) {
   function handleToggle(id: string, enabled: boolean) {
     onChange(services.map((s) => (s.id === id ? { ...s, enabled } : s)));
   }
+  function handleContainer(id: string, containerName: string) { onChange(services.map((service) => service.id === id ? { ...service, containerName: containerName || undefined } : service)); }
 
   return (
     <div className="flex flex-col gap-3">
@@ -76,6 +79,10 @@ export function ServicesEditor({ services, onChange }: ServicesEditorProps) {
                 onCheckedChange={(checked) => handleToggle(svc.id, checked)}
                 aria-label={`Enable ${svc.name}`}
               />
+              <Select value={svc.containerName ?? "none"} onValueChange={(value) => handleContainer(svc.id, value === "none" ? "" : value)}>
+                <SelectTrigger className="h-7 max-w-36 text-xs"><SelectValue placeholder="No container" /></SelectTrigger>
+                <SelectContent><SelectItem value="none">No container</SelectItem>{svc.containerName && !containerNames.includes(svc.containerName) ? <SelectItem value={svc.containerName}>{svc.containerName} (missing)</SelectItem> : null}{containerNames.map((name) => <SelectItem key={name} value={name}>{name}</SelectItem>)}</SelectContent>
+              </Select>
               <Button
                 type="button"
                 variant="ghost"

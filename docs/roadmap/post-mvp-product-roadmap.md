@@ -205,6 +205,20 @@ Scope:
 - restart and undervoltage event history;
 - storage-growth detection.
 
+### M13 - Document Hygiene
+
+Objective: perform a final documentation-quality and governance-reconciliation pass after the planned product milestones are complete.
+
+Scope:
+
+- audit canonical documentation against the implemented product;
+- reconcile roadmap, milestone documents, specifications, release documentation, and AIQT references;
+- remove or archive stale, contradictory, duplicated, or misleading documentation where evidence supports it;
+- improve documentation navigation and validate internal links;
+- record residual documentation debt explicitly.
+
+M13 is intentionally the final planned milestone. It must not introduce unrelated product functionality.
+
 ## 6. Milestone dependencies
 
 Expected dependency chain:

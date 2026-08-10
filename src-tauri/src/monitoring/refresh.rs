@@ -4,6 +4,7 @@ use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::device::Device;
 use crate::domain::health::assess_health;
 use crate::domain::snapshot::DeviceSnapshot;
+use crate::domain::service_health::check_services;
 use crate::error::ApplicationError;
 use crate::infrastructure::parsers::docker::{collect_docker_containers, DockerCollectionResult};
 use crate::infrastructure::parsers::metrics::collect_system_metrics;
@@ -62,6 +63,7 @@ pub fn refresh_device_sync(
                 &err.to_connection_status(),
                 previous.and_then(|p| p.metrics.as_ref()),
             ),
+            service_health: check_services(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default()),
         };
     }
 
@@ -116,6 +118,7 @@ pub fn refresh_device_sync(
         stale: false,
         last_successful_refresh: Some(captured_at),
         health,
+        service_health: check_services(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default()),
     }
 }
 
@@ -206,6 +209,7 @@ mod tests {
             stale: false,
             last_successful_refresh: Some("2026-01-01T00:00:00Z".into()),
             health: assess_health(&DeviceConnectionStatus::Online, Some(&previous_metrics)),
+            service_health: std::collections::HashMap::new(),
         };
 
         let executor = FakeRemoteExecutor::offline();

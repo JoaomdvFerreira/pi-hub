@@ -12,6 +12,7 @@ export interface DeviceService {
   icon?: string;
   description?: string;
   enabled: boolean;
+  containerName?: string;
 }
 
 export interface Device {

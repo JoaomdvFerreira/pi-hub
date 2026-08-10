@@ -57,6 +57,7 @@ pub fn run() {
             commands::monitoring::refresh_device,
             commands::monitoring::refresh_all_devices,
             commands::monitoring::get_latest_snapshot,
+            commands::monitoring::get_activity,
             commands::containers::perform_container_action,
             commands::terminal::open_terminal_session,
             commands::terminal::write_terminal_input,

@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Loader2, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { ServicesEditor } from "@/features/devices/ServicesEditor";
 import { createDevice, testDeviceConnection, updateDevice } from "@/lib/tauri/devices";
+import { getLatestSnapshot } from "@/lib/tauri/monitoring";
 import {
   connectionStatusColorClass,
   connectionStatusLabel,
@@ -81,6 +82,8 @@ interface DeviceFormProps {
 }
 
 export function DeviceForm({ mode, device, onSaved, onCancel }: DeviceFormProps) {
+  const [containerNames, setContainerNames] = useState<string[]>([]);
+  useEffect(() => { if (device) getLatestSnapshot(device.id).then((snapshot) => setContainerNames(snapshot?.containers.map((container) => container.name) ?? [])).catch(() => setContainerNames([])); }, [device]);
   const [form, setForm] = useState<DeviceInput>(() => toFormState(device));
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -312,6 +315,7 @@ export function DeviceForm({ mode, device, onSaved, onCancel }: DeviceFormProps)
         </h2>
         <ServicesEditor
           services={form.services}
+          containerNames={containerNames}
           onChange={(services) => update("services", services)}
         />
       </div>
