@@ -84,6 +84,7 @@ pub enum RemoteOperation {
     #[allow(dead_code)]
     DockerContainers,
     NetworkVisibility,
+    StorageVisibility,
     Diagnostics,
     RestartDevice,
     ShutdownDevice,
@@ -228,6 +229,13 @@ ip route show default 2>/dev/null | while read -r _ via gateway dev iface _; do 
 awk '/^[[:space:]]*nameserver[[:space:]]+/ {print "PIHUB_NET_DNS=" $2}' /etc/resolv.conf 2>/dev/null
 "#;
 
+pub const STORAGE_VISIBILITY_COMMAND: &str = r#"
+findmnt -rn -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null | while IFS=' ' read -r source target fstype options; do
+  [ -n "$target" ] || continue
+  df -P -B1 "$target" 2>/dev/null | awk -v source="$source" -v target="$target" -v fstype="$fstype" -v options="$options" 'NR==2 {ro=(options ~ /(^|,)ro(,|$)/ ? "ro" : (options == "" ? "-" : "rw")); gsub(/%/, "", $5); printf "PIHUB_STORAGE=%s|%s|%s|%s|%s|%s|%s|%s|x\\n", source, target, fstype, $2, $3, $4, $5, ro}'
+done
+"#;
+
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
     pub fn command(&self) -> Option<&'static str> {
@@ -236,6 +244,7 @@ impl RemoteOperation {
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
             RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
+            RemoteOperation::StorageVisibility => Some(STORAGE_VISIBILITY_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),

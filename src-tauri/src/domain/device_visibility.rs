@@ -30,3 +30,20 @@ pub struct DefaultRoute {
     pub interface: String,
     pub gateway: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageVisibility { pub filesystems: Vec<MountedFilesystem> }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct MountedFilesystem {
+    pub source: String,
+    pub mount_point: String,
+    pub filesystem_type: String,
+    pub total_bytes: Option<u64>,
+    pub used_bytes: Option<u64>,
+    pub available_bytes: Option<u64>,
+    pub usage_percent: Option<u8>,
+    pub read_only: Option<bool>,
+}

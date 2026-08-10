@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::time::Duration;
 
-use crate::domain::device_visibility::{DefaultRoute, NetworkInterface, NetworkLinkState, NetworkVisibility};
+use crate::domain::device_visibility::{DefaultRoute, MountedFilesystem, NetworkInterface, NetworkLinkState, NetworkVisibility, StorageVisibility};
 use crate::infrastructure::parsers::key_value::ParseWarning;
 use crate::infrastructure::ssh::{RemoteExecutor, RemoteOperation, SshError, SshTarget};
 
@@ -56,6 +56,38 @@ pub fn collect_network_visibility(executor: &dyn RemoteExecutor, target: &SshTar
     Ok(parse_network_visibility(&result.stdout))
 }
 
+const PSEUDO_FILESYSTEMS: &[&str] = &["proc", "sysfs", "tmpfs", "devtmpfs", "overlay", "squashfs", "cgroup", "cgroup2", "nsfs", "tracefs", "debugfs", "securityfs", "pstore"];
+
+pub fn parse_storage_visibility(raw: &str) -> (StorageVisibility, Vec<ParseWarning>) {
+    let mut filesystems = Vec::new();
+    let mut warnings = Vec::new();
+    for value in raw.lines().filter_map(|line| line.strip_prefix("PIHUB_STORAGE=")) {
+        let parts: Vec<_> = value.split('|').collect();
+        if parts.len() != 9 || parts[..3].iter().any(|part| part.is_empty()) {
+            warnings.push(ParseWarning(format!("invalid storage record: '{value}'")));
+            continue;
+        }
+        if PSEUDO_FILESYSTEMS.contains(&parts[2]) { continue; }
+        let parse_number = |raw: &str, field: &str, warnings: &mut Vec<ParseWarning>| -> Option<u64> {
+            if raw.is_empty() || raw == "-" { return None; }
+            raw.parse().map_err(|_| warnings.push(ParseWarning(format!("invalid {field} in storage record: '{raw}'")))).ok()
+        };
+        let total_bytes = parse_number(parts[3], "total bytes", &mut warnings);
+        let used_bytes = parse_number(parts[4], "used bytes", &mut warnings);
+        let available_bytes = parse_number(parts[5], "available bytes", &mut warnings);
+        let usage_percent = if parts[6].is_empty() || parts[6] == "-" { None } else { parts[6].parse::<u8>().ok().filter(|value| *value <= 100).or_else(|| { warnings.push(ParseWarning(format!("invalid usage percent in storage record: '{}'", parts[6]))); None }) };
+        let read_only = match parts[7] { "ro" => Some(true), "rw" => Some(false), "-" | "" => None, other => { warnings.push(ParseWarning(format!("invalid storage access state: '{other}'"))); None } };
+        filesystems.push(MountedFilesystem { source: parts[0].to_string(), mount_point: parts[1].to_string(), filesystem_type: parts[2].to_string(), total_bytes, used_bytes, available_bytes, usage_percent, read_only });
+    }
+    (StorageVisibility { filesystems }, warnings)
+}
+
+pub fn collect_storage_visibility(executor: &dyn RemoteExecutor, target: &SshTarget, timeout: Duration) -> Result<(StorageVisibility, Vec<ParseWarning>), SshError> {
+    let command = RemoteOperation::StorageVisibility.command().expect("storage visibility command must be fixed");
+    let result = executor.execute(target, command, timeout)?;
+    Ok(parse_storage_visibility(&result.stdout))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -78,5 +110,16 @@ mod tests {
         assert_eq!(network.interfaces.len(), 1);
         assert_eq!(warnings.len(), 2);
         assert!(network.default_route.is_none());
+    }
+
+    #[test]
+    fn storage_filters_pseudo_mounts_and_preserves_unknown_capacity() {
+        let raw = "PIHUB_STORAGE=/dev/mmcblk0p2|/|ext4|1000|400|600|40|ro|ignored\nPIHUB_STORAGE=overlay|/var/lib/docker|overlay|100|10|90|10|rw|ignored\nPIHUB_STORAGE=/dev/sda1|/media/usb|ext4|-|-|-|-|rw|ignored\n";
+        let (storage, warnings) = parse_storage_visibility(raw);
+        assert!(warnings.is_empty());
+        assert_eq!(storage.filesystems.len(), 2);
+        assert_eq!(storage.filesystems[0].mount_point, "/");
+        assert_eq!(storage.filesystems[0].read_only, Some(true));
+        assert_eq!(storage.filesystems[1].total_bytes, None);
     }
 }

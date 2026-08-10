@@ -2487,10 +2487,10 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml visibility"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:20:56.284Z"
+        "updatedAt": "2026-08-10T10:25:50.176Z"
       },
       {
         "id": "WU068",
@@ -6047,17 +6047,59 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:23:51.309Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:23:51.309Z"
+    },
+    {
+      "id": "C056",
+      "workUnitId": "WU067",
+      "packetId": "PKT-056",
+      "summary": "Added typed, read-only mounted-filesystem visibility with pseudo-filesystem filtering.",
+      "completed": [
+        "Filesystem capacity model",
+        "Read-only state parsing",
+        "Pseudo and Docker runtime mount filtering"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/device_visibility.rs",
+        "src-tauri/src/infrastructure/parsers/visibility.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml visibility",
+          "result": "passed",
+          "summary": "Network and storage visibility parser tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Root is identifiable and read-only state is represented",
+          "result": "passed",
+          "evidence": "Mount records include mount point and optional access state."
+        },
+        {
+          "criterion": "Pseudo mounts are filtered and unknown capacity remains unknown",
+          "result": "passed",
+          "evidence": "Parser filters pseudo filesystem types and preserves missing capacity as None."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:25:50.176Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-055",
-    "workUnitId": "WU066",
+    "id": "PKT-056",
+    "workUnitId": "WU067",
     "milestoneId": "M015",
-    "createdAt": "2026-08-10T10:21:07.722Z",
+    "createdAt": "2026-08-10T10:24:06.762Z",
     "format": "markdown",
-    "contentHash": "sha256:4c15cb2546a03f40947797911ddd6e2c3acc5f66f9c7dce2f36f84e7c5635192",
+    "contentHash": "sha256:54803ff345d9155a6fc2117d9e909706e13c386c1f1fd5edcea61e452a6e0971",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6076,7 +6118,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:23:51.309Z",
+  "lastUpdatedAt": "2026-08-10T10:25:50.176Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -7725,6 +7767,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:23:51.309Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C056",
+      "current": {
+        "observationId": "sha256:aa4b8394af9c62afaae2a4a79f9dbcf2599aeb7efc409ee2bc82ac7d210bce31",
+        "checkpointId": "C056",
+        "workUnitId": "WU067",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:25:50.176Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:25:50.176Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:aa4b8394af9c62afaae2a4a79f9dbcf2599aeb7efc409ee2bc82ac7d210bce31",
+          "checkpointId": "C056",
+          "workUnitId": "WU067",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:25:50.176Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:25:50.176Z"
         }
       ]
     }
