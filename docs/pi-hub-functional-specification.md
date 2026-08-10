@@ -1,9 +1,11 @@
 # Pi-Hub — Functional Specification
 
-**Version:** 0.1  
-**Status:** Draft for implementation  
+**Version:** 0.1
+**Status:** Historical MVP baseline; superseded for current behavior
 **Target platform:** Windows 11  
 **Application type:** Desktop system-tray utility
+
+> This document records the original MVP specification. M6-M12 expanded the implemented product; use the [current product contract](current-product-contract.md), [roadmap](roadmap/post-mvp-product-roadmap.md), approved requirements, and milestone records for current behavior. Its original MVP statements are retained as historical context.
 
 ## 1. Overview
 

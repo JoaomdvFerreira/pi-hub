@@ -1,29 +1,56 @@
 # Pi-Hub
 
-A lightweight Windows system-tray desktop app for monitoring and quickly accessing personal self-hosted infrastructure (Raspberry Pi devices, future Linux servers) over Tailscale/SSH. Pi-Hub does not replace SSH — it gives visibility and one-click shortcuts while leaving administration to the terminal.
+Pi-Hub is a Windows system-tray desktop application for observing and deliberately administering personal Linux infrastructure over Tailscale or LAN SSH. It is a focused control center for Raspberry Pi devices and compatible Linux servers, not a replacement for SSH, Portainer, or an infrastructure orchestration platform.
 
-See [`docs/pi-hub-functional-specification.md`](docs/pi-hub-functional-specification.md) and [`docs/pi-hub-technical-architecture-specification.md`](docs/pi-hub-technical-architecture-specification.md) for the full product and architecture specs, and [`docs/design/Pi Control.dc.html`](<docs/design/Pi Control.dc.html>) for the UI reference.
+## Current product
 
-## Roadmap
+M1-M12 are implemented. Pi-Hub provides:
 
-Approved planning lives in [`docs/roadmap/post-mvp-product-roadmap.md`](docs/roadmap/post-mvp-product-roadmap.md). M6, M7, M8, and M9 implementation scope is documented in [`docs/milestones/m6-device-health-and-diagnostics.md`](docs/milestones/m6-device-health-and-diagnostics.md), [`docs/milestones/m7-service-health-and-operational-activity.md`](docs/milestones/m7-service-health-and-operational-activity.md), [`docs/milestones/m8-alerts-and-threshold-governance.md`](docs/milestones/m8-alerts-and-threshold-governance.md), and [`docs/milestones/m9-docker-operational-visibility.md`](docs/milestones/m9-docker-operational-visibility.md); M10's controlled shutdown requirement is in [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
+- device registration, verified SSH connectivity, monitoring, diagnostics, and an Open Terminal shortcut;
+- Device Health, Service Health, Docker visibility, alerts, bounded Activity, and desktop notifications;
+- read-only network, storage, and system visibility;
+- local, bounded historical trends for device, service, and container metrics; and
+- four explicit device administration actions: Restart Device, Shut Down Device, Restart Docker, and Restart Tailscale.
 
-M10's full implementation scope is documented in [`docs/milestones/m10-controlled-device-administration.md`](docs/milestones/m10-controlled-device-administration.md); its shutdown-specific normative requirement remains [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
+The application uses a closed set of typed backend operations. SSH host-key verification remains mandatory; Pi-Hub stores no SSH password or private-key contents, exposes no arbitrary remote-command API, and does not support Power On. Remote collection and administration are bounded; unknown or unavailable data is never presented as healthy or zero.
+
+## Monitoring concepts
+
+| Concept | Meaning |
+| --- | --- |
+| Device Health | Current overall device condition and its reasons. |
+| Service Health | Current HTTP/HTTPS check result for a registered service. |
+| Alerts | Governed operational problems with Active, Acknowledged, and Resolved lifecycle. |
+| Activity | Bounded local audit/event history of changes and actions. |
+| Historical Monitoring | Bounded local metric trends; it is separate from Activity and Alerts. |
+
+Historical Monitoring retains local samples for 30 days. Sampling is at most once per 60 seconds per entity/metric family; available values only are recorded. Queries are limited to 1h, 24h, 7d, or 30d and at most 500 points per series.
+
+## Documentation
+
+- [Roadmap and implementation history](docs/roadmap/post-mvp-product-roadmap.md)
+- [Current product and operational contract](docs/current-product-contract.md)
+- [Functional specification (historical MVP baseline)](docs/pi-hub-functional-specification.md)
+- [Technical architecture specification (historical MVP baseline)](docs/pi-hub-technical-architecture-specification.md)
+- [Milestone records](docs/milestones/)
+- [Release procedure](docs/releasing.md)
+
+The README owns the overview and setup; the current product contract owns durable operational/security behavior; the roadmap owns milestone history; milestone documents retain approved milestone scope and closure history.
 
 ## Stack
 
-- **Desktop shell:** Tauri 2
-- **Frontend:** React + TypeScript + Vite
-- **Backend:** Rust (Tokio, Serde)
-- **Remote access:** Windows OpenSSH client over Tailscale/LAN
+- Desktop shell: Tauri 2
+- Frontend: React, TypeScript, Vite
+- Backend: Rust with Tokio and Serde
+- Remote access: Windows OpenSSH over Tailscale/LAN
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 18+
-- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain via `rustup`)
-- Windows: MSVC build tools (Visual Studio Build Tools with the "Desktop development with C++" workload)
-- Windows OpenSSH client and Windows Terminal (used for `Open Terminal`)
-- Tailscale, installed and authenticated, if managing devices over a tailnet
+- Node.js 18+
+- Rust stable via `rustup`
+- Windows MSVC build tools with the Desktop development with C++ workload
+- Windows OpenSSH client and Windows Terminal
+- Tailscale, when devices are managed through a tailnet
 
 ## Development
 
@@ -32,8 +59,6 @@ npm install
 npm run tauri dev
 ```
 
-This launches the Tauri app with hot-reloading for the frontend.
-
 ## Build
 
 ```bash
@@ -41,28 +66,6 @@ npm run build
 cargo build --manifest-path src-tauri/Cargo.toml
 ```
 
-## Project layout
-
-```text
-src/                  React + TypeScript frontend
-  app/                Application shell and routing
-  components/         Shared UI (ui/) and layout (layout/) components
-  features/           Feature modules: dashboard, devices, containers, services, settings
-  lib/                Tauri command wrappers, formatting, validation
-  stores/             Frontend state stores
-  types/              Shared TypeScript types
-
-src-tauri/            Rust backend
-  src/commands/        Tauri command entry points
-  src/application/     Use-case coordination
-  src/domain/          Core models and rules
-  src/infrastructure/  SSH execution, storage, parsers
-  src/monitoring/      Scheduler, concurrency, notification decisions
-  src/platform/        Windows-specific integrations (tray, terminal, notifications, autostart)
-
-docs/                 Product spec, architecture spec, and UI design reference
-```
-
 ## Project management
 
-This project is planned and tracked with [AIQT](https://www.npmjs.com/package/aiqt) — see `.aiqt/` for the canonical work graph. Run `aiqt status` to check progress or `aiqt next` to fetch the next work unit.
+AIQT is the canonical structured work graph in `.aiqt/`. Use `aiqt status` to inspect it and `aiqt next` only when beginning the selected work unit.

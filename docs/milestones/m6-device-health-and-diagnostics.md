@@ -1,7 +1,9 @@
 # Pi-Hub â€” M6 Device Health and Diagnostics
 
 Version: 0.2  
-Status: Approved for implementation  
+Status: Implemented
+
+> Historical record: later-milestone planning statements describe the M6-era plan. See the [roadmap](../roadmap/post-mvp-product-roadmap.md) for current status.
 Date: 2026-08-09  
 Depends on: M1â€“M5 completed baseline  
 Next milestone: M7 â€” Service Health and Operational Activity

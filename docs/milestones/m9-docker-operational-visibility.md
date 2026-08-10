@@ -1,7 +1,9 @@
 # Pi-Hub — M9 Docker Operational Visibility
 
 Version: 0.1  
-Status: Approved for implementation  
+Status: Implemented
+
+> Historical record: later-milestone planning statements describe the M9-era plan. See the [roadmap](../roadmap/post-mvp-product-roadmap.md) for current status.
 Date: 2026-08-10  
 Depends on: M8 — Alerts and Threshold Governance completed and merged  
 Next milestone: M10 — Controlled Device Administration

@@ -1,7 +1,7 @@
 # Pi-Hub — M11 Network, Storage, and System Visibility
 
 Version: 0.1
-Status: Approved for implementation
+Status: Implemented
 Date: 2026-08-10
 Depends on: M10 — Controlled Device Administration completed and merged
 Next milestone: M12 — Historical Monitoring
@@ -48,8 +48,12 @@ Stable system data may be reused within the refresh model, but M11 adds no histo
 
 ## Exit criteria
 
-M11 completes only when all five Work Units are complete; Device Details shows the three domains clearly; unknown/partial data is not made healthy or zero; collection is bounded and isolated; no modification or arbitrary SSH API exists; M6–M10 behavior remains intact; required tests and canonical validation pass; AIQT and this document reflect evidence; and M12–M13 remain planned/not started.
+M11 completed with all five Work Units complete: Device Details shows the three domains clearly; unknown/partial data is not made healthy or zero; collection is bounded and isolated; no modification or arbitrary SSH API exists; and M6-M10 behavior remains intact. At M11 closure, M12-M13 were planned; later status is maintained by the roadmap.
 
 ## Live validation
 
 Read-only validation against reachable managed devices is permitted and recommended: inspect interfaces, routes/DNS, mounts, and system identity. Do not modify network, storage, firewall, mounts, packages, services, or devices to manufacture validation scenarios. If unavailable, record this as residual manual validation.
+
+## Historical status note
+
+M11 is complete. Statements above about M12 or M13 being planned describe the M11-era plan; current milestone status is maintained in the [roadmap](../roadmap/post-mvp-product-roadmap.md).

@@ -1,0 +1,17 @@
+{
+  "milestones": [{"clientKey":"M013","title":"M13 Document Hygiene","objective":"Reconcile Pi-Hub documentation with the product and repository implemented through M12."}],
+  "workUnits": [
+    {"clientKey":"wu13-01","milestoneClientKey":"M013","title":"WU13-01 Documentation inventory and truth audit","objective":"Audit documentation against M1-M12 and identify canonical ownership.","scope":["Documentation inventory","Truth audit","Canonical ownership"],"outOfScope":["Product changes"],"acceptanceCriteria":["Meaningful documentation reviewed","Conflicts reported"],"suggestedFiles":["README.md","docs",".aiqt"],"validationCommands":["aiqt status"]},
+    {"clientKey":"wu13-02","milestoneClientKey":"M013","title":"WU13-02 Core product and roadmap reconciliation","objective":"Reconcile README, roadmap, milestone status, and primary navigation.","scope":["README","Roadmap","Milestone status","Navigation"],"outOfScope":["New product behavior"],"acceptanceCriteria":["M1-M12 status accurate","M13 represented accurately","Primary docs link to details"],"suggestedFiles":["README.md","docs/roadmap","docs/milestones"],"validationCommands":["npm run build"]},
+    {"clientKey":"wu13-03","milestoneClientKey":"M013","title":"WU13-03 Technical, security, and operational reconciliation","objective":"Correct technical, security, operational, and developer documentation to match product contracts.","scope":["SSH/security","Monitoring","Administration","Historical monitoring"],"outOfScope":["Policy changes","Remote operations"],"acceptanceCriteria":["Security boundaries accurate","Monitoring concepts distinct","Unsupported commands absent"],"suggestedFiles":["docs","AGENTS.md","README.md"],"validationCommands":["git diff --check"]},
+    {"clientKey":"wu13-04","milestoneClientKey":"M013","title":"WU13-04 Deduplication, archival, terminology, and navigation","objective":"Consolidate duplicated or stale documentation and correct navigation.","scope":["Canonical links","Terminology","Archival status","Internal links"],"outOfScope":["Cosmetic mass rewrite"],"acceptanceCriteria":["Guidance consolidated or linked","History truthful","Internal links valid"],"suggestedFiles":["docs","README.md"],"validationCommands":["git diff --check"]},
+    {"clientKey":"wu13-05","milestoneClientKey":"M013","title":"WU13-05 Final documentation baseline and closure","objective":"Validate the documentation baseline, record residual debt, and close M13.","scope":["Documentation validation","AIQT evidence","Milestone closure"],"outOfScope":["New milestones","Product code"],"acceptanceCriteria":["No material stale references","No product code change","M13 complete"],"suggestedFiles":[".aiqt","docs/milestones/m13-document-hygiene.md"],"validationCommands":["node scripts/validate-agent.mjs","git diff --check","aiqt status"]}
+  ],
+  "dependencies":[
+    {"fromClientKey":"wu13-01","toClientKey":"wu13-02","type":"blocks","reason":"Core reconciliation follows the audit."},
+    {"fromClientKey":"wu13-02","toClientKey":"wu13-03","type":"blocks","reason":"Technical reconciliation follows primary docs."},
+    {"fromClientKey":"wu13-03","toClientKey":"wu13-04","type":"blocks","reason":"Consolidation follows contract reconciliation."},
+    {"fromClientKey":"wu13-04","toClientKey":"wu13-05","type":"blocks","reason":"Closure follows the baseline."}
+  ],
+  "extension":{"entryWorkUnitClientKeys":["wu13-01"],"exitWorkUnitClientKeys":["wu13-05"],"reason":"Replace the M13 placeholder with five approved Document Hygiene work units."}
+}
