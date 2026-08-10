@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { ADMINISTRATION_ACTIONS, DeviceAdministration } from "./DeviceAdministration";
+import { DeviceAdministration } from "./DeviceAdministration";
+import { ADMINISTRATION_ACTIONS } from "./DeviceAdministration.actions";
 
 describe("M10 device administration", () => {
   it("exposes exactly the approved operations and no power-on control", () => {

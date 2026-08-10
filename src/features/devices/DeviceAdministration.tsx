@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, Loader2, Power, RotateCw, Server, Wifi } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { getExpectedDisruption, performAdministrationOperation } from "@/lib/tauri/administration";
 import type { AdministrationOperation, AdministrationOperationState, AdministrationOperationType, ExpectedDisruption } from "@/types/administration";
 import type { ApplicationError } from "@/types/settings";
+import { ADMINISTRATION_ACTIONS } from "./DeviceAdministration.actions";
 
-export const ADMINISTRATION_ACTIONS: { type: AdministrationOperationType; label: string; confirmation: string; danger?: boolean; Icon: typeof RotateCw }[] = [
-  { type: "restartDocker", label: "Restart Docker", confirmation: "Running containers and hosted services may stop or restart temporarily. Pi-Hub will verify Docker availability afterwards.", Icon: Server },
-  { type: "restartTailscale", label: "Restart Tailscale", confirmation: "Tailscale connectivity may temporarily drop. If this device is reached through Tailscale, SSH may disconnect while Pi-Hub attempts bounded recovery verification.", Icon: Wifi },
-  { type: "restartDevice", label: "Restart Device", confirmation: "The device will restart. Containers and services will temporarily stop, terminal and SSH sessions may disconnect, and Pi-Hub will wait for it to return online.", danger: true, Icon: RotateCw },
-  { type: "shutdownDevice", label: "Shut Down Device", confirmation: "This will stop all services and containers and disconnect active SSH terminal sessions. Pi-Hub cannot turn this device back on; power-on must be manual or provided by infrastructure outside Pi-Hub.", danger: true, Icon: Power },
-];
 const stateLabel: Record<AdministrationOperationState, string> = { requested: "Requested", dispatching: "Dispatching", commandAccepted: "Command accepted", verifying: "Verifying", waitingForOffline: "Waiting for offline", waitingForOnline: "Waiting for online recovery", completed: "Completed", failed: "Failed", timedOut: "Timed out", outcomeUncertain: "Outcome uncertain" };
 function isApplicationError(error: unknown): error is ApplicationError { return typeof error === "object" && error !== null && "message" in error; }
 
