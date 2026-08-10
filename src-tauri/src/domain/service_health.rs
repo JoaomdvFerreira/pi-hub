@@ -4,6 +4,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 use crate::domain::device::DeviceService;
+use crate::domain::settings::ThresholdPolicy;
 
 pub const SERVICE_CHECK_TIMEOUT: Duration = Duration::from_secs(5);
 const MAX_REDIRECTS: usize = 5;
@@ -53,7 +54,7 @@ impl ServiceCheckResult {
     pub fn is_success(&self) -> bool { self.failure_reason.is_none() }
 }
 
-pub fn apply_check(previous: Option<&ServiceHealthRecord>, service_id: &str, result: ServiceCheckResult, checked_at: String) -> ServiceHealthRecord {
+pub fn apply_check_with_threshold(previous: Option<&ServiceHealthRecord>, service_id: &str, result: ServiceCheckResult, checked_at: String, unavailable_failures: u32) -> ServiceHealthRecord {
     let mut record = previous.cloned().unwrap_or_else(|| ServiceHealthRecord::unknown(service_id));
     record.service_id = service_id.into();
     record.latest_http_status = result.http_status;
@@ -66,16 +67,22 @@ pub fn apply_check(previous: Option<&ServiceHealthRecord>, service_id: &str, res
         record.latest_failure_reason = None;
     } else {
         record.consecutive_failures += 1;
-        record.state = if record.consecutive_failures >= 3 { ServiceHealthState::Unavailable } else { ServiceHealthState::Degraded };
+        record.state = if record.consecutive_failures >= unavailable_failures { ServiceHealthState::Unavailable } else { ServiceHealthState::Degraded };
         record.latest_failure_reason = result.failure_reason;
     }
     record
 }
 
+pub fn apply_check(previous: Option<&ServiceHealthRecord>, service_id: &str, result: ServiceCheckResult, checked_at: String) -> ServiceHealthRecord { apply_check_with_threshold(previous, service_id, result, checked_at, ThresholdPolicy::default().service_unavailable_failures) }
+
 pub fn check_services(services: &[DeviceService], previous: &HashMap<String, ServiceHealthRecord>) -> HashMap<String, ServiceHealthRecord> {
+    check_services_with_threshold(services, previous, ThresholdPolicy::default().service_unavailable_failures)
+}
+
+pub fn check_services_with_threshold(services: &[DeviceService], previous: &HashMap<String, ServiceHealthRecord>, unavailable_failures: u32) -> HashMap<String, ServiceHealthRecord> {
     services.iter().filter(|service| service.enabled).map(|service| {
         let result = check_service(&service.url);
-        let record = apply_check(previous.get(&service.id), &service.id, result, chrono::Utc::now().to_rfc3339());
+        let record = apply_check_with_threshold(previous.get(&service.id), &service.id, result, chrono::Utc::now().to_rfc3339(), unavailable_failures);
         (service.id.clone(), record)
     }).collect()
 }
@@ -124,4 +131,6 @@ mod tests {
     }
     #[test]
     fn invalid_urls_are_typed_failures() { assert_eq!(check_service("file:///secret").failure_reason, Some(ServiceFailureReason::InvalidUrl)); }
+    #[test]
+    fn configured_threshold_controls_unavailable_transition() { let failed = ServiceCheckResult::failure(None, None, ServiceFailureReason::Connection); let one = apply_check_with_threshold(None, "svc", failed.clone(), "2026-01-01T00:00:00Z".into(), 5); let four = (0..3).fold(one, |record, _| apply_check_with_threshold(Some(&record), "svc", failed.clone(), "2026-01-01T00:00:00Z".into(), 5)); assert_eq!(four.state, ServiceHealthState::Degraded); }
 }

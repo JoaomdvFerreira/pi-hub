@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Activity, HardDrive, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Activity, BellRing, HardDrive, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,7 +15,8 @@ import {
 import { EmptyState } from "@/components/layout/EmptyState";
 import { useRouter } from "@/app/router";
 import { deleteDevice, getDevices } from "@/lib/tauri/devices";
-import { getActivity, refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
+import { getActivity, getAlerts, refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
+import type { Alert } from "@/types/alert";
 import type { ActivityEvent } from "@/types/activity";
 import { formatRelativeTime } from "@/lib/formatting/relativeTime";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
@@ -24,7 +25,7 @@ import { DeviceCard } from "@/features/dashboard/DeviceCard";
 import type { Device } from "@/types/device";
 
 export function DashboardScreen() {
-  const { goAddDevice, goActivity, goDevice, goDeviceSettings, goServices } = useRouter();
+  const { goAddDevice, goActivity, goAlerts, goDevice, goDeviceSettings, goServices } = useRouter();
   const { closeTerminal } = useTerminalSessions();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function DashboardScreen() {
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set());
   const [refreshingAll, setRefreshingAll] = useState(false);
   const [activity, setActivity] = useState<ActivityEvent[]>([]);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
 
   const deviceIds = useMemo(() => (devices ?? []).map((d) => d.id), [devices]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -53,6 +55,7 @@ export function DashboardScreen() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
     getActivity().then((events) => setActivity(events.slice(0, 10))).catch(() => undefined);
+    getAlerts().then(setAlerts).catch(() => undefined);
   }, [load]);
 
   async function handleDelete(id: string) {
@@ -130,6 +133,8 @@ export function DashboardScreen() {
       </div>
 
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
+
+      {(() => { const critical = alerts.filter((alert) => alert.state !== "resolved" && alert.severity === "critical").length; const warning = alerts.filter((alert) => alert.state !== "resolved" && alert.severity === "warning").length; return (critical || warning) ? <button type="button" onClick={goAlerts} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3.5 py-3 text-left hover:bg-accent"><BellRing className={critical ? "text-destructive" : "text-amber-500"} /><span className="text-sm font-medium">{critical} Critical · {warning} Warning alerts</span><span className="text-xs text-muted-foreground">View alerts</span></button> : null; })()}
 
       {devices === null ? (
         <div className="flex items-center justify-center gap-2 rounded-lg border border-dashed border-border py-16 text-sm text-muted-foreground">

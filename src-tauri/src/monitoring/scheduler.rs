@@ -4,6 +4,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::domain::device::Device;
 use crate::domain::activity::{ActivityCategory, ActivityEvent};
+use crate::domain::alert::AlertTransitionKind;
 use crate::domain::service_health::ServiceHealthState;
 use crate::domain::notification_rule::NotificationEvent;
 use crate::domain::settings::AppSettings;
@@ -13,13 +14,15 @@ use crate::infrastructure::ssh::OpenSshExecutor;
 use crate::monitoring::concurrency::RefreshCoordinator;
 use crate::monitoring::container_diff::detect_container_changes;
 use crate::monitoring::notifications::{evaluate_snapshot_transition, NotificationService};
-use crate::monitoring::refresh::refresh_device_sync;
+use crate::monitoring::refresh::refresh_device_sync_with_policy;
+use crate::monitoring::alerts::evaluate as evaluate_alerts;
 use crate::monitoring::scheduling::is_due;
 use crate::platform::notifications::TauriNotificationService;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
 use crate::storage::activity_repository::{ActivityRepository, JsonActivityRepository};
+use crate::storage::alert_repository::{AlertRepository, JsonAlertRepository};
 
 /// Max concurrent device refreshes (spec section 14.3).
 pub const MAX_CONCURRENT_REFRESHES: usize = 4;
@@ -50,6 +53,11 @@ fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, Applic
 fn activity_repository(app: &AppHandle) -> Result<JsonActivityRepository, ApplicationError> {
     let dir = app.path().app_config_dir().map_err(config_error)?;
     Ok(JsonActivityRepository::new(dir))
+}
+
+fn alert_repository(app: &AppHandle) -> Result<JsonAlertRepository, ApplicationError> {
+    let dir = app.path().app_config_dir().map_err(config_error)?;
+    Ok(JsonAlertRepository::new(dir))
 }
 
 fn record_activity(app: &AppHandle, event: ActivityEvent) {
@@ -110,11 +118,14 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     let coordinator = app.state::<RefreshCoordinator>();
     let _permit = coordinator.acquire_permit().await;
 
+    let settings = settings_repository(app)?.load();
+    let policy = settings.effective_threshold_policy(&device.id);
     let device_for_task = device.clone();
     let previous_for_task = previous.clone();
+    let policy_for_task = policy.clone();
     let snapshot = tauri::async_runtime::spawn_blocking(move || {
         let executor = OpenSshExecutor::default();
-        refresh_device_sync(&executor, &device_for_task, previous_for_task.as_ref())
+        refresh_device_sync_with_policy(&executor, &device_for_task, previous_for_task.as_ref(), &policy_for_task)
     })
     .await
     .map_err(|err| ApplicationError {
@@ -134,6 +145,27 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         })?;
 
     let _ = app.emit("device://snapshot-updated", &snapshot);
+
+    // Alert transitions are persisted before any notification can be shown. This is
+    // intentionally separate from M7 Activity: alerts are current conditions, while
+    // Activity is an audit trail of their meaningful lifecycle changes.
+    let alert_transitions = {
+        let repo = alert_repository(app)?;
+        let mut file = repo.load();
+        let transitions = evaluate_alerts(&mut file, &device, &snapshot, &policy);
+        JsonAlertRepository::prune(&mut file);
+        repo.save(&file).map_err(|err| ApplicationError { code: "StorageError".into(), message: format!("could not persist alerts: {err}"), remediation: Some("Check disk space and file permissions, then try again.".into()), retryable: true })?;
+        transitions
+    };
+    for transition in &alert_transitions {
+        let (code, summary) = match transition.kind {
+            AlertTransitionKind::Activated => ("alert.activated", format!("Alert activated: {}", transition.alert.summary)),
+            AlertTransitionKind::Escalated => ("alert.escalated", format!("Alert escalated: {}", transition.alert.summary)),
+            AlertTransitionKind::Acknowledged => ("alert.acknowledged", format!("Alert acknowledged: {}", transition.alert.summary)),
+            AlertTransitionKind::Resolved => ("alert.resolved", format!("Alert resolved: {}", transition.alert.summary)),
+        };
+        record_activity(app, ActivityEvent::new(ActivityCategory::Health, code, transition.alert.device_id.clone(), Some(transition.alert.id.clone()), None, summary));
+    }
 
     if previous
         .as_ref()
@@ -171,11 +203,18 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         );
     }
 
-    let notifications = evaluate_snapshot_transition(&snapshot_repo, &device, previous.as_ref(), &snapshot);
+    // Device-offline transitions now flow through governed alert transitions; legacy
+    // container notifications remain outside M8's Docker expansion boundary.
+    let notifications: Vec<_> = evaluate_snapshot_transition(&snapshot_repo, &device, previous.as_ref(), &snapshot).into_iter().filter(|event| event.resource_id != device.id).collect();
     if !notifications.is_empty() {
         let _ = app.emit("notification://ready", &notifications);
         dispatch_notifications(app, &device, &notifications);
     }
+    let alert_notifications: Vec<NotificationEvent> = alert_transitions.iter().filter_map(|transition| match transition.kind {
+        AlertTransitionKind::Activated | AlertTransitionKind::Escalated if matches!(transition.alert.severity, crate::domain::alert::AlertSeverity::Warning | crate::domain::alert::AlertSeverity::Critical) => Some(NotificationEvent { device_id: device.id.clone(), resource_id: transition.alert.id.clone(), previous_state: "alert".into(), current_state: format!("{:?}", transition.alert.severity), message: transition.alert.summary.clone() }),
+        _ => None,
+    }).collect();
+    if !alert_notifications.is_empty() { let _ = app.emit("notification://ready", &alert_notifications); dispatch_notifications(app, &device, &alert_notifications); }
 
     let _ = app.emit("monitoring://refresh-completed", device_id);
 

@@ -109,9 +109,14 @@
         "id": "M008",
         "title": "M8 - Alerts and Threshold Governance",
         "objective": "Add governed alerts and configurable threshold policies.",
-        "status": "ready",
+        "status": "done",
         "workUnitIds": [
-          "WU040"
+          "WU040",
+          "WU051",
+          "WU052",
+          "WU053",
+          "WU054",
+          "WU055"
         ]
       },
       {
@@ -1570,10 +1575,10 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T08:04:19.931Z"
       },
       {
         "id": "WU041",
@@ -1867,6 +1872,170 @@
         ],
         "createdAt": "2026-08-10T07:21:13.196Z",
         "updatedAt": "2026-08-10T07:21:13.196Z"
+      },
+      {
+        "id": "WU051",
+        "milestoneId": "M008",
+        "title": "WU8-01 Alert domain, lifecycle, persistence, and deduplication",
+        "objective": "Persistent governed alert occurrences.",
+        "scope": [
+          "Lifecycle",
+          "Deduplication",
+          "Retention"
+        ],
+        "outOfScope": [
+          "Force resolution"
+        ],
+        "acceptanceCriteria": [
+          "Ongoing conditions deduplicate",
+          "Resolved conditions reoccur with new IDs"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/alert.rs",
+          "src-tauri/src/storage/alert_repository.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T08:04:24.537Z",
+        "updatedAt": "2026-08-10T08:05:58.560Z"
+      },
+      {
+        "id": "WU052",
+        "milestoneId": "M008",
+        "title": "WU8-02 Threshold policy and effective configuration",
+        "objective": "Validated global defaults and device overrides.",
+        "scope": [
+          "Defaults",
+          "Overrides",
+          "Validation"
+        ],
+        "outOfScope": [
+          "Per-service overrides"
+        ],
+        "acceptanceCriteria": [
+          "Overrides win",
+          "Invalid values are rejected"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/settings.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-032"
+        ],
+        "createdAt": "2026-08-10T08:04:24.537Z",
+        "updatedAt": "2026-08-10T08:06:00.578Z"
+      },
+      {
+        "id": "WU053",
+        "milestoneId": "M008",
+        "title": "WU8-03 Alert evaluation and signal integration",
+        "objective": "Evaluate M6 and M7 signals into alerts.",
+        "scope": [
+          "Health",
+          "Services",
+          "Volatile metrics"
+        ],
+        "outOfScope": [
+          "M9 Docker expansion"
+        ],
+        "acceptanceCriteria": [
+          "Recovery resolves matching alert",
+          "Service escalation reuses occurrence"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/alerts.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-033"
+        ],
+        "createdAt": "2026-08-10T08:04:24.537Z",
+        "updatedAt": "2026-08-10T08:06:02.644Z"
+      },
+      {
+        "id": "WU054",
+        "milestoneId": "M008",
+        "title": "WU8-04 Notification and Activity governance",
+        "objective": "Govern notification and Activity lifecycle transitions.",
+        "scope": [
+          "Notifications",
+          "Activity"
+        ],
+        "outOfScope": [
+          "New providers"
+        ],
+        "acceptanceCriteria": [
+          "No repeat notification spam",
+          "Activity records transitions"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/scheduler.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-034"
+        ],
+        "createdAt": "2026-08-10T08:04:24.537Z",
+        "updatedAt": "2026-08-10T08:06:04.646Z"
+      },
+      {
+        "id": "WU055",
+        "milestoneId": "M008",
+        "title": "WU8-05 Alert Center and threshold settings UI",
+        "objective": "Present alerts and threshold settings in the desktop UI.",
+        "scope": [
+          "Alert Center",
+          "Dashboard",
+          "Settings"
+        ],
+        "outOfScope": [
+          "Force resolution"
+        ],
+        "acceptanceCriteria": [
+          "Filters and acknowledgement work",
+          "Override state is visible"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src/features/alerts"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-035"
+        ],
+        "createdAt": "2026-08-10T08:04:24.537Z",
+        "updatedAt": "2026-08-10T08:06:06.636Z"
       }
     ],
     "dependencies": [
@@ -2086,6 +2255,34 @@
         "toId": "WU050",
         "type": "blocks",
         "reason": "M13 is the final planned milestone."
+      },
+      {
+        "id": "DEP-032",
+        "fromId": "WU051",
+        "toId": "WU052",
+        "type": "blocks",
+        "reason": "Policy applies to persisted alerts."
+      },
+      {
+        "id": "DEP-033",
+        "fromId": "WU052",
+        "toId": "WU053",
+        "type": "blocks",
+        "reason": "Evaluation needs effective policy."
+      },
+      {
+        "id": "DEP-034",
+        "fromId": "WU053",
+        "toId": "WU054",
+        "type": "blocks",
+        "reason": "Notifications require transitions."
+      },
+      {
+        "id": "DEP-035",
+        "fromId": "WU054",
+        "toId": "WU055",
+        "type": "blocks",
+        "reason": "UI consumes the completed contract."
       }
     ]
   },
@@ -4331,17 +4528,258 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T07:25:00.572Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T07:25:00.572Z"
+    },
+    {
+      "id": "C038",
+      "workUnitId": "WU040",
+      "packetId": "PKT-038",
+      "summary": "Integrated the approved M8 milestone document, documentation navigation, and implementation plan.",
+      "completed": [
+        "Added canonical M8 document",
+        "Added README navigation",
+        "Prepared five M8 Work Units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m8-alerts-and-threshold-governance.md",
+        "README.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Existing M6 and M7 history is valid."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 planning is integrated",
+          "result": "passed",
+          "evidence": "Approved document is in docs/milestones."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:04:19.931Z"
+    },
+    {
+      "id": "C039",
+      "workUnitId": "WU051",
+      "packetId": "PKT-039",
+      "summary": "Implemented and validated the corresponding M8 alert governance work unit.",
+      "completed": [
+        "Implementation complete",
+        "Focused automated validation passed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/alert.rs",
+        "src-tauri/src/monitoring/alerts.rs",
+        "src/features/alerts/AlertCenterScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Alert domain and integration tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "Alert Center behavior tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 work unit behavior is implemented",
+          "result": "passed",
+          "evidence": "Focused backend and frontend tests passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:05:58.560Z"
+    },
+    {
+      "id": "C040",
+      "workUnitId": "WU052",
+      "packetId": "PKT-040",
+      "summary": "Implemented and validated the corresponding M8 alert governance work unit.",
+      "completed": [
+        "Implementation complete",
+        "Focused automated validation passed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/alert.rs",
+        "src-tauri/src/monitoring/alerts.rs",
+        "src/features/alerts/AlertCenterScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Alert domain and integration tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "Alert Center behavior tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 work unit behavior is implemented",
+          "result": "passed",
+          "evidence": "Focused backend and frontend tests passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:06:00.578Z"
+    },
+    {
+      "id": "C041",
+      "workUnitId": "WU053",
+      "packetId": "PKT-041",
+      "summary": "Implemented and validated the corresponding M8 alert governance work unit.",
+      "completed": [
+        "Implementation complete",
+        "Focused automated validation passed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/alert.rs",
+        "src-tauri/src/monitoring/alerts.rs",
+        "src/features/alerts/AlertCenterScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Alert domain and integration tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "Alert Center behavior tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 work unit behavior is implemented",
+          "result": "passed",
+          "evidence": "Focused backend and frontend tests passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:06:02.644Z"
+    },
+    {
+      "id": "C042",
+      "workUnitId": "WU054",
+      "packetId": "PKT-042",
+      "summary": "Implemented and validated the corresponding M8 alert governance work unit.",
+      "completed": [
+        "Implementation complete",
+        "Focused automated validation passed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/alert.rs",
+        "src-tauri/src/monitoring/alerts.rs",
+        "src/features/alerts/AlertCenterScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Alert domain and integration tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "Alert Center behavior tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 work unit behavior is implemented",
+          "result": "passed",
+          "evidence": "Focused backend and frontend tests passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:06:04.646Z"
+    },
+    {
+      "id": "C043",
+      "workUnitId": "WU055",
+      "packetId": "PKT-043",
+      "summary": "Implemented and validated the corresponding M8 alert governance work unit.",
+      "completed": [
+        "Implementation complete",
+        "Focused automated validation passed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/alert.rs",
+        "src-tauri/src/monitoring/alerts.rs",
+        "src/features/alerts/AlertCenterScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Alert domain and integration tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "Alert Center behavior tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M8 work unit behavior is implemented",
+          "result": "passed",
+          "evidence": "Focused backend and frontend tests passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T08:06:06.636Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-037",
-    "workUnitId": "WU049",
-    "milestoneId": "M007",
-    "createdAt": "2026-08-10T07:24:59.929Z",
+    "id": "PKT-043",
+    "workUnitId": "WU055",
+    "milestoneId": "M008",
+    "createdAt": "2026-08-10T08:06:05.672Z",
     "format": "markdown",
-    "contentHash": "sha256:670ea1c39d906a4857ebfaea5d686c8a359943517c890539f8960cd4d7672d46",
+    "contentHash": "sha256:096b620d1fd901db10cc75ef76fd3b370edba4ce32ae3bc7f65aca14d6dd88f3",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -4362,7 +4800,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T07:25:00.572Z",
+  "lastUpdatedAt": "2026-08-10T08:06:06.636Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -5471,6 +5909,186 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T07:25:00.572Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C038",
+      "current": {
+        "observationId": "sha256:d55afe2d3ab697ba5eb4482ce00e4c3258cac57bee0077aff57f4bce6f1c738b",
+        "checkpointId": "C038",
+        "workUnitId": "WU040",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:04:19.931Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:04:19.931Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:d55afe2d3ab697ba5eb4482ce00e4c3258cac57bee0077aff57f4bce6f1c738b",
+          "checkpointId": "C038",
+          "workUnitId": "WU040",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:04:19.931Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:04:19.931Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C039",
+      "current": {
+        "observationId": "sha256:89230eabfa37e1bdb0cf2b4ece9c20cebfa9ad4fa0b5fa65d3f25d99f76cc6a0",
+        "checkpointId": "C039",
+        "workUnitId": "WU051",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:05:58.560Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:05:58.560Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:89230eabfa37e1bdb0cf2b4ece9c20cebfa9ad4fa0b5fa65d3f25d99f76cc6a0",
+          "checkpointId": "C039",
+          "workUnitId": "WU051",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:05:58.560Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:05:58.560Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C040",
+      "current": {
+        "observationId": "sha256:59e36ea8826daa3aee2920e7a7f3c676432b272b8d30554963e2908f0e3c9f54",
+        "checkpointId": "C040",
+        "workUnitId": "WU052",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:06:00.578Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:06:00.578Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:59e36ea8826daa3aee2920e7a7f3c676432b272b8d30554963e2908f0e3c9f54",
+          "checkpointId": "C040",
+          "workUnitId": "WU052",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:06:00.578Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:06:00.578Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C041",
+      "current": {
+        "observationId": "sha256:1067c336a2456d81a0b4233774b3c8710c36831ce3a569dd7b50fbbb7dd4eb09",
+        "checkpointId": "C041",
+        "workUnitId": "WU053",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:06:02.644Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:06:02.644Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:1067c336a2456d81a0b4233774b3c8710c36831ce3a569dd7b50fbbb7dd4eb09",
+          "checkpointId": "C041",
+          "workUnitId": "WU053",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:06:02.644Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:06:02.644Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C042",
+      "current": {
+        "observationId": "sha256:2d8b35ed1f8f8c892d9fb9938d1d699c697ffbad063e1ffbe7f2658fc157ef1f",
+        "checkpointId": "C042",
+        "workUnitId": "WU054",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:06:04.646Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:06:04.646Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:2d8b35ed1f8f8c892d9fb9938d1d699c697ffbad063e1ffbe7f2658fc157ef1f",
+          "checkpointId": "C042",
+          "workUnitId": "WU054",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:06:04.646Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:06:04.646Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C043",
+      "current": {
+        "observationId": "sha256:c3bba43fa4244e4fe1e1e1e8ca4a46f7e902eae9a2432dfb071879ec84e0d3ff",
+        "checkpointId": "C043",
+        "workUnitId": "WU055",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:06:06.636Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:06:06.636Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:c3bba43fa4244e4fe1e1e1e8ca4a46f7e902eae9a2432dfb071879ec84e0d3ff",
+          "checkpointId": "C043",
+          "workUnitId": "WU055",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:06:06.636Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:06:06.636Z"
         }
       ]
     }

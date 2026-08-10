@@ -3,6 +3,7 @@ import { useRouter } from "@/app/router";
 import { DashboardScreen } from "@/features/dashboard/DashboardScreen";
 import { ServicesScreen } from "@/features/services/ServicesScreen";
 import { ActivityScreen } from "@/features/activity/ActivityScreen";
+import { AlertCenterScreen } from "@/features/alerts/AlertCenterScreen";
 import { GlobalSettingsScreen } from "@/features/settings/GlobalSettingsScreen";
 import { AddDeviceScreen } from "@/features/devices/AddDeviceScreen";
 import { DeviceDetailScreen } from "@/features/devices/DeviceDetailScreen";
@@ -31,6 +32,7 @@ export function AppShell() {
           <ServicesScreen deviceId={screen.deviceId} />
         )}
         {screen.name === "activity" && <ActivityScreen />}
+        {screen.name === "alerts" && <AlertCenterScreen />}
         {screen.name === "globalSettings" && <GlobalSettingsScreen />}
         {screen.name === "device" && (
           <DeviceDetailScreen key={screen.deviceId} deviceId={screen.deviceId} />

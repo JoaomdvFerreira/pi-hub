@@ -1,4 +1,5 @@
 pub mod activity_repository;
+pub mod alert_repository;
 pub mod atomic;
 pub mod config_repository;
 pub mod device_repository;

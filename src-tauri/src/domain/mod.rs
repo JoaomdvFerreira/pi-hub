@@ -1,4 +1,5 @@
 pub mod activity;
+pub mod alert;
 pub mod connection_status;
 pub mod device;
 pub mod diagnostics;

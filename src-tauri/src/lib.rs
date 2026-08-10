@@ -45,6 +45,11 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::settings::get_app_settings,
             commands::settings::save_app_settings,
+            commands::settings::get_effective_threshold_policy,
+            commands::settings::save_device_threshold_overrides,
+            commands::settings::clear_device_threshold_overrides,
+            commands::alerts::get_alerts,
+            commands::alerts::acknowledge_alert,
             commands::devices::get_devices,
             commands::devices::get_device,
             commands::devices::create_device,

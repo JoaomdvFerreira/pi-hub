@@ -4,7 +4,8 @@ use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::device::Device;
 use crate::domain::health::assess_health;
 use crate::domain::snapshot::DeviceSnapshot;
-use crate::domain::service_health::check_services;
+use crate::domain::service_health::check_services_with_threshold;
+use crate::domain::settings::ThresholdPolicy;
 use crate::error::ApplicationError;
 use crate::infrastructure::parsers::docker::{collect_docker_containers, DockerCollectionResult};
 use crate::infrastructure::parsers::metrics::collect_system_metrics;
@@ -32,6 +33,15 @@ pub fn refresh_device_sync(
     executor: &dyn RemoteExecutor,
     device: &Device,
     previous: Option<&DeviceSnapshot>,
+) -> DeviceSnapshot {
+    refresh_device_sync_with_policy(executor, device, previous, &ThresholdPolicy::default())
+}
+
+pub fn refresh_device_sync_with_policy(
+    executor: &dyn RemoteExecutor,
+    device: &Device,
+    previous: Option<&DeviceSnapshot>,
+    policy: &ThresholdPolicy,
 ) -> DeviceSnapshot {
     let started = Instant::now();
     let captured_at = chrono::Utc::now().to_rfc3339();
@@ -63,7 +73,7 @@ pub fn refresh_device_sync(
                 &err.to_connection_status(),
                 previous.and_then(|p| p.metrics.as_ref()),
             ),
-            service_health: check_services(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default()),
+            service_health: check_services_with_threshold(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default(), policy.service_unavailable_failures),
         };
     }
 
@@ -118,7 +128,7 @@ pub fn refresh_device_sync(
         stale: false,
         last_successful_refresh: Some(captured_at),
         health,
-        service_health: check_services(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default()),
+        service_health: check_services_with_threshold(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default(), policy.service_unavailable_failures),
     }
 }
 
