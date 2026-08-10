@@ -1,9 +1,12 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
 use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::docker_container::DockerContainerSummary;
 use crate::domain::health::DeviceHealthAssessment;
 use crate::domain::system_metrics::SystemMetrics;
+use crate::domain::service_health::ServiceHealthRecord;
 use crate::error::ApplicationError;
 
 /// One monitoring cycle's result for a device. Immutable once built: the
@@ -34,4 +37,6 @@ pub struct DeviceSnapshot {
     /// `connectionStatus` was `Online`, if any.
     pub last_successful_refresh: Option<String>,
     pub health: DeviceHealthAssessment,
+    #[serde(default)]
+    pub service_health: HashMap<String, ServiceHealthRecord>,
 }

@@ -4,6 +4,8 @@ use crate::domain::snapshot::DeviceSnapshot;
 use crate::error::ApplicationError;
 use crate::monitoring::scheduler;
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
+use crate::storage::activity_repository::{ActivityRepository, JsonActivityRepository};
+use crate::domain::activity::ActivityEvent;
 
 fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, ApplicationError> {
     let dir = app
@@ -46,4 +48,10 @@ pub fn get_latest_snapshot(
     id: String,
 ) -> Result<Option<DeviceSnapshot>, ApplicationError> {
     Ok(snapshot_repository(&app)?.get(&id))
+}
+
+#[tauri::command]
+pub fn get_activity(app: AppHandle) -> Result<Vec<ActivityEvent>, ApplicationError> {
+    let dir = app.path().app_config_dir().map_err(|err| ApplicationError { code: "ConfigurationError".into(), message: format!("could not resolve the application config directory: {err}"), remediation: None, retryable: false })?;
+    Ok(JsonActivityRepository::new(dir).load_all())
 }

@@ -3,6 +3,8 @@ use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::domain::device::Device;
+use crate::domain::activity::{ActivityCategory, ActivityEvent};
+use crate::domain::service_health::ServiceHealthState;
 use crate::domain::notification_rule::NotificationEvent;
 use crate::domain::settings::AppSettings;
 use crate::domain::snapshot::DeviceSnapshot;
@@ -17,6 +19,7 @@ use crate::platform::notifications::TauriNotificationService;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
+use crate::storage::activity_repository::{ActivityRepository, JsonActivityRepository};
 
 /// Max concurrent device refreshes (spec section 14.3).
 pub const MAX_CONCURRENT_REFRESHES: usize = 4;
@@ -42,6 +45,17 @@ fn device_repository(app: &AppHandle) -> Result<JsonDeviceRepository, Applicatio
 fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, ApplicationError> {
     let dir = app.path().app_config_dir().map_err(config_error)?;
     Ok(JsonSnapshotRepository::new(dir))
+}
+
+fn activity_repository(app: &AppHandle) -> Result<JsonActivityRepository, ApplicationError> {
+    let dir = app.path().app_config_dir().map_err(config_error)?;
+    Ok(JsonActivityRepository::new(dir))
+}
+
+fn record_activity(app: &AppHandle, event: ActivityEvent) {
+    if let Ok(repo) = activity_repository(app) {
+        if let Err(err) = repo.append(event) { log::warn!("could not persist activity event: {err}"); }
+    }
 }
 
 fn settings_repository(app: &AppHandle) -> Result<JsonSettingsRepository, ApplicationError> {
@@ -127,6 +141,20 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         .is_none_or(|prev_status| prev_status != snapshot.connection_status)
     {
         let _ = app.emit("device://status-changed", &snapshot);
+        let code = if snapshot.connection_status == crate::domain::connection_status::DeviceConnectionStatus::Online { "device.online" } else { "device.offline" };
+        record_activity(app, ActivityEvent::new(ActivityCategory::Device, code, Some(device.id.clone()), Some(device.id.clone()), Some(device.name.clone()), format!("{} is {}", device.name, if code == "device.online" { "online" } else { "offline" })));
+    }
+
+    if previous.as_ref().map(|item| item.health.state) != Some(snapshot.health.state) {
+        record_activity(app, ActivityEvent::new(ActivityCategory::Health, "device.health_changed", Some(device.id.clone()), Some(device.id.clone()), Some(device.name.clone()), format!("{} health is now {:?}", device.name, snapshot.health.state)));
+    }
+
+    for service in &device.services {
+        let Some(current) = snapshot.service_health.get(&service.id) else { continue; };
+        let prior = previous.as_ref().and_then(|item| item.service_health.get(&service.id)).map(|item| item.state);
+        if prior != Some(current.state) && !(prior.is_none() && current.state == ServiceHealthState::Healthy) {
+            record_activity(app, ActivityEvent::new(ActivityCategory::Service, "service.health_changed", Some(device.id.clone()), Some(service.id.clone()), Some(service.name.clone()), format!("{} is now {:?}", service.name, current.state)));
+        }
     }
 
     let container_changes = detect_container_changes(
