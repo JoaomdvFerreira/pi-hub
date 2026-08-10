@@ -40,8 +40,35 @@ pub fn parse_system_metrics(raw: &str) -> (SystemMetrics, Vec<ParseWarning>) {
 
     metrics.temperature_celsius = parse_numeric::<f64>(&fields, "PIHUB_TEMP_MILLIC", &mut warnings)
         .map(|millic| millic / 1000.0);
+    metrics.swap_total_bytes = parse_numeric(&fields, "PIHUB_SWAP_TOTAL_BYTES", &mut warnings);
+    let swap_free: Option<u64> = parse_numeric(&fields, "PIHUB_SWAP_FREE_BYTES", &mut warnings);
+    metrics.swap_used_bytes = derive_used(metrics.swap_total_bytes, swap_free);
+    metrics.cpu_frequency_mhz = parse_numeric(&fields, "PIHUB_CPU_FREQUENCY_MHZ", &mut warnings);
+    metrics.boot_timestamp = parse_numeric(&fields, "PIHUB_BOOT_TIMESTAMP", &mut warnings);
+    metrics.reboot_required = parse_bool(&fields, "PIHUB_REBOOT_REQUIRED", &mut warnings);
+    metrics.root_filesystem_read_only =
+        parse_bool(&fields, "PIHUB_ROOT_FS_READ_ONLY", &mut warnings);
+    metrics.throttling_raw = fields.get("PIHUB_THROTTLED_RAW").cloned();
 
     (metrics, warnings)
+}
+
+fn parse_bool(
+    fields: &HashMap<String, String>,
+    key: &str,
+    warnings: &mut Vec<ParseWarning>,
+) -> Option<bool> {
+    let raw = fields.get(key)?;
+    match raw.as_str() {
+        "1" | "true" => Some(true),
+        "0" | "false" => Some(false),
+        _ => {
+            warnings.push(ParseWarning(format!(
+                "invalid boolean value for '{key}': '{raw}'"
+            )));
+            None
+        }
+    }
 }
 
 /// Runs the fixed SystemMetrics remote operation over SSH and parses the
@@ -106,6 +133,13 @@ PIHUB_MEMORY_AVAILABLE_BYTES=6432382976
 PIHUB_DISK_TOTAL_BYTES=250000000000
 PIHUB_DISK_AVAILABLE_BYTES=183000000000
 PIHUB_TEMP_MILLIC=45200
+PIHUB_SWAP_TOTAL_BYTES=1048576
+PIHUB_SWAP_FREE_BYTES=524288
+PIHUB_CPU_FREQUENCY_MHZ=1800
+PIHUB_BOOT_TIMESTAMP=1720000000
+PIHUB_REBOOT_REQUIRED=1
+PIHUB_ROOT_FS_READ_ONLY=0
+PIHUB_THROTTLED_RAW=throttled=0x50000
 ";
 
     #[test]
@@ -132,6 +166,12 @@ PIHUB_TEMP_MILLIC=45200
             Some(250_000_000_000 - 183_000_000_000)
         );
         assert_eq!(metrics.temperature_celsius, Some(45.2));
+        assert_eq!(metrics.swap_used_bytes, Some(524_288));
+        assert_eq!(metrics.cpu_frequency_mhz, Some(1800.0));
+        assert_eq!(metrics.boot_timestamp, Some(1_720_000_000));
+        assert_eq!(metrics.reboot_required, Some(true));
+        assert_eq!(metrics.root_filesystem_read_only, Some(false));
+        assert_eq!(metrics.throttling_raw.as_deref(), Some("throttled=0x50000"));
     }
 
     #[test]
@@ -163,6 +203,17 @@ PIHUB_TEMP_MILLIC=45200
         assert_eq!(metrics.uptime_seconds, None);
         assert_eq!(metrics.cpu_usage_percent, Some(22.0));
         assert_eq!(warnings.len(), 1);
+    }
+
+    #[test]
+    fn malformed_optional_health_values_do_not_discard_other_metrics() {
+        let payload = "PIHUB_HOSTNAME=pi5\nPIHUB_SWAP_TOTAL_BYTES=bad\nPIHUB_REBOOT_REQUIRED=maybe\nPIHUB_ROOT_FS_READ_ONLY=1\n";
+        let (metrics, warnings) = parse_system_metrics(payload);
+        assert_eq!(metrics.hostname.as_deref(), Some("pi5"));
+        assert_eq!(metrics.swap_total_bytes, None);
+        assert_eq!(metrics.reboot_required, None);
+        assert_eq!(metrics.root_filesystem_read_only, Some(true));
+        assert_eq!(warnings.len(), 2);
     }
 
     #[test]

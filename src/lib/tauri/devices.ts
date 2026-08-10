@@ -5,6 +5,7 @@ import type {
   DeviceInput,
   TestConnectionInput,
 } from "../../types/device";
+import type { ConnectivityDiagnosticReport } from "../../types/snapshot";
 
 export function getDevices(): Promise<Device[]> {
   return invoke<Device[]>("get_devices");
@@ -30,6 +31,12 @@ export function testDeviceConnection(
   input: TestConnectionInput,
 ): Promise<ConnectionTestResult> {
   return invoke<ConnectionTestResult>("test_device_connection", { input });
+}
+
+export function diagnoseDeviceConnection(
+  input: TestConnectionInput,
+): Promise<ConnectivityDiagnosticReport> {
+  return invoke<ConnectivityDiagnosticReport>("diagnose_device_connection", { input });
 }
 
 export function openDeviceService(deviceId: string, serviceId: string): Promise<void> {

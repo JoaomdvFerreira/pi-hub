@@ -27,4 +27,11 @@ pub struct SystemMetrics {
     pub disk_total_bytes: Option<u64>,
     pub disk_used_bytes: Option<u64>,
     pub temperature_celsius: Option<f64>,
+    pub swap_total_bytes: Option<u64>,
+    pub swap_used_bytes: Option<u64>,
+    pub cpu_frequency_mhz: Option<f64>,
+    pub boot_timestamp: Option<u64>,
+    pub reboot_required: Option<bool>,
+    pub root_filesystem_read_only: Option<bool>,
+    pub throttling_raw: Option<String>,
 }

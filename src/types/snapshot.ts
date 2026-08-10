@@ -53,7 +53,20 @@ export interface SystemMetrics {
   diskTotalBytes?: number;
   diskUsedBytes?: number;
   temperatureCelsius?: number;
+  swapTotalBytes?: number;
+  swapUsedBytes?: number;
+  cpuFrequencyMhz?: number;
+  bootTimestamp?: number;
+  rebootRequired?: boolean;
+  rootFilesystemReadOnly?: boolean;
+  throttlingRaw?: string;
 }
+export type DeviceHealthState = "healthy" | "warning" | "critical" | "unknown";
+export interface HealthReason { code: string; severity: "info" | "warning" | "critical"; summary: string; }
+export interface RaspberryPiPowerState { raw?: string; undervoltageNow?: boolean; undervoltageSinceBoot?: boolean; frequencyCappedNow?: boolean; frequencyCappedSinceBoot?: boolean; throttledNow?: boolean; throttledSinceBoot?: boolean; softTemperatureLimitNow?: boolean; softTemperatureLimitSinceBoot?: boolean; }
+export interface DeviceHealthAssessment { state: DeviceHealthState; reasons: HealthReason[]; power: RaspberryPiPowerState; }
+export interface DiagnosticCheck { code: string; status: "passed" | "warning" | "failed" | "skipped"; summary: string; detail?: string; durationMs?: number; }
+export interface ConnectivityDiagnosticReport { checks: DiagnosticCheck[]; durationMs: number; }
 
 export interface DeviceSnapshot {
   deviceId: string;
@@ -72,4 +85,5 @@ export interface DeviceSnapshot {
   };
   stale: boolean;
   lastSuccessfulRefresh?: string;
+  health: DeviceHealthAssessment;
 }

@@ -8,7 +8,11 @@ use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::device::{
     validate_host, validate_service_url, validate_ssh_port, validate_ssh_username, Device,
 };
+use crate::domain::diagnostics::{
+    diagnostic_failure, diagnostic_success, ConnectivityDiagnosticReport,
+};
 use crate::error::ApplicationError;
+use crate::infrastructure::ssh::RemoteOperation;
 use crate::infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, SshTarget};
 use crate::platform::pty::PtySessionManager;
 use crate::platform::tray;
@@ -30,6 +34,55 @@ pub struct TestConnectionInput {
 pub struct ConnectionTestResult {
     pub status: DeviceConnectionStatus,
     pub message: Option<String>,
+}
+
+#[tauri::command]
+pub async fn diagnose_device_connection(
+    input: TestConnectionInput,
+) -> Result<ConnectivityDiagnosticReport, ApplicationError> {
+    validate_host(&input.host).map_err(|e| ApplicationError {
+        code: "ValidationError".into(),
+        message: e.0,
+        remediation: None,
+        retryable: true,
+    })?;
+    validate_ssh_port(input.ssh_port).map_err(|e| ApplicationError {
+        code: "ValidationError".into(),
+        message: e.0,
+        remediation: None,
+        retryable: true,
+    })?;
+    validate_ssh_username(&input.ssh_username).map_err(|e| ApplicationError {
+        code: "ValidationError".into(),
+        message: e.0,
+        remediation: None,
+        retryable: true,
+    })?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let target = SshTarget {
+            host: input.host,
+            port: input.ssh_port,
+            username: input.ssh_username,
+        };
+        let executor = OpenSshExecutor::default();
+        match executor.execute(
+            &target,
+            RemoteOperation::Diagnostics
+                .command()
+                .expect("fixed diagnostic command"),
+            Duration::from_secs(10),
+        ) {
+            Ok(result) => diagnostic_success(&result.stdout, result.duration_ms),
+            Err(error) => diagnostic_failure(&error),
+        }
+    })
+    .await
+    .map_err(|_| ApplicationError {
+        code: "PlatformIntegrationError".into(),
+        message: "the diagnostic did not complete".into(),
+        remediation: Some("Try again.".into()),
+        retryable: true,
+    })
 }
 
 fn repository(app: &AppHandle) -> Result<JsonDeviceRepository, ApplicationError> {

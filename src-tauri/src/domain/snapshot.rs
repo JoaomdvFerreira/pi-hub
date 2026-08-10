@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::docker_container::DockerContainerSummary;
+use crate::domain::health::DeviceHealthAssessment;
 use crate::domain::system_metrics::SystemMetrics;
 use crate::error::ApplicationError;
 
@@ -32,4 +33,5 @@ pub struct DeviceSnapshot {
     /// The `capturedAt` of the most recent snapshot where
     /// `connectionStatus` was `Online`, if any.
     pub last_successful_refresh: Option<String>,
+    pub health: DeviceHealthAssessment,
 }

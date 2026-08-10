@@ -4,6 +4,10 @@ A lightweight Windows system-tray desktop app for monitoring and quickly accessi
 
 See [`docs/pi-hub-functional-specification.md`](docs/pi-hub-functional-specification.md) and [`docs/pi-hub-technical-architecture-specification.md`](docs/pi-hub-technical-architecture-specification.md) for the full product and architecture specs, and [`docs/design/Pi Control.dc.html`](<docs/design/Pi Control.dc.html>) for the UI reference.
 
+## Roadmap
+
+Approved planning lives in [`docs/roadmap/post-mvp-product-roadmap.md`](docs/roadmap/post-mvp-product-roadmap.md). M6 implementation scope and M10's controlled shutdown requirement are documented in [`docs/milestones/m6-device-health-and-diagnostics.md`](docs/milestones/m6-device-health-and-diagnostics.md) and [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
+
 ## Stack
 
 - **Desktop shell:** Tauri 2

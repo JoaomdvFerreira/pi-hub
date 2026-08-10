@@ -1,7 +1,7 @@
 {
   "version": "0.5.0",
-  "projectStatus": "review",
-  "currentMilestoneId": null,
+  "projectStatus": "in_progress",
+  "currentMilestoneId": "M005",
   "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
@@ -59,7 +59,7 @@
         "id": "M005",
         "title": "M5 — Post-MVP backlog (Phase 2)",
         "objective": "Ship a distributable production build, then work through the explicitly-deferred Phase 2 enhancements: Docker container lifecycle actions, an embedded terminal, and per-event-type notification controls.",
-        "status": "done",
+        "status": "ready",
         "workUnitIds": [
           "WU019",
           "WU020",
@@ -76,6 +76,73 @@
           "WU031",
           "WU032",
           "WU033"
+        ]
+      },
+      {
+        "id": "M006",
+        "title": "M6 - Device Health and Diagnostics",
+        "objective": "Extend monitoring into deterministic device health, Raspberry Pi power/throttling interpretation, and read-only connectivity diagnostics.",
+        "status": "done",
+        "workUnitIds": [
+          "WU034",
+          "WU035",
+          "WU036",
+          "WU037",
+          "WU038"
+        ]
+      },
+      {
+        "id": "M007",
+        "title": "M7 - Service Health and Operational Activity",
+        "objective": "Add service health monitoring and bounded operational activity.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU039"
+        ]
+      },
+      {
+        "id": "M008",
+        "title": "M8 - Alerts and Threshold Governance",
+        "objective": "Add governed alerts and configurable threshold policies.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU040"
+        ]
+      },
+      {
+        "id": "M009",
+        "title": "M9 - Docker Operational Visibility",
+        "objective": "Deepen bounded Docker operational visibility.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU041"
+        ]
+      },
+      {
+        "id": "M010",
+        "title": "M10 - Controlled Device Administration",
+        "objective": "Add controlled restart and shutdown actions; remote power-on remains out of scope.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU042"
+        ]
+      },
+      {
+        "id": "M011",
+        "title": "M11 - Network, Storage, and System Visibility",
+        "objective": "Expose richer device-level network, storage, and system context.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU043"
+        ]
+      },
+      {
+        "id": "M012",
+        "title": "M12 - Historical Monitoring",
+        "objective": "Add bounded historical health monitoring after current-state contracts stabilize.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU044"
         ]
       }
     ],
@@ -1052,10 +1119,10 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm run build"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-03T16:54:41.010Z",
-        "updatedAt": "2026-08-03T16:54:41.010Z"
+        "updatedAt": "2026-08-10T06:50:22.927Z"
       },
       {
         "id": "WU027",
@@ -1285,6 +1352,318 @@
         "dependencies": [],
         "createdAt": "2026-08-03T16:54:41.010Z",
         "updatedAt": "2026-08-03T16:54:41.010Z"
+      },
+      {
+        "id": "WU034",
+        "milestoneId": "M006",
+        "title": "Extended device-health snapshot",
+        "objective": "Collect optional health-relevant snapshot data with partial-data tolerance.",
+        "scope": [
+          "Load, swap, CPU frequency, boot, reboot, root filesystem, and throttling raw data"
+        ],
+        "outOfScope": [
+          "Historical storage"
+        ],
+        "acceptanceCriteria": [
+          "Optional metrics remain independently unavailable",
+          "Generic Linux hosts degrade gracefully"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/system_metrics.rs",
+          "src-tauri/src/infrastructure/parsers/metrics.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:53:09.558Z"
+      },
+      {
+        "id": "WU035",
+        "milestoneId": "M006",
+        "title": "Raspberry Pi power and throttling interpretation",
+        "objective": "Interpret vcgencmd throttling flags into current and historical typed state.",
+        "scope": [
+          "Decode all supported throttling bits"
+        ],
+        "outOfScope": [
+          "Power management"
+        ],
+        "acceptanceCriteria": [
+          "Current and historical flags are distinct",
+          "Malformed output stays unavailable"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/health.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-022"
+        ],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:53:20.721Z"
+      },
+      {
+        "id": "WU036",
+        "milestoneId": "M006",
+        "title": "Device health assessment",
+        "objective": "Produce deterministic Healthy, Warning, Critical, and Unknown health assessments.",
+        "scope": [
+          "Stable reason codes and fixed M6 thresholds"
+        ],
+        "outOfScope": [
+          "Configurable thresholds"
+        ],
+        "acceptanceCriteria": [
+          "Highest severity wins",
+          "Unsupported data does not cause false warnings"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/health.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-023"
+        ],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:53:30.911Z"
+      },
+      {
+        "id": "WU037",
+        "milestoneId": "M006",
+        "title": "Structured connectivity diagnostics",
+        "objective": "Provide bounded read-only diagnostics that identify connection failure stages.",
+        "scope": [
+          "SSH, Docker, and Tailscale diagnostic checks"
+        ],
+        "outOfScope": [
+          "Remote configuration changes"
+        ],
+        "acceptanceCriteria": [
+          "Host-key and authentication failures stay distinct",
+          "Downstream checks are skipped after hard failure"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/diagnostics.rs",
+          "src-tauri/src/commands/devices.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:53:40.881Z"
+      },
+      {
+        "id": "WU038",
+        "milestoneId": "M006",
+        "title": "Health and diagnostics UI",
+        "objective": "Present health status, detailed reasons, power state, and diagnostics without reimplementing rules in React.",
+        "scope": [
+          "Dashboard and Device Details health/diagnostics presentation"
+        ],
+        "outOfScope": [
+          "Interface redesign"
+        ],
+        "acceptanceCriteria": [
+          "Status is not color-only",
+          "Unavailable values remain explicit"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [
+          "src/features/dashboard/DeviceCard.tsx",
+          "src/features/devices/DeviceDetailScreen.tsx"
+        ],
+        "validationCommands": [
+          "npm run build",
+          "npm run lint"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-024",
+          "DEP-025"
+        ],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:53:53.804Z"
+      },
+      {
+        "id": "WU039",
+        "milestoneId": "M007",
+        "title": "Plan service health and activity",
+        "objective": "Planned M7 service health and operational activity work.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU040",
+        "milestoneId": "M008",
+        "title": "Plan alerts and thresholds",
+        "objective": "Planned M8 alert and threshold governance work.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU041",
+        "milestoneId": "M009",
+        "title": "Plan Docker visibility",
+        "objective": "Planned M9 Docker operational visibility work.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU042",
+        "milestoneId": "M010",
+        "title": "Plan controlled administration",
+        "objective": "Planned M10 restart and shutdown work; power-on remains out of scope.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU043",
+        "milestoneId": "M011",
+        "title": "Plan system visibility",
+        "objective": "Planned M11 network, storage, and system visibility work.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
+      },
+      {
+        "id": "WU044",
+        "milestoneId": "M012",
+        "title": "Plan historical monitoring",
+        "objective": "Planned M12 bounded historical monitoring work.",
+        "scope": [
+          "Planning only"
+        ],
+        "outOfScope": [
+          "M6 implementation"
+        ],
+        "acceptanceCriteria": [
+          "Roadmap remains planned"
+        ],
+        "agentContextRefs": [
+          "project.objective"
+        ],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "git status"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T06:43:19.193Z",
+        "updatedAt": "2026-08-10T06:43:19.193Z"
       }
     ],
     "dependencies": [
@@ -1434,6 +1813,34 @@
         "toId": "WU018",
         "type": "blocks",
         "reason": "Autostart toggle lives in global settings."
+      },
+      {
+        "id": "DEP-022",
+        "fromId": "WU034",
+        "toId": "WU035",
+        "type": "blocks",
+        "reason": "Power interpretation consumes the snapshot raw value."
+      },
+      {
+        "id": "DEP-023",
+        "fromId": "WU035",
+        "toId": "WU036",
+        "type": "blocks",
+        "reason": "Health assessment consumes interpreted power state."
+      },
+      {
+        "id": "DEP-024",
+        "fromId": "WU036",
+        "toId": "WU038",
+        "type": "blocks",
+        "reason": "UI consumes the backend health assessment."
+      },
+      {
+        "id": "DEP-025",
+        "fromId": "WU037",
+        "toId": "WU038",
+        "type": "blocks",
+        "reason": "UI renders diagnostic reports."
       }
     ]
   },
@@ -3248,15 +3655,226 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt review",
       "createdAt": "2026-08-03T08:38:33.671Z"
+    },
+    {
+      "id": "C026",
+      "workUnitId": "WU026",
+      "packetId": "PKT-026",
+      "summary": "Reconciled stale WU026 active execution state after the approved M1-M5 baseline was confirmed complete.",
+      "completed": [
+        "Recorded the completed-baseline reconciliation without changing M5 implementation scope."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "AIQT graph was valid before reconciliation."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M1-M5 completed history remains preserved.",
+          "result": "passed",
+          "evidence": "Approved M6 baseline explicitly identifies M1-M5 as completed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:50:22.927Z"
+    },
+    {
+      "id": "C027",
+      "workUnitId": "WU034",
+      "packetId": "PKT-027",
+      "summary": "Implemented extended optional device-health snapshot collection and parsing.",
+      "completed": [
+        "Collected load, swap, frequency, boot, reboot, root filesystem, and throttling raw data.",
+        "Preserved independent optional-field fallback behavior."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/system_metrics.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/infrastructure/parsers/metrics.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "178 passed; optional metric parser cases covered."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Optional metrics remain independently unavailable.",
+          "result": "passed",
+          "evidence": "Parser tests cover complete, empty, malformed, and partial payloads."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:53:09.558Z"
+    },
+    {
+      "id": "C028",
+      "workUnitId": "WU035",
+      "packetId": "PKT-028",
+      "summary": "Implemented Raspberry Pi current and historical throttling interpretation.",
+      "completed": [
+        "Decoded all supported vcgencmd bitmask flags.",
+        "Preserved clear versus unavailable semantics."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "178 passed; optional metric parser cases covered."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Current and historical flags remain distinct and malformed output is unavailable.",
+          "result": "passed",
+          "evidence": "Domain tests cover zero, individual/combined bits, malformed, and absent output."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:53:20.721Z"
+    },
+    {
+      "id": "C029",
+      "workUnitId": "WU036",
+      "packetId": "PKT-029",
+      "summary": "Implemented deterministic device health assessment.",
+      "completed": [
+        "Added stable reason codes and fixed M6 thresholds.",
+        "Preserved Critical, Warning, Healthy, and Unknown precedence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "178 passed; optional metric parser cases covered."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Highest severity wins and unsupported data does not create false warnings.",
+          "result": "passed",
+          "evidence": "Domain tests cover threshold boundaries, multi-reason precedence, Unknown, and reboot-only behavior."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:53:30.911Z"
+    },
+    {
+      "id": "C030",
+      "workUnitId": "WU037",
+      "packetId": "PKT-030",
+      "summary": "Implemented bounded structured read-only connectivity diagnostics.",
+      "completed": [
+        "Added staged SSH, Docker, and Tailscale diagnostic reports.",
+        "Preserved host-key and authentication failure distinctions."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "178 passed; optional metric parser cases covered."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Downstream checks skip after hard failure without weakening SSH security.",
+          "result": "passed",
+          "evidence": "Diagnostic domain tests cover failure stage and non-fatal Docker/Tailscale warnings."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T06:53:40.881Z"
+    },
+    {
+      "id": "C031",
+      "workUnitId": "WU038",
+      "packetId": "PKT-031",
+      "summary": "Implemented and tested M6 health and diagnostics presentation.",
+      "completed": [
+        "Rendered dashboard/detail health, power state, and diagnostics.",
+        "Added focused behavioral frontend coverage."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "7 M6 UI tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Frontend production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Status is not color-only and unavailable values remain explicit.",
+          "result": "passed",
+          "evidence": "Rendered UI tests assert text and accessible diagnostic status labels."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T06:53:53.804Z",
+      "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-025",
-    "workUnitId": "WU025",
-    "milestoneId": "M005",
-    "createdAt": "2026-08-03T08:23:21.614Z",
+    "id": "PKT-031",
+    "workUnitId": "WU038",
+    "milestoneId": "M006",
+    "createdAt": "2026-08-10T06:53:41.486Z",
     "format": "markdown",
-    "contentHash": "sha256:d1d626c9e7e9b5e0a132b94b0fe77f24b4e3eedf00e5c49c3f00e6202f8ae0f5",
+    "contentHash": "sha256:6095b4e94e592578bd09b3aed67cc2413c5a62174222fc9bc2cc9bd337d13ea2",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -3264,18 +3882,20 @@
       "constraints",
       "acceptance",
       "validation",
+      "designGuidance",
+      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": false,
+      "includesDesignGuidance": true,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": false,
+      "includesComponentSystemGuidance": true,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-03T16:54:41.010Z",
+  "lastUpdatedAt": "2026-08-10T06:53:53.804Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -4024,6 +4644,186 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-03T08:38:33.671Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C026",
+      "current": {
+        "observationId": "sha256:cf9ea47aaae844359704b0e6bff9d873094952492f02c6d597f667bfc9956f8e",
+        "checkpointId": "C026",
+        "workUnitId": "WU026",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:50:22.927Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:50:22.927Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:cf9ea47aaae844359704b0e6bff9d873094952492f02c6d597f667bfc9956f8e",
+          "checkpointId": "C026",
+          "workUnitId": "WU026",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:50:22.927Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:50:22.927Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C027",
+      "current": {
+        "observationId": "sha256:e8f7b5602b08e5e709384167503866faf44b1968cb2c6d418af3a05b3345fcbf",
+        "checkpointId": "C027",
+        "workUnitId": "WU034",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:53:09.558Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:53:09.558Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:e8f7b5602b08e5e709384167503866faf44b1968cb2c6d418af3a05b3345fcbf",
+          "checkpointId": "C027",
+          "workUnitId": "WU034",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:53:09.558Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:53:09.558Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C028",
+      "current": {
+        "observationId": "sha256:389b3c7e2242ca67ea620275775f97739ee63df0471041c60ef5a3fb587afb47",
+        "checkpointId": "C028",
+        "workUnitId": "WU035",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:53:20.721Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:53:20.721Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:389b3c7e2242ca67ea620275775f97739ee63df0471041c60ef5a3fb587afb47",
+          "checkpointId": "C028",
+          "workUnitId": "WU035",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:53:20.721Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:53:20.721Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C029",
+      "current": {
+        "observationId": "sha256:a3e01e0d4c5f45cad7b736bd81faf11c0d21aeaa9e4adfdb62f8220869ceb581",
+        "checkpointId": "C029",
+        "workUnitId": "WU036",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:53:30.911Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:53:30.911Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a3e01e0d4c5f45cad7b736bd81faf11c0d21aeaa9e4adfdb62f8220869ceb581",
+          "checkpointId": "C029",
+          "workUnitId": "WU036",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:53:30.911Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:53:30.911Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C030",
+      "current": {
+        "observationId": "sha256:f56719e01244d85f50920f67b941a86bd35d7516c0d207c612cae371d411ddd3",
+        "checkpointId": "C030",
+        "workUnitId": "WU037",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:53:40.881Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:53:40.881Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f56719e01244d85f50920f67b941a86bd35d7516c0d207c612cae371d411ddd3",
+          "checkpointId": "C030",
+          "workUnitId": "WU037",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:53:40.881Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:53:40.881Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C031",
+      "current": {
+        "observationId": "sha256:6ada9b626a249120fa80cd6084aca72b5df6b72f1a2230645ea7f0c8a07543db",
+        "checkpointId": "C031",
+        "workUnitId": "WU038",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T06:53:53.804Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T06:53:53.804Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:6ada9b626a249120fa80cd6084aca72b5df6b72f1a2230645ea7f0c8a07543db",
+          "checkpointId": "C031",
+          "workUnitId": "WU038",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T06:53:53.804Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T06:53:53.804Z"
         }
       ]
     }
