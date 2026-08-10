@@ -17,6 +17,7 @@ import {
 import { connectionStatusLabel } from "@/lib/formatting/connectionStatus";
 import type { Device, DeviceType } from "@/types/device";
 import type { DeviceSnapshot } from "@/types/snapshot";
+import { HealthSummary } from "@/features/devices/HealthDiagnostics";
 
 const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
   "raspberry-pi": "Raspberry Pi",
@@ -186,6 +187,8 @@ export const DeviceCard = memo(function DeviceCard({
           />
         </div>
       ) : null}
+
+      {snapshot ? <HealthSummary health={snapshot.health} /> : null}
 
       <div className="flex items-center gap-3 text-[11.5px] text-muted-foreground">
         <span>

@@ -2,6 +2,7 @@ use std::time::{Duration, Instant};
 
 use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::device::Device;
+use crate::domain::health::assess_health;
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::error::ApplicationError;
 use crate::infrastructure::parsers::docker::{collect_docker_containers, DockerCollectionResult};
@@ -57,6 +58,10 @@ pub fn refresh_device_sync(
             }),
             stale: true,
             last_successful_refresh: previous.and_then(|p| p.last_successful_refresh.clone()),
+            health: assess_health(
+                &err.to_connection_status(),
+                previous.and_then(|p| p.metrics.as_ref()),
+            ),
         };
     }
 
@@ -97,6 +102,7 @@ pub fn refresh_device_sync(
             }
         };
 
+    let health = assess_health(&DeviceConnectionStatus::Online, metrics.as_ref());
     DeviceSnapshot {
         device_id: device.id.clone(),
         connection_status: DeviceConnectionStatus::Online,
@@ -109,6 +115,7 @@ pub fn refresh_device_sync(
         error: None,
         stale: false,
         last_successful_refresh: Some(captured_at),
+        health,
     }
 }
 
@@ -198,6 +205,7 @@ mod tests {
             error: None,
             stale: false,
             last_successful_refresh: Some("2026-01-01T00:00:00Z".into()),
+            health: assess_health(&DeviceConnectionStatus::Online, Some(&previous_metrics)),
         };
 
         let executor = FakeRemoteExecutor::offline();

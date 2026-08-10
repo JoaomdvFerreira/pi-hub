@@ -51,6 +51,7 @@ pub fn run() {
             commands::devices::update_device,
             commands::devices::delete_device,
             commands::devices::test_device_connection,
+            commands::devices::diagnose_device_connection,
             commands::devices::open_device_service,
             commands::launch::open_device_terminal,
             commands::monitoring::refresh_device,

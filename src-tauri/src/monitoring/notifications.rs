@@ -134,6 +134,7 @@ mod tests {
             error: None,
             stale: false,
             last_successful_refresh: None,
+            health: crate::domain::health::assess_health(&status, None),
         }
     }
 

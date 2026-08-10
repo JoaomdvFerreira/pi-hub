@@ -141,6 +141,7 @@ mod tests {
             error: None,
             stale: false,
             last_successful_refresh: Some("2026-01-01T00:00:00Z".into()),
+            health: crate::domain::health::assess_health(&DeviceConnectionStatus::Online, None),
         }
     }
 

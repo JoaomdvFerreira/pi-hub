@@ -72,9 +72,11 @@ pub enum RemoteOperation {
     // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     DockerContainers,
+    Diagnostics,
 }
 
 pub const PROBE_COMMAND: &str = "printf 'PIHUB_OK'";
+pub const DIAGNOSTICS_COMMAND: &str = "printf 'PIHUB_DIAG_DOCKER='; command -v docker >/dev/null 2>&1 && printf 1 || printf 0; printf '\\nPIHUB_DIAG_TAILSCALE='; command -v tailscale >/dev/null 2>&1 && printf 1 || printf 0";
 
 /// Collects CPU usage (via a two-sample `/proc/stat` delta over a bounded
 /// interval, per spec section 12.2), memory (`/proc/meminfo`), disk usage
@@ -134,6 +136,25 @@ if [ -r /proc/meminfo ]; then
   [ -n "$mem_avail_kb" ] && printf 'PIHUB_MEMORY_AVAILABLE_BYTES=%s\n' "$((mem_avail_kb*1024))"
 fi
 
+if [ -r /proc/meminfo ]; then
+  swap_total_kb=$(awk '/^SwapTotal:/ {print $2}' /proc/meminfo)
+  swap_free_kb=$(awk '/^SwapFree:/ {print $2}' /proc/meminfo)
+  [ -n "$swap_total_kb" ] && printf 'PIHUB_SWAP_TOTAL_BYTES=%s\n' "$((swap_total_kb*1024))"
+  [ -n "$swap_free_kb" ] && printf 'PIHUB_SWAP_FREE_BYTES=%s\n' "$((swap_free_kb*1024))"
+fi
+
+freq_khz=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null)
+[ -n "$freq_khz" ] && printf 'PIHUB_CPU_FREQUENCY_MHZ=%s\n' "$((freq_khz/1000))"
+boot_time=$(awk '/^btime / {print $2}' /proc/stat 2>/dev/null)
+[ -n "$boot_time" ] && printf 'PIHUB_BOOT_TIMESTAMP=%s\n' "$boot_time"
+[ -e /var/run/reboot-required ] && printf 'PIHUB_REBOOT_REQUIRED=1\n' || printf 'PIHUB_REBOOT_REQUIRED=0\n'
+root_opts=$(findmnt -n -o OPTIONS / 2>/dev/null)
+[ -n "$root_opts" ] && case ",$root_opts," in *,ro,*) printf 'PIHUB_ROOT_FS_READ_ONLY=1\n' ;; *) printf 'PIHUB_ROOT_FS_READ_ONLY=0\n' ;; esac
+if command -v vcgencmd >/dev/null 2>&1; then
+  throttled=$(vcgencmd get_throttled 2>/dev/null)
+  [ -n "$throttled" ] && printf 'PIHUB_THROTTLED_RAW=%s\n' "$throttled"
+fi
+
 df_line=$(df -Pk / 2>/dev/null | awk 'NR==2')
 if [ -n "$df_line" ]; then
   set -- $df_line
@@ -172,6 +193,7 @@ impl RemoteOperation {
             RemoteOperation::Probe => Some(PROBE_COMMAND),
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
+            RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::SystemIdentity => None,
         }
     }

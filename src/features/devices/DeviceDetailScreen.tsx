@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ExternalLink, Loader2, RefreshCw, Settings, TerminalSquare } from "lucide-react";
+import { Activity, ArrowLeft, ExternalLink, Loader2, RefreshCw, Settings, TerminalSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useRouter } from "@/app/router";
-import { getDevice, openDeviceService, openDeviceTerminal } from "@/lib/tauri/devices";
+import { diagnoseDeviceConnection, getDevice, openDeviceService, openDeviceTerminal } from "@/lib/tauri/devices";
+import type { ConnectivityDiagnosticReport } from "@/types/snapshot";
+import { DiagnosticsList, HealthDetails, PowerThrottling } from "@/features/devices/HealthDiagnostics";
 import { refreshDevice } from "@/lib/tauri/monitoring";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
 import { useDeviceActivity } from "@/stores/useDeviceActivity";
@@ -73,6 +75,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
   const { openTerminal } = useTerminalSessions();
   const [openingExternalTerminal, setOpeningExternalTerminal] = useState(false);
   const [terminalError, setTerminalError] = useState<string | null>(null);
+  const [diagnostics, setDiagnostics] = useState<ConnectivityDiagnosticReport | null>(null);
+  const [diagnosing, setDiagnosing] = useState(false);
 
   const deviceIds = useMemo(() => [deviceId], [deviceId]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -128,6 +132,16 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
       // Reflected in the snapshot's connectionStatus/error, rendered below.
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function handleDiagnostics() {
+    if (!device) return;
+    setDiagnosing(true);
+    try {
+      setDiagnostics(await diagnoseDeviceConnection({ host: device.host, sshPort: device.sshPort, sshUsername: device.sshUsername }));
+    } finally {
+      setDiagnosing(false);
     }
   }
 
@@ -210,6 +224,9 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
         >
           {refreshing ? <Loader2 className="animate-spin" /> : <RefreshCw />}
         </Button>
+        <Button variant="outline" size="icon" className="size-[30px]" title="Run connection diagnostics" disabled={diagnosing} onClick={handleDiagnostics}>
+          {diagnosing ? <Loader2 className="animate-spin" /> : <Activity />}
+        </Button>
         <Button
           variant="outline"
           size="icon"
@@ -225,6 +242,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
 
       <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1.3fr_1fr]">
         <div className="flex flex-col gap-3.5">
+          {snapshot ? <HealthDetails health={snapshot.health} /> : null}
           <section className="rounded-lg border border-border bg-card p-3.5">
             <h2 className="mb-2.5 text-xs font-bold tracking-wide text-muted-foreground">
               GENERAL INFORMATION
@@ -313,7 +331,17 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
                 </b>
               </span>
             </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+              <span>Load: {metrics?.loadAverage1m ?? "-"} / {metrics?.loadAverage5m ?? "-"} / {metrics?.loadAverage15m ?? "-"}</span>
+              <span>CPU frequency: {metrics?.cpuFrequencyMhz !== undefined ? `${Math.round(metrics.cpuFrequencyMhz)} MHz` : "Unavailable"}</span>
+              <span>Swap: {metrics?.swapUsedBytes !== undefined && metrics?.swapTotalBytes !== undefined ? `${Math.round(metrics.swapUsedBytes / 1048576)} / ${Math.round(metrics.swapTotalBytes / 1048576)} MiB` : "Unavailable"}</span>
+              <span>Root filesystem: {metrics?.rootFilesystemReadOnly === undefined ? "Unavailable" : metrics.rootFilesystemReadOnly ? "Read-only" : "Read-write"}</span>
+              <span>Boot time: {metrics?.bootTimestamp !== undefined ? new Date(metrics.bootTimestamp * 1000).toLocaleString() : "Unavailable"}</span>
+              <span>Reboot required: {metrics?.rebootRequired === undefined ? "Unavailable" : metrics.rebootRequired ? "Yes" : "No"}</span>
+            </div>
           </section>
+
+          {snapshot ? <PowerThrottling health={snapshot.health} /> : null}
         </div>
 
         <section className="flex max-h-[340px] flex-col rounded-lg border border-border bg-card p-3.5">
@@ -343,6 +371,8 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           )}
         </section>
       </div>
+
+      {diagnostics ? <DiagnosticsList diagnostics={diagnostics} /> : null}
 
       <section className="rounded-lg border border-border bg-card p-3.5">
         <h2 className="mb-2.5 text-xs font-bold tracking-wide text-muted-foreground">
@@ -477,6 +507,7 @@ function InfoField({ label, value, mono }: { label: string; value: string; mono?
     </div>
   );
 }
+
 
 function BackButton({ onClick }: { onClick: () => void }) {
   return (
