@@ -357,19 +357,19 @@ export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetai
           </h2>
           {activity.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No activity observed yet this session.
+              No meaningful activity recorded for this device yet.
             </p>
           ) : (
             <div className="flex flex-col gap-2.5 overflow-y-auto">
-              {activity.map((entry, index) => (
-                <div key={`${entry.resourceId}-${entry.receivedAt}-${index}`} className="flex gap-2">
+              {activity.map((entry) => (
+                <div key={entry.id} className="flex gap-2">
                   <span className="mt-1.5 size-[7px] shrink-0 rounded-full bg-status-warning" />
                   <div>
                     <div className="text-[12.5px] leading-snug text-foreground/90">
-                      {entry.message}
+                      {entry.summary}
                     </div>
                     <div className="mt-0.5 text-[11px] text-muted-foreground">
-                      {formatRelativeTime(entry.receivedAt)}
+                      {formatRelativeTime(entry.timestamp)}
                     </div>
                   </div>
                 </div>
