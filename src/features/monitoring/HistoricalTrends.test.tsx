@@ -1,11 +1,20 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { HistoricalTrends } from "./HistoricalTrends";
 
 const { getHistoricalSeries } = vi.hoisted(() => ({ getHistoricalSeries: vi.fn() }));
 vi.mock("@/lib/tauri/monitoring", () => ({ getHistoricalSeries }));
 const trends = [{ label: "CPU usage", metric: "cpuUsagePercent" as const, unit: "%" }, { label: "Device health", metric: "deviceHealth" as const, unit: "" }];
+const productionCallers = [
+  ["device", undefined, [{ label: "CPU usage", metric: "cpuUsagePercent" as const, unit: "%" }, { label: "Memory usage", metric: "memoryUsagePercent" as const, unit: "%" }, { label: "Root filesystem", metric: "rootFilesystemUsagePercent" as const, unit: "%" }, { label: "Temperature", metric: "temperatureCelsius" as const, unit: "°C" }, { label: "Device health", metric: "deviceHealth" as const, unit: "" }]],
+  ["service", "service-1", [{ label: "Response time", metric: "responseTimeMs" as const, unit: " ms" }, { label: "Service health", metric: "serviceHealth" as const, unit: "" }]],
+  ["container", "container-1", [{ label: "CPU usage", metric: "containerCpuPercent" as const, unit: "%" }, { label: "Memory usage", metric: "containerMemoryPercent" as const, unit: "%" }]],
+] as const;
 describe("HistoricalTrends", () => {
+  beforeEach(() => { getHistoricalSeries.mockReset(); getHistoricalSeries.mockResolvedValue({ numericPoints: [], statePoints: [] }); });
+  afterEach(cleanup);
   it("shows numeric points, state transitions, and requests only the selected bounded range", async () => { getHistoricalSeries.mockImplementation((_d: string, _e: string, metric: string) => Promise.resolve(metric === "deviceHealth" ? { numericPoints: [], statePoints: [{ timestamp: "2026-08-10T00:00:00Z", state: "healthy" }] } : { numericPoints: [{ timestamp: "2026-08-10T00:00:00Z", value: 42, minimum: 40, maximum: 60 }], statePoints: [] })); render(<HistoricalTrends deviceId="device" trends={trends} />); await waitFor(() => expect(document.body.textContent).toContain("healthy")); expect(screen.getByText(/1 samples/)).toBeInTheDocument(); fireEvent.click(screen.getByRole("button", { name: "7d" })); await waitFor(() => expect(getHistoricalSeries).toHaveBeenLastCalledWith("device", undefined, "deviceHealth", "sevenDays")); });
   it("makes empty history explicit", async () => { getHistoricalSeries.mockResolvedValue({ numericPoints: [], statePoints: [] }); render(<HistoricalTrends deviceId="device" trends={[trends[0]]} />); expect(await screen.findByText("No historical samples in this range.")).toBeInTheDocument(); });
+  it.each(productionCallers)("does not re-query settled inline %s trend configuration after a parent rerender", async (_name, entityId, callerTrends) => { const renderCaller = () => <HistoricalTrends deviceId="device" entityId={entityId} trends={[...callerTrends]} />; const { rerender } = render(renderCaller()); await waitFor(() => expect(getHistoricalSeries).toHaveBeenCalledTimes(callerTrends.length)); rerender(renderCaller()); await new Promise((resolve) => setTimeout(resolve, 0)); expect(getHistoricalSeries).toHaveBeenCalledTimes(callerTrends.length); });
+  it("re-queries when the selected range, entity, or metric configuration changes", async () => { const serviceTrends = [{ label: "Response time", metric: "responseTimeMs" as const, unit: " ms" }]; const { rerender } = render(<HistoricalTrends deviceId="device" entityId="service-a" trends={[...serviceTrends]} />); await waitFor(() => expect(getHistoricalSeries).toHaveBeenCalledTimes(1)); fireEvent.click(screen.getByRole("button", { name: "7d" })); await waitFor(() => expect(getHistoricalSeries).toHaveBeenCalledTimes(2)); expect(getHistoricalSeries).toHaveBeenLastCalledWith("device", "service-a", "responseTimeMs", "sevenDays"); rerender(<HistoricalTrends deviceId="device" entityId="service-b" trends={[...serviceTrends]} />); await waitFor(() => expect(getHistoricalSeries).toHaveBeenCalledTimes(3)); expect(getHistoricalSeries).toHaveBeenLastCalledWith("device", "service-b", "responseTimeMs", "sevenDays"); rerender(<HistoricalTrends deviceId="device" entityId="service-b" trends={[...serviceTrends, { label: "Service health", metric: "serviceHealth" as const, unit: "" }]} />); await waitFor(() => expect(getHistoricalSeries).toHaveBeenCalledTimes(5)); });
 });
