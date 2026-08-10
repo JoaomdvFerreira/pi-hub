@@ -1,0 +1,13 @@
+{
+  "summary": "Added the closed, read-only M11 network visibility domain, parser, and fixed SSH collection operation.",
+  "completed": ["Typed interface, address, route, and DNS model", "Partial-record parser isolation", "Fixed read-only network operation"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/domain/device_visibility.rs", "src-tauri/src/infrastructure/parsers/visibility.rs", "src-tauri/src/infrastructure/ssh/operation.rs"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml visibility","result":"passed","summary":"Network visibility parser tests passed."}],
+  "acceptanceCriteria": [{"criterion":"Partial network output is isolated","result":"passed","evidence":"Malformed records yield parser warnings while valid interfaces, addresses, route, and DNS remain available."},{"criterion":"No command input from frontend","result":"passed","evidence":"Collection is a fixed RemoteOperation command with no user-controlled arguments."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["Live read-only device validation is deferred to milestone closure.", "Risk score: 18/100 (low): bounded read-only SSH collection with parser isolation."]
+}

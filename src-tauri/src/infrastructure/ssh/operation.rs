@@ -83,6 +83,7 @@ pub enum RemoteOperation {
     // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     DockerContainers,
+    NetworkVisibility,
     Diagnostics,
     RestartDevice,
     ShutdownDevice,
@@ -211,6 +212,22 @@ ids=$(docker ps -aq)
 docker stats --no-stream --format 'PIHUB_DOCKER_STATS={{json .}}' 2>/dev/null || true
 "#;
 
+/// Fixed, read-only network collection. It emits a compact protocol rather
+/// than exposing raw shell output to the frontend; unavailable sources simply
+/// omit records and never grant configuration capability.
+pub const NETWORK_VISIBILITY_COMMAND: &str = r#"
+ip -o link show 2>/dev/null | while IFS= read -r line; do
+  set -- $line; name=${2%:}; name=${name%@*}; state=unknown; mac=
+  case " $line " in *" state UP "*) state=up ;; *" state DOWN "*) state=down ;; esac
+  for word in $line; do case "$word" in [0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]) mac=$word ;; esac; done
+  [ -n "$name" ] && printf 'PIHUB_NET_LINK=%s|%s|%s\n' "$name" "$state" "$mac"
+done
+ip -o -4 addr show 2>/dev/null | awk '{sub(/:$/, "", $2); print "PIHUB_NET_ADDR=" $2 "|4|" $4}'
+ip -o -6 addr show 2>/dev/null | awk '{sub(/:$/, "", $2); print "PIHUB_NET_ADDR=" $2 "|6|" $4}'
+ip route show default 2>/dev/null | while read -r _ via gateway dev iface _; do [ -n "$iface" ] && printf 'PIHUB_NET_ROUTE=%s|%s\n' "$iface" "$gateway"; done
+awk '/^[[:space:]]*nameserver[[:space:]]+/ {print "PIHUB_NET_DNS=" $2}' /etc/resolv.conf 2>/dev/null
+"#;
+
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
     pub fn command(&self) -> Option<&'static str> {
@@ -218,6 +235,7 @@ impl RemoteOperation {
             RemoteOperation::Probe => Some(PROBE_COMMAND),
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
+            RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),

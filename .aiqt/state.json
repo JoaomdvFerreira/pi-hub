@@ -146,7 +146,7 @@
         "id": "M011",
         "title": "M11 - Network, Storage, and System Visibility",
         "objective": "Expose richer device-level network, storage, and system context.",
-        "status": "ready",
+        "status": "planned",
         "workUnitIds": [
           "WU043"
         ]
@@ -180,6 +180,19 @@
           "WU063",
           "WU064",
           "WU065"
+        ]
+      },
+      {
+        "id": "M015",
+        "title": "M11 — Network, Storage, and System Visibility",
+        "objective": "Expose read-only network, storage, and system context in Device Details.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU066",
+          "WU067",
+          "WU068",
+          "WU069",
+          "WU070"
         ]
       }
     ],
@@ -1679,10 +1692,18 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "replanned",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T10:20:56.284Z",
+        "replanReason": "Replace the M11 planning placeholder with the five approved implementation work units.",
+        "replacedByWorkUnitIds": [
+          "WU066",
+          "WU067",
+          "WU068",
+          "WU069",
+          "WU070"
+        ]
       },
       {
         "id": "WU044",
@@ -2407,6 +2428,169 @@
         ],
         "createdAt": "2026-08-10T09:35:13.675Z",
         "updatedAt": "2026-08-10T09:36:39.541Z"
+      },
+      {
+        "id": "WU066",
+        "milestoneId": "M015",
+        "title": "WU11-01 Network visibility",
+        "objective": "Collect and parse typed interfaces, addresses, routes, and DNS.",
+        "scope": [
+          "Interfaces",
+          "IPv4/IPv6",
+          "Routes",
+          "DNS"
+        ],
+        "outOfScope": [
+          "Network configuration",
+          "Scanning"
+        ],
+        "acceptanceCriteria": [
+          "Partial network output is isolated",
+          "No command input from frontend"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/domain/device_visibility.rs",
+          "src-tauri/src/infrastructure/parsers/visibility.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml visibility"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T10:20:56.284Z",
+        "updatedAt": "2026-08-10T10:23:51.309Z"
+      },
+      {
+        "id": "WU067",
+        "milestoneId": "M015",
+        "title": "WU11-02 Storage visibility",
+        "objective": "Collect and parse mounted filesystem capacity and access state.",
+        "scope": [
+          "Mounted filesystems",
+          "Capacity",
+          "Read-only state"
+        ],
+        "outOfScope": [
+          "Mounting",
+          "Filesystem writes"
+        ],
+        "acceptanceCriteria": [
+          "Root is identifiable",
+          "Pseudo mounts are filtered",
+          "Unknown capacity is not zero"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/parsers/visibility.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml visibility"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T10:20:56.284Z",
+        "updatedAt": "2026-08-10T10:20:56.284Z"
+      },
+      {
+        "id": "WU068",
+        "milestoneId": "M015",
+        "title": "WU11-03 System visibility",
+        "objective": "Collect typed OS and hardware identity context.",
+        "scope": [
+          "OS",
+          "Kernel",
+          "Architecture",
+          "CPU",
+          "Memory",
+          "Boot context"
+        ],
+        "outOfScope": [
+          "Invasive hardware probing"
+        ],
+        "acceptanceCriteria": [
+          "Pi and generic Linux data are supported",
+          "Optional fields remain optional"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/domain/device_visibility.rs",
+          "src-tauri/src/infrastructure/ssh/operation.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml visibility"
+        ],
+        "status": "ready",
+        "dependencies": [],
+        "createdAt": "2026-08-10T10:20:56.284Z",
+        "updatedAt": "2026-08-10T10:20:56.284Z"
+      },
+      {
+        "id": "WU069",
+        "milestoneId": "M015",
+        "title": "WU11-04 Device Details visibility",
+        "objective": "Render concise Network, Storage, and System sections.",
+        "scope": [
+          "Device Details UI",
+          "Unavailable states"
+        ],
+        "outOfScope": [
+          "Raw output UI"
+        ],
+        "acceptanceCriteria": [
+          "Populated and partial data are clear",
+          "No color-only meaning"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src/features/devices/DeviceVisibility.tsx",
+          "src/features/devices/DeviceDetailScreen.tsx"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-046",
+          "DEP-047",
+          "DEP-048"
+        ],
+        "createdAt": "2026-08-10T10:20:56.284Z",
+        "updatedAt": "2026-08-10T10:20:56.284Z"
+      },
+      {
+        "id": "WU070",
+        "milestoneId": "M015",
+        "title": "WU11-05 Integration and closure",
+        "objective": "Integrate bounded independent M11 refresh domains and closure evidence.",
+        "scope": [
+          "Refresh integration",
+          "Partial failures",
+          "Documentation"
+        ],
+        "outOfScope": [
+          "Historical monitoring",
+          "M13 documentation pass"
+        ],
+        "acceptanceCriteria": [
+          "M6–M10 remain intact",
+          "M12–M13 remain unstarted"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src/monitoring/refresh.rs",
+          "docs/milestones/m11-network-storage-system-visibility.md"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-049"
+        ],
+        "createdAt": "2026-08-10T10:20:56.284Z",
+        "updatedAt": "2026-08-10T10:20:56.284Z"
       }
     ],
     "dependencies": [
@@ -2724,6 +2908,34 @@
         "toId": "WU065",
         "type": "blocks",
         "reason": "UI exposes all service/device actions."
+      },
+      {
+        "id": "DEP-046",
+        "fromId": "WU066",
+        "toId": "WU069",
+        "type": "blocks",
+        "reason": "UI consumes network model."
+      },
+      {
+        "id": "DEP-047",
+        "fromId": "WU067",
+        "toId": "WU069",
+        "type": "blocks",
+        "reason": "UI consumes storage model."
+      },
+      {
+        "id": "DEP-048",
+        "fromId": "WU068",
+        "toId": "WU069",
+        "type": "blocks",
+        "reason": "UI consumes system model."
+      },
+      {
+        "id": "DEP-049",
+        "fromId": "WU069",
+        "toId": "WU070",
+        "type": "blocks",
+        "reason": "Closure follows integration."
       }
     ]
   },
@@ -5793,17 +6005,59 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T09:36:39.541Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T09:36:39.541Z"
+    },
+    {
+      "id": "C055",
+      "workUnitId": "WU066",
+      "packetId": "PKT-055",
+      "summary": "Added the closed, read-only M11 network visibility domain, parser, and fixed SSH collection operation.",
+      "completed": [
+        "Typed interface, address, route, and DNS model",
+        "Partial-record parser isolation",
+        "Fixed read-only network operation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/device_visibility.rs",
+        "src-tauri/src/infrastructure/parsers/visibility.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml visibility",
+          "result": "passed",
+          "summary": "Network visibility parser tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Partial network output is isolated",
+          "result": "passed",
+          "evidence": "Malformed records yield parser warnings while valid interfaces, addresses, route, and DNS remain available."
+        },
+        {
+          "criterion": "No command input from frontend",
+          "result": "passed",
+          "evidence": "Collection is a fixed RemoteOperation command with no user-controlled arguments."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:23:51.309Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-054",
-    "workUnitId": "WU065",
-    "milestoneId": "M014",
-    "createdAt": "2026-08-10T09:36:38.910Z",
+    "id": "PKT-055",
+    "workUnitId": "WU066",
+    "milestoneId": "M015",
+    "createdAt": "2026-08-10T10:21:07.722Z",
     "format": "markdown",
-    "contentHash": "sha256:3de6bda05ad586f1c671bef3398326d6d8573edca54af4bf0f238da127d7fa4a",
+    "contentHash": "sha256:4c15cb2546a03f40947797911ddd6e2c3acc5f66f9c7dce2f36f84e7c5635192",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -5822,7 +6076,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T09:36:39.541Z",
+  "lastUpdatedAt": "2026-08-10T10:23:51.309Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -7441,6 +7695,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T09:36:39.541Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C055",
+      "current": {
+        "observationId": "sha256:570e27c93854f77ff96084739f1a8a9fee9f131400657f72de4d18d7d76bcf43",
+        "checkpointId": "C055",
+        "workUnitId": "WU066",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:23:51.309Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:23:51.309Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:570e27c93854f77ff96084739f1a8a9fee9f131400657f72de4d18d7d76bcf43",
+          "checkpointId": "C055",
+          "workUnitId": "WU066",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:23:51.309Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:23:51.309Z"
         }
       ]
     }

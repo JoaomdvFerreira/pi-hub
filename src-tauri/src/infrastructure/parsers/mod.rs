@@ -6,3 +6,4 @@
 pub mod docker;
 pub mod key_value;
 pub mod metrics;
+pub mod visibility;
