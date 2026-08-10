@@ -186,7 +186,7 @@
         "id": "M015",
         "title": "M11 — Network, Storage, and System Visibility",
         "objective": "Expose read-only network, storage, and system context in Device Details.",
-        "status": "ready",
+        "status": "done",
         "workUnitIds": [
           "WU066",
           "WU067",
@@ -2585,12 +2585,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-049"
         ],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:31:37.672Z"
+        "updatedAt": "2026-08-10T10:33:22.424Z"
       }
     ],
     "dependencies": [
@@ -6184,17 +6184,65 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:31:37.672Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:31:37.672Z"
+    },
+    {
+      "id": "C059",
+      "workUnitId": "WU070",
+      "packetId": "PKT-059",
+      "summary": "Completed M11 network, storage, and system visibility with bounded independent refresh collection and closure validation.",
+      "completed": [
+        "Independent network, storage, and system refresh domains",
+        "Backward-compatible snapshot persistence",
+        "Device Details summaries and unavailable states",
+        "Approved M11 documentation",
+        "Canonical validation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/monitoring/refresh.rs",
+        "docs/milestones/m11-network-storage-system-visibility.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend test/build/lint, AIQT status, and diff check passed; lint has 4 existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M11 collection is bounded and failures are isolated",
+          "result": "passed",
+          "evidence": "Three fixed read-only operations use bounded timeouts and preserve other domain results on failure."
+        },
+        {
+          "criterion": "No historical storage or arbitrary command surface was introduced",
+          "result": "passed",
+          "evidence": "Visibility is embedded only in current snapshots and RemoteOperation remains a fixed closed catalogue."
+        },
+        {
+          "criterion": "M6–M10 remain intact and future milestones are not started",
+          "result": "passed",
+          "evidence": "Full Rust and frontend suites pass; only M015 Work Units were selected."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:33:22.424Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-058",
-    "workUnitId": "WU069",
+    "id": "PKT-059",
+    "workUnitId": "WU070",
     "milestoneId": "M015",
-    "createdAt": "2026-08-10T10:27:44.633Z",
+    "createdAt": "2026-08-10T10:31:47.011Z",
     "format": "markdown",
-    "contentHash": "sha256:bc4e24f01ac370482ad6eb64045132ae9f88bdd37125a9cc396c430c4d02362d",
+    "contentHash": "sha256:f6709daba7d78c64e6182b22a1e2aaceda651d65046b1b3fc0de8dc7ee6bfc1e",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6213,7 +6261,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:31:37.672Z",
+  "lastUpdatedAt": "2026-08-10T10:33:22.424Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -7952,6 +8000,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:31:37.672Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C059",
+      "current": {
+        "observationId": "sha256:ae4a5703c85595b7540778dce4e39905f8948c5343ce57751f30a65d3f20f12e",
+        "checkpointId": "C059",
+        "workUnitId": "WU070",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:33:22.424Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:33:22.424Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:ae4a5703c85595b7540778dce4e39905f8948c5343ce57751f30a65d3f20f12e",
+          "checkpointId": "C059",
+          "workUnitId": "WU070",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:33:22.424Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:33:22.424Z"
         }
       ]
     }
