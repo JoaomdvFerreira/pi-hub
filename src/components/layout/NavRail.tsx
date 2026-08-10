@@ -1,4 +1,4 @@
-import { LayoutDashboard, Grid2x2, Settings, Activity } from "lucide-react";
+import { LayoutDashboard, Grid2x2, Settings, Activity, BellRing } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, type Screen } from "@/app/router";
 
@@ -10,16 +10,18 @@ const NAV_ITEMS: {
   { target: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { target: "services", label: "Services", icon: Grid2x2 },
   { target: "activity", label: "Activity", icon: Activity },
+  { target: "alerts", label: "Alerts", icon: BellRing },
   { target: "globalSettings", label: "Settings", icon: Settings },
 ];
 
 export function NavRail() {
-  const { screen, goDashboard, goServices, goActivity, goGlobalSettings } = useRouter();
+  const { screen, goDashboard, goServices, goActivity, goAlerts, goGlobalSettings } = useRouter();
 
   const handlers: Record<string, () => void> = {
     dashboard: goDashboard,
     services: () => goServices(),
     activity: goActivity,
+    alerts: goAlerts,
     globalSettings: goGlobalSettings,
   };
 

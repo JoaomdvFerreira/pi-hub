@@ -5,6 +5,7 @@ import { relaunch } from "@tauri-apps/plugin-process";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -159,6 +160,22 @@ export function GlobalSettingsScreen() {
               ))}
             </div>
           </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="mb-1 text-xs font-bold tracking-wide text-muted-foreground">ALERT THRESHOLDS</h2>
+          <p className="mb-3 text-xs text-muted-foreground">Global defaults. Device settings can override these values.</p>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              ["cpuWarningPercent", "CPU warning (%)"], ["cpuCriticalPercent", "CPU critical (%)"],
+              ["memoryWarningPercent", "Memory warning (%)"], ["memoryCriticalPercent", "Memory critical (%)"],
+              ["diskWarningPercent", "Disk warning (%)"], ["diskCriticalPercent", "Disk critical (%)"],
+              ["temperatureWarningCelsius", "Temperature warning (C)"], ["temperatureCriticalCelsius", "Temperature critical (C)"],
+              ["serviceUnavailableFailures", "Service failures"], ["temperatureConsecutiveSamples", "Temperature samples"],
+            ] as const).map(([key, label]) => <div key={key} className="flex flex-col gap-1"><Label htmlFor={key} className="text-xs">{label}</Label><Input id={key} type="number" value={settings.thresholdPolicy[key]} onChange={(event) => persist({ ...settings, thresholdPolicy: { ...settings.thresholdPolicy, [key]: Number(event.target.value) } })} /></div>)}
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-3"><div className="flex flex-col gap-1"><Label htmlFor="cpu-duration" className="text-xs">CPU duration (seconds)</Label><Input id="cpu-duration" type="number" value={settings.thresholdPolicy.cpuDurationSeconds} onChange={(event) => persist({ ...settings, thresholdPolicy: { ...settings.thresholdPolicy, cpuDurationSeconds: Number(event.target.value) } })} /></div><div className="flex flex-col gap-1"><Label htmlFor="memory-duration" className="text-xs">Memory duration (seconds)</Label><Input id="memory-duration" type="number" value={settings.thresholdPolicy.memoryDurationSeconds} onChange={(event) => persist({ ...settings, thresholdPolicy: { ...settings.thresholdPolicy, memoryDurationSeconds: Number(event.target.value) } })} /></div></div>
+          <Button className="mt-3" variant="outline" size="sm" onClick={() => persist({ ...settings, thresholdPolicy: { cpuWarningPercent: 85, cpuCriticalPercent: 95, cpuDurationSeconds: 300, memoryWarningPercent: 90, memoryCriticalPercent: 95, memoryDurationSeconds: 300, diskWarningPercent: 85, diskCriticalPercent: 95, temperatureWarningCelsius: 70, temperatureCriticalCelsius: 80, temperatureConsecutiveSamples: 2, serviceUnavailableFailures: 3 } })}>Restore defaults</Button>
         </section>
 
         <section className="rounded-lg border border-border bg-card p-4">

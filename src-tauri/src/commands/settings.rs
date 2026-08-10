@@ -1,6 +1,6 @@
 use tauri::{AppHandle, Manager};
 
-use crate::domain::settings::AppSettings;
+use crate::domain::settings::{AppSettings, ThresholdPolicy, ThresholdPolicyOverrides};
 use crate::error::ApplicationError;
 use crate::platform::autostart;
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
@@ -58,5 +58,27 @@ pub fn save_app_settings(
         retryable: true,
     })?;
 
+    Ok(settings)
+}
+
+#[tauri::command]
+pub fn get_effective_threshold_policy(app: AppHandle, device_id: Option<String>) -> Result<ThresholdPolicy, ApplicationError> {
+    let settings = repository(&app)?.load();
+    Ok(device_id.as_deref().map(|id| settings.effective_threshold_policy(id)).unwrap_or(settings.threshold_policy))
+}
+
+#[tauri::command]
+pub fn save_device_threshold_overrides(app: AppHandle, device_id: String, overrides: ThresholdPolicyOverrides) -> Result<AppSettings, ApplicationError> {
+    let repo = repository(&app)?; let mut settings = repo.load();
+    overrides.apply_to(&settings.threshold_policy).map_err(|err| ApplicationError { code: "ValidationError".into(), message: err.0, remediation: Some("Adjust the thresholds to a valid ordered range.".into()), retryable: true })?;
+    settings.device_threshold_overrides.insert(device_id, overrides);
+    repo.save(&settings).map_err(|err| ApplicationError { code: "StorageError".into(), message: err.to_string(), remediation: Some("Check disk space and file permissions, then try again.".into()), retryable: true })?;
+    Ok(settings)
+}
+
+#[tauri::command]
+pub fn clear_device_threshold_overrides(app: AppHandle, device_id: String) -> Result<AppSettings, ApplicationError> {
+    let repo = repository(&app)?; let mut settings = repo.load(); settings.device_threshold_overrides.remove(&device_id);
+    repo.save(&settings).map_err(|err| ApplicationError { code: "StorageError".into(), message: err.to_string(), remediation: Some("Check disk space and file permissions, then try again.".into()), retryable: true })?;
     Ok(settings)
 }

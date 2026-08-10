@@ -1,0 +1,16 @@
+{
+  "milestones": [],
+  "workUnits": [
+    {"clientKey":"wu8-01","milestoneClientKey":"M008","title":"WU8-01 Alert domain, lifecycle, persistence, and deduplication","objective":"Persistent governed alert occurrences.","scope":["Lifecycle","Deduplication","Retention"],"outOfScope":["Force resolution"],"acceptanceCriteria":["Ongoing conditions deduplicate","Resolved conditions reoccur with new IDs"],"agentContextRefs":["project.objective"],"suggestedFiles":["src-tauri/src/domain/alert.rs","src-tauri/src/storage/alert_repository.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml"]},
+    {"clientKey":"wu8-02","milestoneClientKey":"M008","title":"WU8-02 Threshold policy and effective configuration","objective":"Validated global defaults and device overrides.","scope":["Defaults","Overrides","Validation"],"outOfScope":["Per-service overrides"],"acceptanceCriteria":["Overrides win","Invalid values are rejected"],"agentContextRefs":["project.objective"],"suggestedFiles":["src-tauri/src/domain/settings.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml"]},
+    {"clientKey":"wu8-03","milestoneClientKey":"M008","title":"WU8-03 Alert evaluation and signal integration","objective":"Evaluate M6 and M7 signals into alerts.","scope":["Health","Services","Volatile metrics"],"outOfScope":["M9 Docker expansion"],"acceptanceCriteria":["Recovery resolves matching alert","Service escalation reuses occurrence"],"agentContextRefs":["project.objective"],"suggestedFiles":["src-tauri/src/monitoring/alerts.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml"]},
+    {"clientKey":"wu8-04","milestoneClientKey":"M008","title":"WU8-04 Notification and Activity governance","objective":"Govern notification and Activity lifecycle transitions.","scope":["Notifications","Activity"],"outOfScope":["New providers"],"acceptanceCriteria":["No repeat notification spam","Activity records transitions"],"agentContextRefs":["project.objective"],"suggestedFiles":["src-tauri/src/monitoring/scheduler.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml"]},
+    {"clientKey":"wu8-05","milestoneClientKey":"M008","title":"WU8-05 Alert Center and threshold settings UI","objective":"Present alerts and threshold settings in the desktop UI.","scope":["Alert Center","Dashboard","Settings"],"outOfScope":["Force resolution"],"acceptanceCriteria":["Filters and acknowledgement work","Override state is visible"],"agentContextRefs":["project.objective"],"suggestedFiles":["src/features/alerts"],"validationCommands":["npm test","npm run build"]}
+  ],
+  "dependencies":[
+    {"fromClientKey":"wu8-01","toClientKey":"wu8-02","type":"blocks","reason":"Policy applies to persisted alerts."},
+    {"fromClientKey":"wu8-02","toClientKey":"wu8-03","type":"blocks","reason":"Evaluation needs effective policy."},
+    {"fromClientKey":"wu8-03","toClientKey":"wu8-04","type":"blocks","reason":"Notifications require transitions."},
+    {"fromClientKey":"wu8-04","toClientKey":"wu8-05","type":"blocks","reason":"UI consumes the completed contract."}
+  ]
+}

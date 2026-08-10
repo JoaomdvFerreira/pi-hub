@@ -1,0 +1,13 @@
+{
+  "summary": "Integrated the approved M8 milestone document, documentation navigation, and implementation plan.",
+  "completed": ["Added canonical M8 document", "Added README navigation", "Prepared five M8 Work Units"],
+  "notCompleted": [],
+  "filesChanged": ["docs/milestones/m8-alerts-and-threshold-governance.md", "README.md"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"aiqt status","result":"passed","summary":"Existing M6 and M7 history is valid."}],
+  "acceptanceCriteria": [{"criterion":"M8 planning is integrated","result":"passed","evidence":"Approved document is in docs/milestones."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["M9 through M13 remain planned/not started."]
+}
