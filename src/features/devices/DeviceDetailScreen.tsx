@@ -30,6 +30,7 @@ import {
   formatPorts,
 } from "@/lib/formatting/containerStatus";
 import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
+import { ContainerDetailDialog } from "@/features/containers/ContainerDetailDialog";
 import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
@@ -40,6 +41,7 @@ function isApplicationError(err: unknown): err is ApplicationError {
 
 interface DeviceDetailScreenProps {
   deviceId: string;
+  initialContainerId?: string;
 }
 
 interface MetricStatProps {
@@ -67,7 +69,7 @@ function MetricStat({ label, value, unit, colorClass, barClass }: MetricStatProp
   );
 }
 
-export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
+export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetailScreenProps) {
   const { goDashboard, goDeviceSettings } = useRouter();
   const [device, setDevice] = useState<Device | null | undefined>(undefined);
   const [refreshing, setRefreshing] = useState(false);
@@ -78,6 +80,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
   const [terminalError, setTerminalError] = useState<string | null>(null);
   const [diagnostics, setDiagnostics] = useState<ConnectivityDiagnosticReport | null>(null);
   const [diagnosing, setDiagnosing] = useState(false);
+  const [selectedContainerId, setSelectedContainerId] = useState<string | null>(initialContainerId ?? null);
 
   const deviceIds = useMemo(() => [deviceId], [deviceId]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -409,9 +412,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
               <tbody>
                 {containers.map((c) => (
                   <tr key={c.id} className="border-b border-border/50 last:border-b-0">
-                    <td className="max-w-[180px] truncate px-2 py-2 font-semibold text-foreground">
-                      {c.name}
-                    </td>
+                    <td className="max-w-[180px] truncate px-2 py-2 font-semibold text-foreground"><button type="button" className="hover:underline" onClick={() => setSelectedContainerId(c.id)}>{c.name}</button></td>
                     <td className={cn("px-2 py-2 font-semibold", containerStateColorClass(c.state))}>
                       <span className="flex items-center gap-1.5">
                         <span
@@ -450,6 +451,7 @@ export function DeviceDetailScreen({ deviceId }: DeviceDetailScreenProps) {
           </div>
         )}
       </section>
+      <ContainerDetailDialog deviceId={deviceId} container={containers.find((container) => container.id === selectedContainerId) ?? null} onOpenChange={(open) => { if (!open) setSelectedContainerId(null); }} services={device.services} />
 
       <section>
         <h2 className="mb-2.5 text-xs font-bold tracking-wide text-muted-foreground">

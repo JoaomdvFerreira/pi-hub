@@ -19,7 +19,7 @@ interface ServiceTile {
 }
 
 export function ServicesScreen({ deviceId }: ServicesScreenProps) {
-  const { goServices } = useRouter();
+  const { goServices, goContainer } = useRouter();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [openingKey, setOpeningKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -140,7 +140,7 @@ export function ServicesScreen({ deviceId }: ServicesScreenProps) {
                   {tile.service.url}
                 </div>
                 <ServiceHealthDetails health={health} />
-                {associatedContainer ? <p className="text-xs text-muted-foreground">Container: {associatedContainer}{associationMissing ? " (not currently found)" : ""}</p> : null}
+                {associatedContainer ? <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground"><span>Container: {associatedContainer}{associationMissing ? " (not currently found)" : ""}</span>{!associationMissing ? <button type="button" className="text-primary hover:underline" onClick={() => goContainer(tile.device.id, containers.find((container) => container.name === associatedContainer)!.id)}>View container</button> : null}</div> : null}
                 <button
                   type="button"
                   disabled={!tile.service.enabled || openingKey === key}

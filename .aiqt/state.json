@@ -123,9 +123,14 @@
         "id": "M009",
         "title": "M9 - Docker Operational Visibility",
         "objective": "Deepen bounded Docker operational visibility.",
-        "status": "ready",
+        "status": "done",
         "workUnitIds": [
-          "WU041"
+          "WU041",
+          "WU056",
+          "WU057",
+          "WU058",
+          "WU059",
+          "WU060"
         ]
       },
       {
@@ -1601,10 +1606,10 @@
         "validationCommands": [
           "git status"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-10T06:43:19.193Z",
-        "updatedAt": "2026-08-10T06:43:19.193Z"
+        "updatedAt": "2026-08-10T08:46:05.077Z"
       },
       {
         "id": "WU042",
@@ -2036,6 +2041,177 @@
         ],
         "createdAt": "2026-08-10T08:04:24.537Z",
         "updatedAt": "2026-08-10T08:06:06.636Z"
+      },
+      {
+        "id": "WU056",
+        "milestoneId": "M009",
+        "title": "WU9-01 Extended Docker/container operational model",
+        "objective": "Collect and normalize bounded container inspection metadata.",
+        "scope": [
+          "Runtime and health state",
+          "Identity, restart policy, ports, mounts, networks, labels",
+          "Docker availability classification"
+        ],
+        "outOfScope": [
+          "Docker administration beyond existing lifecycle controls",
+          "Environment variables"
+        ],
+        "acceptanceCriteria": [
+          "Richer states and health are distinguishable",
+          "Secret-like labels are redacted",
+          "Malformed metadata is isolated"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/domain/docker_container.rs",
+          "src-tauri/src/infrastructure/parsers/docker.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-10T08:45:49.248Z",
+        "updatedAt": "2026-08-10T08:57:48.672Z"
+      },
+      {
+        "id": "WU057",
+        "milestoneId": "M009",
+        "title": "WU9-02 Current container resource metrics",
+        "objective": "Add bounded point-in-time CPU and memory metrics.",
+        "scope": [
+          "One bounded multi-container stats operation",
+          "Partial metrics parsing"
+        ],
+        "outOfScope": [
+          "Historical metrics"
+        ],
+        "acceptanceCriteria": [
+          "Running container stats are available when supported",
+          "Missing or malformed stats do not remove metadata"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/infrastructure/parsers/docker.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-036"
+        ],
+        "createdAt": "2026-08-10T08:45:49.248Z",
+        "updatedAt": "2026-08-10T08:58:01.320Z"
+      },
+      {
+        "id": "WU058",
+        "milestoneId": "M009",
+        "title": "WU9-03 Bounded container logs",
+        "objective": "Provide safe on-demand recent container logs.",
+        "scope": [
+          "100/500 line and 15m/1h modes",
+          "512 KiB response cap",
+          "Typed errors"
+        ],
+        "outOfScope": [
+          "Streaming",
+          "Persistence",
+          "Arbitrary Docker commands"
+        ],
+        "acceptanceCriteria": [
+          "Backend enforces request and output bounds",
+          "Log failures are classified"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/containers.rs",
+          "src-tauri/src/infrastructure/ssh/operation.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-037"
+        ],
+        "createdAt": "2026-08-10T08:45:49.248Z",
+        "updatedAt": "2026-08-10T08:59:20.172Z"
+      },
+      {
+        "id": "WU059",
+        "milestoneId": "M009",
+        "title": "WU9-04 Lifecycle action hardening and Activity evidence",
+        "objective": "Verify lifecycle actions and record concise evidence.",
+        "scope": [
+          "Duplicate-action prevention",
+          "Post-action verification",
+          "Activity events"
+        ],
+        "outOfScope": [
+          "Pause/unpause unless supported cleanly"
+        ],
+        "acceptanceCriteria": [
+          "Actions are state-aware and verified",
+          "Failures and verification mismatches are explicit"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/src/commands/containers.rs"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-038"
+        ],
+        "createdAt": "2026-08-10T08:45:49.248Z",
+        "updatedAt": "2026-08-10T08:59:41.958Z"
+      },
+      {
+        "id": "WU060",
+        "milestoneId": "M009",
+        "title": "WU9-05 Container detail and operational UI",
+        "objective": "Expose details, logs, actions, and service context in the established UI.",
+        "scope": [
+          "Container detail",
+          "Service navigation",
+          "Action progress"
+        ],
+        "outOfScope": [
+          "Portainer-like administration"
+        ],
+        "acceptanceCriteria": [
+          "List remains scan-friendly",
+          "Detail exposes bounded operational data",
+          "Associated services are navigable"
+        ],
+        "agentContextRefs": [
+          "context.architectureNotes"
+        ],
+        "suggestedFiles": [
+          "src/features/containers",
+          "src/features/devices/DeviceDetailScreen.tsx"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-039"
+        ],
+        "createdAt": "2026-08-10T08:45:49.248Z",
+        "updatedAt": "2026-08-10T09:00:29.990Z"
       }
     ],
     "dependencies": [
@@ -2283,6 +2459,34 @@
         "toId": "WU055",
         "type": "blocks",
         "reason": "UI consumes the completed contract."
+      },
+      {
+        "id": "DEP-036",
+        "fromId": "WU056",
+        "toId": "WU057",
+        "type": "blocks",
+        "reason": "Stats enrich the inspection model."
+      },
+      {
+        "id": "DEP-037",
+        "fromId": "WU057",
+        "toId": "WU058",
+        "type": "blocks",
+        "reason": "The bounded Docker operation contract precedes logs."
+      },
+      {
+        "id": "DEP-038",
+        "fromId": "WU058",
+        "toId": "WU059",
+        "type": "blocks",
+        "reason": "Actions reuse the typed Docker boundary."
+      },
+      {
+        "id": "DEP-039",
+        "fromId": "WU059",
+        "toId": "WU060",
+        "type": "blocks",
+        "reason": "UI consumes completed operational contracts."
       }
     ]
   },
@@ -4769,17 +4973,300 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T08:06:06.636Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:06:06.636Z"
+    },
+    {
+      "id": "C044",
+      "workUnitId": "WU041",
+      "packetId": "PKT-044",
+      "summary": "Integrated the approved M9 Docker Operational Visibility milestone document and reconciled its implementation work units in the existing M9 AIQT milestone.",
+      "completed": [
+        "Verified M8 merged into main",
+        "Created the M9 milestone branch",
+        "Added canonical approved milestone document",
+        "Prepared five M9 implementation work units"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m9-docker-operational-visibility.md",
+        ".aiqt/inputs/m9-work-units.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "Existing M1-M8 history remains valid before M9 implementation."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M9 planning is integrated",
+          "result": "passed",
+          "evidence": "Approved source document is copied byte-for-byte into docs/milestones and implementation work units are registered through AIQT."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:46:05.077Z"
+    },
+    {
+      "id": "C045",
+      "workUnitId": "WU056",
+      "packetId": "PKT-045",
+      "summary": "Extended the Docker snapshot contract with rich runtime state, inspection metadata, bounded/redacted labels, and current multi-container resource usage while retaining Docker failure isolation from device connectivity.",
+      "completed": [
+        "Added Created and Removing runtime states",
+        "Collected bounded inspect metadata without environment variables",
+        "Added redacted bounded labels, mounts, networks, restart data, and image IDs",
+        "Added single-call Docker stats parsing with partial-data isolation"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/docker_container.rs",
+        "src-tauri/src/infrastructure/parsers/docker.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/monitoring/refresh.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml docker",
+          "result": "passed",
+          "summary": "30 Docker-related Rust tests passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Richer states and health are distinguishable",
+          "result": "passed",
+          "evidence": "Created, running, paused, restarting, exited, dead, removing, and health states are serialized separately."
+        },
+        {
+          "criterion": "Secret-like labels are redacted",
+          "result": "passed",
+          "evidence": "Parser test confirms api_key and password labels return [redacted]."
+        },
+        {
+          "criterion": "Malformed metadata is isolated",
+          "result": "passed",
+          "evidence": "Per-line Docker ps, inspect, and stats parsing preserves unrelated containers and emits warnings."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:57:48.672Z"
+    },
+    {
+      "id": "C046",
+      "workUnitId": "WU057",
+      "packetId": "PKT-046",
+      "summary": "Added a bounded single Docker stats collection to enrich running containers with current CPU and memory usage without treating unavailable or malformed stats as zero.",
+      "completed": [
+        "Added one docker stats --no-stream collection for all running containers",
+        "Parsed CPU, memory used, limit, and percentage",
+        "Preserved container metadata when stats are absent or malformed"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/infrastructure/parsers/docker.rs",
+        "src-tauri/src/domain/docker_container.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml docker",
+          "result": "passed",
+          "summary": "30 Docker-related Rust tests passed, including multi-container stats parsing."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Running container stats are available when supported",
+          "result": "passed",
+          "evidence": "Stats parser attaches CPU and memory data to matching container IDs."
+        },
+        {
+          "criterion": "Missing or malformed stats do not remove metadata",
+          "result": "passed",
+          "evidence": "Malformed/unknown stats are ignored per container; metadata remains available."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:58:01.320Z"
+    },
+    {
+      "id": "C047",
+      "workUnitId": "WU058",
+      "packetId": "PKT-047",
+      "summary": "Delivered typed on-demand bounded container logs with four fixed modes, a ten-second SSH timeout, 512 KiB UTF-8-safe response truncation, and no persistence into Activity or alerts.",
+      "completed": [
+        "Added closed log-mode enum",
+        "Added dedicated Tauri log command",
+        "Enforced 512 KiB return cap",
+        "Added detail UI log controls"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/containers.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src/lib/tauri/containers.ts",
+        "src/features/containers/ContainerDetailDialog.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml containers::tests",
+          "result": "passed",
+          "summary": "UTF-8-safe 512 KiB truncation test passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Container detail/log UI typechecks and builds."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Backend enforces request and output bounds",
+          "result": "passed",
+          "evidence": "Closed enum only permits four approved modes; output is hard-capped at 512 KiB."
+        },
+        {
+          "criterion": "Log failures are classified",
+          "result": "passed",
+          "evidence": "SSH errors map through the established ApplicationError codes."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:59:20.172Z"
+    },
+    {
+      "id": "C048",
+      "workUnitId": "WU059",
+      "packetId": "PKT-048",
+      "summary": "Hardened Start, Stop, and Restart with per-container duplicate prevention, state-aware UI controls, post-command refresh verification, and concise non-sensitive Activity evidence.",
+      "completed": [
+        "Serialized conflicting actions for each device/container pair",
+        "Added in-progress UI behavior",
+        "Refreshed after command success before reporting completion",
+        "Recorded requested, completed, failed, and verification-failed Activity events"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/containers.rs",
+        "src/features/devices/ContainerActionsCell.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml docker",
+          "result": "passed",
+          "summary": "Docker command validation and parser suite passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "State-aware action UI builds successfully."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Actions are state-aware and verified",
+          "result": "passed",
+          "evidence": "UI only exposes applicable actions and backend runs refresh_one after a successful command."
+        },
+        {
+          "criterion": "Failures and verification mismatches are explicit",
+          "result": "passed",
+          "evidence": "ActionConflict and PostActionVerificationFailed map to user-presentable ApplicationErrors; Activity records concise outcome evidence."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T08:59:41.958Z"
+    },
+    {
+      "id": "C049",
+      "workUnitId": "WU060",
+      "packetId": "PKT-049",
+      "summary": "Added a scan-friendly Docker detail surface with metadata sections, on-demand bounded logs, action progress, and direct navigation from registered services to their associated container.",
+      "completed": [
+        "Added container detail dialog",
+        "Kept overview table concise",
+        "Added bounded log controls",
+        "Made service associations navigable"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src/features/containers/ContainerDetailDialog.tsx",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/services/ServicesScreen.tsx",
+        "src/app/router.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "8 frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production frontend build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "List remains scan-friendly",
+          "result": "passed",
+          "evidence": "Ports, mounts, networks, labels, and logs are restricted to detail."
+        },
+        {
+          "criterion": "Detail exposes bounded operational data",
+          "result": "passed",
+          "evidence": "Detail includes overview, ports, storage, networks, labels, services, and on-demand logs."
+        },
+        {
+          "criterion": "Associated services are navigable",
+          "result": "passed",
+          "evidence": "Service tiles provide View container for a present manual association; missing associations remain visibly missing."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T09:00:29.990Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-043",
-    "workUnitId": "WU055",
-    "milestoneId": "M008",
-    "createdAt": "2026-08-10T08:06:05.672Z",
+    "id": "PKT-049",
+    "workUnitId": "WU060",
+    "milestoneId": "M009",
+    "createdAt": "2026-08-10T08:59:42.575Z",
     "format": "markdown",
-    "contentHash": "sha256:096b620d1fd901db10cc75ef76fd3b370edba4ce32ae3bc7f65aca14d6dd88f3",
+    "contentHash": "sha256:add29c86055911a5bc010d377943369b673365652092873be9a764a7859e3674",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -4787,20 +5274,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T08:06:06.636Z",
+  "lastUpdatedAt": "2026-08-10T09:00:29.990Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -6089,6 +6574,186 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T08:06:06.636Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C044",
+      "current": {
+        "observationId": "sha256:e7a9c6e32b16928169f23ebe72893ea41958b92bfd908c11bff979c874e8c243",
+        "checkpointId": "C044",
+        "workUnitId": "WU041",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:46:05.077Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:46:05.077Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:e7a9c6e32b16928169f23ebe72893ea41958b92bfd908c11bff979c874e8c243",
+          "checkpointId": "C044",
+          "workUnitId": "WU041",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:46:05.077Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:46:05.077Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C045",
+      "current": {
+        "observationId": "sha256:1dde5df7469a65515f031ff56ee896134d06ddbd3760369b9b5d810cee25d888",
+        "checkpointId": "C045",
+        "workUnitId": "WU056",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:57:48.672Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:57:48.672Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:1dde5df7469a65515f031ff56ee896134d06ddbd3760369b9b5d810cee25d888",
+          "checkpointId": "C045",
+          "workUnitId": "WU056",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:57:48.672Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:57:48.672Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C046",
+      "current": {
+        "observationId": "sha256:7088a7bd0422905ee02131694310ca49bd49b594c2504e9d3fc325bce0b242bd",
+        "checkpointId": "C046",
+        "workUnitId": "WU057",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:58:01.320Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:58:01.320Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:7088a7bd0422905ee02131694310ca49bd49b594c2504e9d3fc325bce0b242bd",
+          "checkpointId": "C046",
+          "workUnitId": "WU057",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:58:01.320Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:58:01.320Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C047",
+      "current": {
+        "observationId": "sha256:2a830802cab58dec9a5fa705f2791a3afb788151d5691f18fb0e9ae1e728570b",
+        "checkpointId": "C047",
+        "workUnitId": "WU058",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:59:20.172Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:59:20.172Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:2a830802cab58dec9a5fa705f2791a3afb788151d5691f18fb0e9ae1e728570b",
+          "checkpointId": "C047",
+          "workUnitId": "WU058",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:59:20.172Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:59:20.172Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C048",
+      "current": {
+        "observationId": "sha256:a7fb90bbfd38bca88e34af5a772bee63c839738edfe79f0edb044bd98692e7f7",
+        "checkpointId": "C048",
+        "workUnitId": "WU059",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T08:59:41.958Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T08:59:41.958Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a7fb90bbfd38bca88e34af5a772bee63c839738edfe79f0edb044bd98692e7f7",
+          "checkpointId": "C048",
+          "workUnitId": "WU059",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T08:59:41.958Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T08:59:41.958Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C049",
+      "current": {
+        "observationId": "sha256:5c19766b9bb7cd04a7ebd72197cc66100b3194ec7708ca4888e656989ad09883",
+        "checkpointId": "C049",
+        "workUnitId": "WU060",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T09:00:29.990Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T09:00:29.990Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:5c19766b9bb7cd04a7ebd72197cc66100b3194ec7708ca4888e656989ad09883",
+          "checkpointId": "C049",
+          "workUnitId": "WU060",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T09:00:29.990Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T09:00:29.990Z"
         }
       ]
     }

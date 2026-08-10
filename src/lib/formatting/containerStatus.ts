@@ -1,21 +1,25 @@
 import type { DockerContainerState, DockerHealthStatus } from "@/types/snapshot";
 
 const STATE_LABELS: Record<DockerContainerState, string> = {
+  created: "Created",
   running: "Running",
   stopped: "Stopped",
   exited: "Exited",
   restarting: "Restarting",
   paused: "Paused",
   dead: "Dead",
+  removing: "Removing",
   unknown: "Unknown",
 };
 
 /** Tailwind text-color classes matching the status tokens in src/globals.css. */
 const STATE_COLOR_CLASSES: Record<DockerContainerState, string> = {
+  created: "text-muted-foreground",
   running: "text-status-healthy",
   stopped: "text-status-offline",
   exited: "text-status-offline",
   dead: "text-status-offline",
+  removing: "text-status-warning",
   restarting: "text-status-warning",
   paused: "text-status-warning",
   unknown: "text-muted-foreground",

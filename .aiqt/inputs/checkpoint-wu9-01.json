@@ -1,0 +1,13 @@
+{
+  "summary": "Extended the Docker snapshot contract with rich runtime state, inspection metadata, bounded/redacted labels, and current multi-container resource usage while retaining Docker failure isolation from device connectivity.",
+  "completed": ["Added Created and Removing runtime states", "Collected bounded inspect metadata without environment variables", "Added redacted bounded labels, mounts, networks, restart data, and image IDs", "Added single-call Docker stats parsing with partial-data isolation"],
+  "notCompleted": [],
+  "filesChanged": ["src-tauri/src/domain/docker_container.rs", "src-tauri/src/infrastructure/parsers/docker.rs", "src-tauri/src/infrastructure/ssh/operation.rs", "src-tauri/src/monitoring/refresh.rs"],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [{"command":"cargo test --manifest-path src-tauri/Cargo.toml docker","result":"passed","summary":"30 Docker-related Rust tests passed."}],
+  "acceptanceCriteria": [{"criterion":"Richer states and health are distinguishable","result":"passed","evidence":"Created, running, paused, restarting, exited, dead, removing, and health states are serialized separately."},{"criterion":"Secret-like labels are redacted","result":"passed","evidence":"Parser test confirms api_key and password labels return [redacted]."},{"criterion":"Malformed metadata is isolated","result":"passed","evidence":"Per-line Docker ps, inspect, and stats parsing preserves unrelated containers and emits warnings."}],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": ["M10-M13 remain planned/not started. Live Docker validation remains pending; no disruptive operation was executed."]
+}

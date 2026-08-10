@@ -37,6 +37,9 @@ export function AppShell() {
         {screen.name === "device" && (
           <DeviceDetailScreen key={screen.deviceId} deviceId={screen.deviceId} />
         )}
+        {screen.name === "container" && (
+          <DeviceDetailScreen key={`${screen.deviceId}:${screen.containerId}`} deviceId={screen.deviceId} initialContainerId={screen.containerId} />
+        )}
         {screen.name === "deviceSettings" && (
           <DeviceSettingsScreen deviceId={screen.deviceId} />
         )}
