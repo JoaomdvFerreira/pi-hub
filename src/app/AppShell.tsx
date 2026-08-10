@@ -2,6 +2,7 @@ import { NavRail } from "@/components/layout/NavRail";
 import { useRouter } from "@/app/router";
 import { DashboardScreen } from "@/features/dashboard/DashboardScreen";
 import { ServicesScreen } from "@/features/services/ServicesScreen";
+import { ActivityScreen } from "@/features/activity/ActivityScreen";
 import { GlobalSettingsScreen } from "@/features/settings/GlobalSettingsScreen";
 import { AddDeviceScreen } from "@/features/devices/AddDeviceScreen";
 import { DeviceDetailScreen } from "@/features/devices/DeviceDetailScreen";
@@ -29,6 +30,7 @@ export function AppShell() {
         {screen.name === "services" && (
           <ServicesScreen deviceId={screen.deviceId} />
         )}
+        {screen.name === "activity" && <ActivityScreen />}
         {screen.name === "globalSettings" && <GlobalSettingsScreen />}
         {screen.name === "device" && (
           <DeviceDetailScreen key={screen.deviceId} deviceId={screen.deviceId} />

@@ -65,6 +65,9 @@ export type DeviceHealthState = "healthy" | "warning" | "critical" | "unknown";
 export interface HealthReason { code: string; severity: "info" | "warning" | "critical"; summary: string; }
 export interface RaspberryPiPowerState { raw?: string; undervoltageNow?: boolean; undervoltageSinceBoot?: boolean; frequencyCappedNow?: boolean; frequencyCappedSinceBoot?: boolean; throttledNow?: boolean; throttledSinceBoot?: boolean; softTemperatureLimitNow?: boolean; softTemperatureLimitSinceBoot?: boolean; }
 export interface DeviceHealthAssessment { state: DeviceHealthState; reasons: HealthReason[]; power: RaspberryPiPowerState; }
+export type ServiceHealthState = "unknown" | "healthy" | "degraded" | "unavailable";
+export type ServiceFailureReason = "http_status" | "connection" | "timeout" | "tls" | "redirect" | "invalid_url" | "unknown";
+export interface ServiceHealthRecord { serviceId: string; state: ServiceHealthState; consecutiveFailures: number; latestHttpStatus?: number; latestResponseTimeMs?: number; lastCheckedAt?: string; lastSuccessfulCheckAt?: string; latestFailureReason?: ServiceFailureReason; }
 export interface DiagnosticCheck { code: string; status: "passed" | "warning" | "failed" | "skipped"; summary: string; detail?: string; durationMs?: number; }
 export interface ConnectivityDiagnosticReport { checks: DiagnosticCheck[]; durationMs: number; }
 
@@ -86,4 +89,5 @@ export interface DeviceSnapshot {
   stale: boolean;
   lastSuccessfulRefresh?: string;
   health: DeviceHealthAssessment;
+  serviceHealth: Record<string, ServiceHealthRecord>;
 }

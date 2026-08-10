@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { HardDrive, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { Activity, HardDrive, Loader2, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,20 +15,23 @@ import {
 import { EmptyState } from "@/components/layout/EmptyState";
 import { useRouter } from "@/app/router";
 import { deleteDevice, getDevices } from "@/lib/tauri/devices";
-import { refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
+import { getActivity, refreshAllDevices, refreshDevice } from "@/lib/tauri/monitoring";
+import type { ActivityEvent } from "@/types/activity";
+import { formatRelativeTime } from "@/lib/formatting/relativeTime";
 import { useDeviceSnapshots } from "@/stores/useDeviceSnapshots";
 import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import { DeviceCard } from "@/features/dashboard/DeviceCard";
 import type { Device } from "@/types/device";
 
 export function DashboardScreen() {
-  const { goAddDevice, goDevice, goDeviceSettings, goServices } = useRouter();
+  const { goAddDevice, goActivity, goDevice, goDeviceSettings, goServices } = useRouter();
   const { closeTerminal } = useTerminalSessions();
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [refreshingIds, setRefreshingIds] = useState<Set<string>>(new Set());
   const [refreshingAll, setRefreshingAll] = useState(false);
+  const [activity, setActivity] = useState<ActivityEvent[]>([]);
 
   const deviceIds = useMemo(() => (devices ?? []).map((d) => d.id), [devices]);
   const snapshots = useDeviceSnapshots(deviceIds);
@@ -49,6 +52,7 @@ export function DashboardScreen() {
     // apply here.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     load();
+    getActivity().then((events) => setActivity(events.slice(0, 10))).catch(() => undefined);
   }, [load]);
 
   async function handleDelete(id: string) {
@@ -190,6 +194,10 @@ export function DashboardScreen() {
           ))}
         </div>
       )}
+      <section className="rounded-lg border border-border bg-card p-3.5">
+        <div className="mb-2 flex items-center justify-between"><h2 className="text-xs font-bold tracking-wide text-muted-foreground">RECENT ACTIVITY</h2><Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={goActivity}>View all</Button></div>
+        {activity.length === 0 ? <p className="text-sm text-muted-foreground">No meaningful activity recorded yet.</p> : <div className="flex flex-col gap-2">{activity.map((event) => <div key={event.id} className="flex gap-2 text-sm"><Activity className="mt-0.5 size-3.5 shrink-0 text-primary" /><span className="min-w-0 flex-1 truncate">{event.summary}</span><span className="shrink-0 text-xs text-muted-foreground">{formatRelativeTime(event.timestamp)}</span></div>)}</div>}
+      </section>
     </div>
   );
 }
