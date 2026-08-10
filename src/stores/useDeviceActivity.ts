@@ -1,24 +1,37 @@
 import { useEffect, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import { getDeviceActivity } from "@/lib/tauri/monitoring";
 import type { ActivityEvent } from "@/types/activity";
+
+interface DeviceActivityState {
+  deviceId: string;
+  entries: ActivityEvent[];
+}
 
 /**
  * Persisted recent-activity feed for one device. Device filtering happens in
  * the backend against ActivityEvent.deviceId, retaining device isolation.
  */
 export function useDeviceActivity(deviceId: string): ActivityEvent[] {
-  const [entries, setEntries] = useState<ActivityEvent[]>([]);
+  const [activity, setActivity] = useState<DeviceActivityState>({ deviceId, entries: [] });
 
   useEffect(() => {
     let active = true;
-    setEntries([]);
-    getDeviceActivity(deviceId).then((events) => {
-      if (active) setEntries(events);
-    }).catch(() => {
-      if (active) setEntries([]);
+    let latestRequest = 0;
+    const load = () => {
+      const request = ++latestRequest;
+      getDeviceActivity(deviceId).then((entries) => {
+        if (active && request === latestRequest) setActivity({ deviceId, entries });
+      }).catch(() => {
+        if (active && request === latestRequest) setActivity({ deviceId, entries: [] });
+      });
+    };
+    load();
+    const unlistenPromise = listen<string>("monitoring://refresh-completed", (event) => {
+      if (event.payload === deviceId) load();
     });
-    return () => { active = false; };
+    return () => { active = false; unlistenPromise.then((unlisten) => unlisten()); };
   }, [deviceId]);
 
-  return entries;
+  return activity.deviceId === deviceId ? activity.entries : [];
 }
