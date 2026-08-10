@@ -32,6 +32,7 @@ import {
 import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
 import { ContainerDetailDialog } from "@/features/containers/ContainerDetailDialog";
 import { DeviceAdministration } from "@/features/devices/DeviceAdministration";
+import { DeviceVisibility } from "@/features/devices/DeviceVisibility";
 import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
@@ -378,6 +379,8 @@ export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetai
       </div>
 
       {diagnostics ? <DiagnosticsList diagnostics={diagnostics} /> : null}
+
+      <DeviceVisibility network={snapshot?.networkVisibility} storage={snapshot?.storageVisibility} system={snapshot?.systemVisibility} />
 
       <DeviceAdministration deviceId={deviceId} deviceName={device.name} />
 

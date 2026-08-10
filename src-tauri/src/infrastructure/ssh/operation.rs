@@ -83,6 +83,9 @@ pub enum RemoteOperation {
     // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     DockerContainers,
+    NetworkVisibility,
+    StorageVisibility,
+    SystemVisibility,
     Diagnostics,
     RestartDevice,
     ShutdownDevice,
@@ -211,6 +214,41 @@ ids=$(docker ps -aq)
 docker stats --no-stream --format 'PIHUB_DOCKER_STATS={{json .}}' 2>/dev/null || true
 "#;
 
+/// Fixed, read-only network collection. It emits a compact protocol rather
+/// than exposing raw shell output to the frontend; unavailable sources simply
+/// omit records and never grant configuration capability.
+pub const NETWORK_VISIBILITY_COMMAND: &str = r#"
+ip -o link show 2>/dev/null | while IFS= read -r line; do
+  set -- $line; name=${2%:}; name=${name%@*}; state=unknown; mac=
+  case " $line " in *" state UP "*) state=up ;; *" state DOWN "*) state=down ;; esac
+  for word in $line; do case "$word" in [0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]:[0-9A-Fa-f][0-9A-Fa-f]) mac=$word ;; esac; done
+  [ -n "$name" ] && printf 'PIHUB_NET_LINK=%s|%s|%s\n' "$name" "$state" "$mac"
+done
+ip -o -4 addr show 2>/dev/null | awk '{sub(/:$/, "", $2); print "PIHUB_NET_ADDR=" $2 "|4|" $4}'
+ip -o -6 addr show 2>/dev/null | awk '{sub(/:$/, "", $2); print "PIHUB_NET_ADDR=" $2 "|6|" $4}'
+ip route show default 2>/dev/null | while read -r _ via gateway dev iface _; do [ -n "$iface" ] && printf 'PIHUB_NET_ROUTE=%s|%s\n' "$iface" "$gateway"; done
+awk '/^[[:space:]]*nameserver[[:space:]]+/ {print "PIHUB_NET_DNS=" $2}' /etc/resolv.conf 2>/dev/null
+"#;
+
+pub const STORAGE_VISIBILITY_COMMAND: &str = r#"
+findmnt -rn -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null | while IFS=' ' read -r source target fstype options; do
+  [ -n "$target" ] || continue
+  df -P -B1 "$target" 2>/dev/null | awk -v source="$source" -v target="$target" -v fstype="$fstype" -v options="$options" 'NR==2 {ro=(options ~ /(^|,)ro(,|$)/ ? "ro" : (options == "" ? "-" : "rw")); gsub(/%/, "", $5); printf "PIHUB_STORAGE=%s|%s|%s|%s|%s|%s|%s|%s|x\\n", source, target, fstype, $2, $3, $4, $5, ro}'
+done
+"#;
+
+pub const SYSTEM_VISIBILITY_COMMAND: &str = r#"
+printf 'PIHUB_SYS_HOSTNAME=%s\n' "$(hostname 2>/dev/null)"
+[ -r /etc/os-release ] && os=$(sh -c '. /etc/os-release 2>/dev/null; printf "%s" "$PRETTY_NAME"') && [ -n "$os" ] && printf 'PIHUB_SYS_OS=%s\n' "$os"
+printf 'PIHUB_SYS_KERNEL=%s\n' "$(uname -r 2>/dev/null)"; printf 'PIHUB_SYS_ARCH=%s\n' "$(uname -m 2>/dev/null)"
+model=$(tr -d '\0' < /proc/device-tree/model 2>/dev/null); [ -n "$model" ] && printf 'PIHUB_SYS_MODEL=%s\n' "$model"
+cpu=$(awk -F: '/model name|Hardware/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null); [ -n "$cpu" ] && printf 'PIHUB_SYS_CPU=%s\n' "$cpu"
+cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null); [ -n "$cores" ] && printf 'PIHUB_SYS_CORES=%s\n' "$cores"
+mem=$(awk '/^MemTotal:/ {print $2*1024}' /proc/meminfo 2>/dev/null); [ -n "$mem" ] && printf 'PIHUB_SYS_MEMORY_BYTES=%.0f\n' "$mem"
+boot=$(awk '/^btime / {print $2}' /proc/stat 2>/dev/null); [ -n "$boot" ] && printf 'PIHUB_SYS_BOOT_TIMESTAMP=%s\n' "$boot"
+read -r uptime _ < /proc/uptime; [ -n "$uptime" ] && printf 'PIHUB_SYS_UPTIME_SECONDS=%s\n' "${uptime%%.*}"
+"#;
+
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
     pub fn command(&self) -> Option<&'static str> {
@@ -218,6 +256,9 @@ impl RemoteOperation {
             RemoteOperation::Probe => Some(PROBE_COMMAND),
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
+            RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
+            RemoteOperation::StorageVisibility => Some(STORAGE_VISIBILITY_COMMAND),
+            RemoteOperation::SystemVisibility => Some(SYSTEM_VISIBILITY_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),

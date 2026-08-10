@@ -77,6 +77,11 @@ export interface SystemMetrics {
   rootFilesystemReadOnly?: boolean;
   throttlingRaw?: string;
 }
+export interface NetworkInterface { name: string; linkState: "up" | "down" | "unknown"; macAddress?: string; ipv4Addresses: string[]; ipv6Addresses: string[]; }
+export interface NetworkVisibility { interfaces: NetworkInterface[]; defaultRoute?: { interface: string; gateway?: string }; dnsServers: string[]; }
+export interface MountedFilesystem { source: string; mountPoint: string; filesystemType: string; totalBytes?: number; usedBytes?: number; availableBytes?: number; usagePercent?: number; readOnly?: boolean; }
+export interface StorageVisibility { filesystems: MountedFilesystem[]; }
+export interface SystemVisibility { hostname?: string; operatingSystem?: string; kernelVersion?: string; architecture?: string; model?: string; cpuModel?: string; logicalCoreCount?: number; totalMemoryBytes?: number; bootTimestamp?: number; uptimeSeconds?: number; }
 export type DeviceHealthState = "healthy" | "warning" | "critical" | "unknown";
 export interface HealthReason { code: string; severity: "info" | "warning" | "critical"; summary: string; }
 export interface RaspberryPiPowerState { raw?: string; undervoltageNow?: boolean; undervoltageSinceBoot?: boolean; frequencyCappedNow?: boolean; frequencyCappedSinceBoot?: boolean; throttledNow?: boolean; throttledSinceBoot?: boolean; softTemperatureLimitNow?: boolean; softTemperatureLimitSinceBoot?: boolean; }
@@ -106,4 +111,7 @@ export interface DeviceSnapshot {
   lastSuccessfulRefresh?: string;
   health: DeviceHealthAssessment;
   serviceHealth: Record<string, ServiceHealthRecord>;
+  networkVisibility?: NetworkVisibility;
+  storageVisibility?: StorageVisibility;
+  systemVisibility?: SystemVisibility;
 }

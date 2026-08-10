@@ -143,6 +143,9 @@ mod tests {
             last_successful_refresh: Some("2026-01-01T00:00:00Z".into()),
             health: crate::domain::health::assess_health(&DeviceConnectionStatus::Online, None),
             service_health: HashMap::new(),
+            network_visibility: None,
+            storage_visibility: None,
+            system_visibility: None,
         }
     }
 

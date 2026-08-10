@@ -6,6 +6,7 @@ use crate::domain::connection_status::DeviceConnectionStatus;
 use crate::domain::docker_container::DockerContainerSummary;
 use crate::domain::health::DeviceHealthAssessment;
 use crate::domain::system_metrics::SystemMetrics;
+use crate::domain::device_visibility::{NetworkVisibility, StorageVisibility, SystemVisibility};
 use crate::domain::service_health::ServiceHealthRecord;
 use crate::error::ApplicationError;
 
@@ -39,4 +40,10 @@ pub struct DeviceSnapshot {
     pub health: DeviceHealthAssessment,
     #[serde(default)]
     pub service_health: HashMap<String, ServiceHealthRecord>,
+    #[serde(default)]
+    pub network_visibility: Option<NetworkVisibility>,
+    #[serde(default)]
+    pub storage_visibility: Option<StorageVisibility>,
+    #[serde(default)]
+    pub system_visibility: Option<SystemVisibility>,
 }

@@ -402,6 +402,9 @@ mod tests {
             last_successful_refresh: None,
             health: assess_health(&status, None),
             service_health: services,
+            network_visibility: None,
+            storage_visibility: None,
+            system_visibility: None,
         }
     }
     #[test]
