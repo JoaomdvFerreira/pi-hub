@@ -1,0 +1,10 @@
+# Pi-Hub Codex project defaults.
+# Explicit model/effort selections in Codex can override these values.
+model = "gpt-5.6-terra"
+model_reasoning_effort = "medium"
+model_verbosity = "low"
+
+# Pi-Hub milestones are sequential and share one codebase. Keep multi-agent
+# execution off by default to avoid unnecessary duplicated context/usage.
+[agents]
+enabled = false
