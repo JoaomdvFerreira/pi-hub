@@ -2,27 +2,30 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::domain::device::Device;
 use crate::domain::activity::{ActivityCategory, ActivityEvent};
 use crate::domain::alert::AlertTransitionKind;
-use crate::domain::service_health::ServiceHealthState;
+use crate::domain::device::Device;
 use crate::domain::notification_rule::NotificationEvent;
+use crate::domain::service_health::ServiceHealthState;
 use crate::domain::settings::AppSettings;
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::error::ApplicationError;
 use crate::infrastructure::ssh::OpenSshExecutor;
+use crate::monitoring::alerts::evaluate_with_expected_disruption as evaluate_alerts;
 use crate::monitoring::concurrency::RefreshCoordinator;
 use crate::monitoring::container_diff::detect_container_changes;
 use crate::monitoring::notifications::{evaluate_snapshot_transition, NotificationService};
 use crate::monitoring::refresh::refresh_device_sync_with_policy;
-use crate::monitoring::alerts::evaluate as evaluate_alerts;
 use crate::monitoring::scheduling::is_due;
 use crate::platform::notifications::TauriNotificationService;
+use crate::storage::activity_repository::{ActivityRepository, JsonActivityRepository};
+use crate::storage::administration_repository::{
+    AdministrationRepository, JsonAdministrationRepository,
+};
+use crate::storage::alert_repository::{AlertRepository, JsonAlertRepository};
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
-use crate::storage::activity_repository::{ActivityRepository, JsonActivityRepository};
-use crate::storage::alert_repository::{AlertRepository, JsonAlertRepository};
 
 /// Max concurrent device refreshes (spec section 14.3).
 pub const MAX_CONCURRENT_REFRESHES: usize = 4;
@@ -62,7 +65,9 @@ fn alert_repository(app: &AppHandle) -> Result<JsonAlertRepository, ApplicationE
 
 fn record_activity(app: &AppHandle, event: ActivityEvent) {
     if let Ok(repo) = activity_repository(app) {
-        if let Err(err) = repo.append(event) { log::warn!("could not persist activity event: {err}"); }
+        if let Err(err) = repo.append(event) {
+            log::warn!("could not persist activity event: {err}");
+        }
     }
 }
 
@@ -125,7 +130,12 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     let policy_for_task = policy.clone();
     let snapshot = tauri::async_runtime::spawn_blocking(move || {
         let executor = OpenSshExecutor::default();
-        refresh_device_sync_with_policy(&executor, &device_for_task, previous_for_task.as_ref(), &policy_for_task)
+        refresh_device_sync_with_policy(
+            &executor,
+            &device_for_task,
+            previous_for_task.as_ref(),
+            &policy_for_task,
+        )
     })
     .await
     .map_err(|err| ApplicationError {
@@ -152,19 +162,66 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     let alert_transitions = {
         let repo = alert_repository(app)?;
         let mut file = repo.load();
-        let transitions = evaluate_alerts(&mut file, &device, &snapshot, &policy);
+        let disruption_repo =
+            JsonAdministrationRepository::new(app.path().app_config_dir().map_err(config_error)?);
+        let expected = disruption_repo.get_valid(&device.id);
+        let suppress_device_offline = expected.is_some()
+            && snapshot.connection_status
+                != crate::domain::connection_status::DeviceConnectionStatus::Online;
+        // An observed return online proves recovery and clears every valid
+        // M10 marker, including planned shutdown after a manual power-on.
+        if snapshot.connection_status
+            == crate::domain::connection_status::DeviceConnectionStatus::Online
+            && expected.is_some()
+        {
+            let _ = disruption_repo.clear(&device.id);
+        }
+        let transitions = evaluate_alerts(
+            &mut file,
+            &device,
+            &snapshot,
+            &policy,
+            suppress_device_offline,
+        );
         JsonAlertRepository::prune(&mut file);
-        repo.save(&file).map_err(|err| ApplicationError { code: "StorageError".into(), message: format!("could not persist alerts: {err}"), remediation: Some("Check disk space and file permissions, then try again.".into()), retryable: true })?;
+        repo.save(&file).map_err(|err| ApplicationError {
+            code: "StorageError".into(),
+            message: format!("could not persist alerts: {err}"),
+            remediation: Some("Check disk space and file permissions, then try again.".into()),
+            retryable: true,
+        })?;
         transitions
     };
     for transition in &alert_transitions {
         let (code, summary) = match transition.kind {
-            AlertTransitionKind::Activated => ("alert.activated", format!("Alert activated: {}", transition.alert.summary)),
-            AlertTransitionKind::Escalated => ("alert.escalated", format!("Alert escalated: {}", transition.alert.summary)),
-            AlertTransitionKind::Acknowledged => ("alert.acknowledged", format!("Alert acknowledged: {}", transition.alert.summary)),
-            AlertTransitionKind::Resolved => ("alert.resolved", format!("Alert resolved: {}", transition.alert.summary)),
+            AlertTransitionKind::Activated => (
+                "alert.activated",
+                format!("Alert activated: {}", transition.alert.summary),
+            ),
+            AlertTransitionKind::Escalated => (
+                "alert.escalated",
+                format!("Alert escalated: {}", transition.alert.summary),
+            ),
+            AlertTransitionKind::Acknowledged => (
+                "alert.acknowledged",
+                format!("Alert acknowledged: {}", transition.alert.summary),
+            ),
+            AlertTransitionKind::Resolved => (
+                "alert.resolved",
+                format!("Alert resolved: {}", transition.alert.summary),
+            ),
         };
-        record_activity(app, ActivityEvent::new(ActivityCategory::Health, code, transition.alert.device_id.clone(), Some(transition.alert.id.clone()), None, summary));
+        record_activity(
+            app,
+            ActivityEvent::new(
+                ActivityCategory::Health,
+                code,
+                transition.alert.device_id.clone(),
+                Some(transition.alert.id.clone()),
+                None,
+                summary,
+            ),
+        );
     }
 
     if previous
@@ -173,19 +230,70 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         .is_none_or(|prev_status| prev_status != snapshot.connection_status)
     {
         let _ = app.emit("device://status-changed", &snapshot);
-        let code = if snapshot.connection_status == crate::domain::connection_status::DeviceConnectionStatus::Online { "device.online" } else { "device.offline" };
-        record_activity(app, ActivityEvent::new(ActivityCategory::Device, code, Some(device.id.clone()), Some(device.id.clone()), Some(device.name.clone()), format!("{} is {}", device.name, if code == "device.online" { "online" } else { "offline" })));
+        let code = if snapshot.connection_status
+            == crate::domain::connection_status::DeviceConnectionStatus::Online
+        {
+            "device.online"
+        } else {
+            "device.offline"
+        };
+        record_activity(
+            app,
+            ActivityEvent::new(
+                ActivityCategory::Device,
+                code,
+                Some(device.id.clone()),
+                Some(device.id.clone()),
+                Some(device.name.clone()),
+                format!(
+                    "{} is {}",
+                    device.name,
+                    if code == "device.online" {
+                        "online"
+                    } else {
+                        "offline"
+                    }
+                ),
+            ),
+        );
     }
 
     if previous.as_ref().map(|item| item.health.state) != Some(snapshot.health.state) {
-        record_activity(app, ActivityEvent::new(ActivityCategory::Health, "device.health_changed", Some(device.id.clone()), Some(device.id.clone()), Some(device.name.clone()), format!("{} health is now {:?}", device.name, snapshot.health.state)));
+        record_activity(
+            app,
+            ActivityEvent::new(
+                ActivityCategory::Health,
+                "device.health_changed",
+                Some(device.id.clone()),
+                Some(device.id.clone()),
+                Some(device.name.clone()),
+                format!("{} health is now {:?}", device.name, snapshot.health.state),
+            ),
+        );
     }
 
     for service in &device.services {
-        let Some(current) = snapshot.service_health.get(&service.id) else { continue; };
-        let prior = previous.as_ref().and_then(|item| item.service_health.get(&service.id)).map(|item| item.state);
-        if prior != Some(current.state) && !(prior.is_none() && current.state == ServiceHealthState::Healthy) {
-            record_activity(app, ActivityEvent::new(ActivityCategory::Service, "service.health_changed", Some(device.id.clone()), Some(service.id.clone()), Some(service.name.clone()), format!("{} is now {:?}", service.name, current.state)));
+        let Some(current) = snapshot.service_health.get(&service.id) else {
+            continue;
+        };
+        let prior = previous
+            .as_ref()
+            .and_then(|item| item.service_health.get(&service.id))
+            .map(|item| item.state);
+        if prior != Some(current.state)
+            && !(prior.is_none() && current.state == ServiceHealthState::Healthy)
+        {
+            record_activity(
+                app,
+                ActivityEvent::new(
+                    ActivityCategory::Service,
+                    "service.health_changed",
+                    Some(device.id.clone()),
+                    Some(service.id.clone()),
+                    Some(service.name.clone()),
+                    format!("{} is now {:?}", service.name, current.state),
+                ),
+            );
         }
     }
 
@@ -205,16 +313,40 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
 
     // Device-offline transitions now flow through governed alert transitions; legacy
     // container notifications remain outside M8's Docker expansion boundary.
-    let notifications: Vec<_> = evaluate_snapshot_transition(&snapshot_repo, &device, previous.as_ref(), &snapshot).into_iter().filter(|event| event.resource_id != device.id).collect();
+    let notifications: Vec<_> =
+        evaluate_snapshot_transition(&snapshot_repo, &device, previous.as_ref(), &snapshot)
+            .into_iter()
+            .filter(|event| event.resource_id != device.id)
+            .collect();
     if !notifications.is_empty() {
         let _ = app.emit("notification://ready", &notifications);
         dispatch_notifications(app, &device, &notifications);
     }
-    let alert_notifications: Vec<NotificationEvent> = alert_transitions.iter().filter_map(|transition| match transition.kind {
-        AlertTransitionKind::Activated | AlertTransitionKind::Escalated if matches!(transition.alert.severity, crate::domain::alert::AlertSeverity::Warning | crate::domain::alert::AlertSeverity::Critical) => Some(NotificationEvent { device_id: device.id.clone(), resource_id: transition.alert.id.clone(), previous_state: "alert".into(), current_state: format!("{:?}", transition.alert.severity), message: transition.alert.summary.clone() }),
-        _ => None,
-    }).collect();
-    if !alert_notifications.is_empty() { let _ = app.emit("notification://ready", &alert_notifications); dispatch_notifications(app, &device, &alert_notifications); }
+    let alert_notifications: Vec<NotificationEvent> = alert_transitions
+        .iter()
+        .filter_map(|transition| match transition.kind {
+            AlertTransitionKind::Activated | AlertTransitionKind::Escalated
+                if matches!(
+                    transition.alert.severity,
+                    crate::domain::alert::AlertSeverity::Warning
+                        | crate::domain::alert::AlertSeverity::Critical
+                ) =>
+            {
+                Some(NotificationEvent {
+                    device_id: device.id.clone(),
+                    resource_id: transition.alert.id.clone(),
+                    previous_state: "alert".into(),
+                    current_state: format!("{:?}", transition.alert.severity),
+                    message: transition.alert.summary.clone(),
+                })
+            }
+            _ => None,
+        })
+        .collect();
+    if !alert_notifications.is_empty() {
+        let _ = app.emit("notification://ready", &alert_notifications);
+        dispatch_notifications(app, &device, &alert_notifications);
+    }
 
     let _ = app.emit("monitoring://refresh-completed", device_id);
 

@@ -8,6 +8,8 @@ See [`docs/pi-hub-functional-specification.md`](docs/pi-hub-functional-specifica
 
 Approved planning lives in [`docs/roadmap/post-mvp-product-roadmap.md`](docs/roadmap/post-mvp-product-roadmap.md). M6, M7, M8, and M9 implementation scope is documented in [`docs/milestones/m6-device-health-and-diagnostics.md`](docs/milestones/m6-device-health-and-diagnostics.md), [`docs/milestones/m7-service-health-and-operational-activity.md`](docs/milestones/m7-service-health-and-operational-activity.md), [`docs/milestones/m8-alerts-and-threshold-governance.md`](docs/milestones/m8-alerts-and-threshold-governance.md), and [`docs/milestones/m9-docker-operational-visibility.md`](docs/milestones/m9-docker-operational-visibility.md); M10's controlled shutdown requirement is in [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
 
+M10's full implementation scope is documented in [`docs/milestones/m10-controlled-device-administration.md`](docs/milestones/m10-controlled-device-administration.md); its shutdown-specific normative requirement remains [`docs/requirements/controlled-device-shutdown-requirement.md`](docs/requirements/controlled-device-shutdown-requirement.md).
+
 ## Stack
 
 - **Desktop shell:** Tauri 2
