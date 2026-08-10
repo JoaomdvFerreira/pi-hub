@@ -2520,10 +2520,10 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml visibility"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:20:56.284Z"
+        "updatedAt": "2026-08-10T10:27:39.520Z"
       },
       {
         "id": "WU069",
@@ -2550,14 +2550,14 @@
           "npm test",
           "npm run build"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-046",
           "DEP-047",
           "DEP-048"
         ],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:20:56.284Z"
+        "updatedAt": "2026-08-10T10:27:39.520Z"
       },
       {
         "id": "WU070",
@@ -6089,17 +6089,59 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:25:50.176Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:25:50.176Z"
+    },
+    {
+      "id": "C057",
+      "workUnitId": "WU068",
+      "packetId": "PKT-057",
+      "summary": "Added typed, read-only operating-system and hardware identity visibility.",
+      "completed": [
+        "OS/kernel/architecture fields",
+        "Pi model and generic Linux CPU metadata",
+        "Core, memory, boot and uptime context"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/device_visibility.rs",
+        "src-tauri/src/infrastructure/parsers/visibility.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml visibility",
+          "result": "passed",
+          "summary": "Visibility parser fixtures passed for Pi and generic Linux data."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Pi and generic Linux devices are supported",
+          "result": "passed",
+          "evidence": "Model and CPU data are optional while OS/kernel/architecture parse independently."
+        },
+        {
+          "criterion": "Optional fields remain optional",
+          "result": "passed",
+          "evidence": "Missing or malformed fields become None without discarding other system metadata."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:27:39.520Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-056",
-    "workUnitId": "WU067",
+    "id": "PKT-057",
+    "workUnitId": "WU068",
     "milestoneId": "M015",
-    "createdAt": "2026-08-10T10:24:06.762Z",
+    "createdAt": "2026-08-10T10:25:57.242Z",
     "format": "markdown",
-    "contentHash": "sha256:54803ff345d9155a6fc2117d9e909706e13c386c1f1fd5edcea61e452a6e0971",
+    "contentHash": "sha256:9662ba77824d45e989480b7a9f541697c9dbd29b196008b6fc53ef78ffcdf402",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6118,7 +6160,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:25:50.176Z",
+  "lastUpdatedAt": "2026-08-10T10:27:39.520Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -7797,6 +7839,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:25:50.176Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C057",
+      "current": {
+        "observationId": "sha256:a520c07404cd653e8e7d9182dd593f4aaef4f4b426b884bcde845c3ff38b027c",
+        "checkpointId": "C057",
+        "workUnitId": "WU068",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:27:39.520Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:27:39.520Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a520c07404cd653e8e7d9182dd593f4aaef4f4b426b884bcde845c3ff38b027c",
+          "checkpointId": "C057",
+          "workUnitId": "WU068",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:27:39.520Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:27:39.520Z"
         }
       ]
     }

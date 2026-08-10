@@ -1,7 +1,7 @@
 use std::collections::BTreeMap;
 use std::time::Duration;
 
-use crate::domain::device_visibility::{DefaultRoute, MountedFilesystem, NetworkInterface, NetworkLinkState, NetworkVisibility, StorageVisibility};
+use crate::domain::device_visibility::{DefaultRoute, MountedFilesystem, NetworkInterface, NetworkLinkState, NetworkVisibility, StorageVisibility, SystemVisibility};
 use crate::infrastructure::parsers::key_value::ParseWarning;
 use crate::infrastructure::ssh::{RemoteExecutor, RemoteOperation, SshError, SshTarget};
 
@@ -88,6 +88,19 @@ pub fn collect_storage_visibility(executor: &dyn RemoteExecutor, target: &SshTar
     Ok(parse_storage_visibility(&result.stdout))
 }
 
+pub fn parse_system_visibility(raw: &str) -> (SystemVisibility, Vec<ParseWarning>) {
+    let mut fields = std::collections::HashMap::new(); let mut warnings = Vec::new();
+    for line in raw.lines() { if let Some((key, value)) = line.split_once('=') { fields.insert(key, value); } }
+    let number = |key: &str, warnings: &mut Vec<ParseWarning>| -> Option<u64> { fields.get(key).and_then(|value| value.parse().map_err(|_| warnings.push(ParseWarning(format!("invalid system value for {key}: '{value}'")))).ok()) };
+    let cores = number("PIHUB_SYS_CORES", &mut warnings).and_then(|value| u32::try_from(value).ok());
+    (SystemVisibility { hostname: fields.get("PIHUB_SYS_HOSTNAME").map(|v| (*v).to_string()), operating_system: fields.get("PIHUB_SYS_OS").map(|v| (*v).to_string()), kernel_version: fields.get("PIHUB_SYS_KERNEL").map(|v| (*v).to_string()), architecture: fields.get("PIHUB_SYS_ARCH").map(|v| (*v).to_string()), model: fields.get("PIHUB_SYS_MODEL").map(|v| (*v).to_string()), cpu_model: fields.get("PIHUB_SYS_CPU").map(|v| (*v).to_string()), logical_core_count: cores, total_memory_bytes: number("PIHUB_SYS_MEMORY_BYTES", &mut warnings), boot_timestamp: number("PIHUB_SYS_BOOT_TIMESTAMP", &mut warnings), uptime_seconds: number("PIHUB_SYS_UPTIME_SECONDS", &mut warnings) }, warnings)
+}
+
+pub fn collect_system_visibility(executor: &dyn RemoteExecutor, target: &SshTarget, timeout: Duration) -> Result<(SystemVisibility, Vec<ParseWarning>), SshError> {
+    let result = executor.execute(target, RemoteOperation::SystemVisibility.command().expect("system visibility command must be fixed"), timeout)?;
+    Ok(parse_system_visibility(&result.stdout))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -121,5 +134,13 @@ mod tests {
         assert_eq!(storage.filesystems[0].mount_point, "/");
         assert_eq!(storage.filesystems[0].read_only, Some(true));
         assert_eq!(storage.filesystems[1].total_bytes, None);
+    }
+
+    #[test]
+    fn system_parser_supports_pi_and_generic_linux_partial_data() {
+        let (pi, warnings) = parse_system_visibility("PIHUB_SYS_HOSTNAME=pi5\nPIHUB_SYS_OS=Debian 12\nPIHUB_SYS_MODEL=Raspberry Pi 5\nPIHUB_SYS_CORES=4\nPIHUB_SYS_MEMORY_BYTES=8589934592\n");
+        assert!(warnings.is_empty()); assert_eq!(pi.model.as_deref(), Some("Raspberry Pi 5")); assert_eq!(pi.logical_core_count, Some(4));
+        let (linux, warnings) = parse_system_visibility("PIHUB_SYS_OS=Ubuntu\nPIHUB_SYS_CORES=bad\n");
+        assert_eq!(linux.operating_system.as_deref(), Some("Ubuntu")); assert_eq!(linux.model, None); assert_eq!(warnings.len(), 1);
     }
 }

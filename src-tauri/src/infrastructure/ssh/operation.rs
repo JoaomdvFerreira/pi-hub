@@ -85,6 +85,7 @@ pub enum RemoteOperation {
     DockerContainers,
     NetworkVisibility,
     StorageVisibility,
+    SystemVisibility,
     Diagnostics,
     RestartDevice,
     ShutdownDevice,
@@ -236,6 +237,18 @@ findmnt -rn -o SOURCE,TARGET,FSTYPE,OPTIONS 2>/dev/null | while IFS=' ' read -r 
 done
 "#;
 
+pub const SYSTEM_VISIBILITY_COMMAND: &str = r#"
+printf 'PIHUB_SYS_HOSTNAME=%s\n' "$(hostname 2>/dev/null)"
+[ -r /etc/os-release ] && os=$(sh -c '. /etc/os-release 2>/dev/null; printf "%s" "$PRETTY_NAME"') && [ -n "$os" ] && printf 'PIHUB_SYS_OS=%s\n' "$os"
+printf 'PIHUB_SYS_KERNEL=%s\n' "$(uname -r 2>/dev/null)"; printf 'PIHUB_SYS_ARCH=%s\n' "$(uname -m 2>/dev/null)"
+model=$(tr -d '\0' < /proc/device-tree/model 2>/dev/null); [ -n "$model" ] && printf 'PIHUB_SYS_MODEL=%s\n' "$model"
+cpu=$(awk -F: '/model name|Hardware/ {gsub(/^[ \t]+/, "", $2); print $2; exit}' /proc/cpuinfo 2>/dev/null); [ -n "$cpu" ] && printf 'PIHUB_SYS_CPU=%s\n' "$cpu"
+cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null); [ -n "$cores" ] && printf 'PIHUB_SYS_CORES=%s\n' "$cores"
+mem=$(awk '/^MemTotal:/ {print $2*1024}' /proc/meminfo 2>/dev/null); [ -n "$mem" ] && printf 'PIHUB_SYS_MEMORY_BYTES=%.0f\n' "$mem"
+boot=$(awk '/^btime / {print $2}' /proc/stat 2>/dev/null); [ -n "$boot" ] && printf 'PIHUB_SYS_BOOT_TIMESTAMP=%s\n' "$boot"
+read -r uptime _ < /proc/uptime; [ -n "$uptime" ] && printf 'PIHUB_SYS_UPTIME_SECONDS=%s\n' "${uptime%%.*}"
+"#;
+
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
     pub fn command(&self) -> Option<&'static str> {
@@ -245,6 +258,7 @@ impl RemoteOperation {
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
             RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
             RemoteOperation::StorageVisibility => Some(STORAGE_VISIBILITY_COMMAND),
+            RemoteOperation::SystemVisibility => Some(SYSTEM_VISIBILITY_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),
