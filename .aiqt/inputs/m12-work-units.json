@@ -1,0 +1,17 @@
+{
+  "milestones": [{"clientKey":"M012","title":"M12 — Historical Monitoring","objective":"Add bounded local historical monitoring for device, service, and container operational trends."}],
+  "workUnits": [
+    {"clientKey":"wu12-01","milestoneClientKey":"M012","title":"WU12-01 Historical metric domain and persistence","objective":"Add typed bounded historical records, migration, reload, and retention.","scope":["Metric domain","JSON persistence","30-day pruning"],"outOfScope":["Activity or alert retention changes"],"acceptanceCriteria":["Missing values stay optional","Corrupt data recovers safely","History reloads after restart"],"suggestedFiles":["src-tauri/src/domain","src-tauri/src/storage"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml historical"]},
+    {"clientKey":"wu12-02","milestoneClientKey":"M012","title":"WU12-02 Bounded historical sampling","objective":"Sample current monitoring snapshots without degrading current refreshes.","scope":["60-second cadence","Device/service/container samples","Failure isolation"],"outOfScope":["New remote operations"],"acceptanceCriteria":["No duplicate manual-refresh samples","Partial data is absent rather than zero"],"suggestedFiles":["src-tauri/src/monitoring/scheduler.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml historical"]},
+    {"clientKey":"wu12-03","milestoneClientKey":"M012","title":"WU12-03 Historical query and downsampling API","objective":"Expose bounded typed history queries with deterministic aggregation.","scope":["Preset ranges","500-point cap","Numeric and state aggregation"],"outOfScope":["Arbitrary date ranges"],"acceptanceCriteria":["Entity isolation","Gaps and transitions preserved"],"suggestedFiles":["src-tauri/src/commands/monitoring.rs"],"validationCommands":["cargo test --manifest-path src-tauri/Cargo.toml historical"]},
+    {"clientKey":"wu12-04","milestoneClientKey":"M012","title":"WU12-04 Historical monitoring UI","objective":"Render bounded historical trends in device, service, and container details.","scope":["Range controls","Trend charts","Explicit chart states"],"outOfScope":["Dashboard redesign"],"acceptanceCriteria":["Gaps are visible","Units and states are clear"],"suggestedFiles":["src/features/devices","src/features/containers"],"validationCommands":["npm test -- --run historical","npm run build"]},
+    {"clientKey":"wu12-05","milestoneClientKey":"M012","title":"WU12-05 Integration and closure","objective":"Validate the integrated bounded historical monitoring milestone.","scope":["Integration","AIQT","Validation"],"outOfScope":["M13 Document Hygiene"],"acceptanceCriteria":["M13 remains planned","Current monitoring stays independent"],"suggestedFiles":["docs/milestones/m12-historical-monitoring.md"],"validationCommands":["node scripts/validate-agent.mjs"]}
+  ],
+  "dependencies":[
+    {"fromClientKey":"wu12-01","toClientKey":"wu12-02","type":"blocks","reason":"Sampling requires persistence."},
+    {"fromClientKey":"wu12-02","toClientKey":"wu12-03","type":"blocks","reason":"Queries consume stored samples."},
+    {"fromClientKey":"wu12-03","toClientKey":"wu12-04","type":"blocks","reason":"UI consumes query API."},
+    {"fromClientKey":"wu12-04","toClientKey":"wu12-05","type":"blocks","reason":"Closure follows UI integration."}
+  ],
+  "extension":{"entryWorkUnitClientKeys":["wu12-01"],"exitWorkUnitClientKeys":["wu12-05"],"reason":"Replace the M12 planning placeholder with the five approved implementation work units."}
+}

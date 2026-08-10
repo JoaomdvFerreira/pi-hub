@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { getContainerLogs } from "@/lib/tauri/containers";
 import type { ContainerLogMode, DockerContainerSummary } from "@/types/snapshot";
+import { HistoricalTrends } from "@/features/monitoring/HistoricalTrends";
 
 interface ContainerDetailDialogProps { deviceId: string; container: DockerContainerSummary | null; onOpenChange: (open: boolean) => void; services: { id: string; name: string; containerName?: string }[]; }
 
@@ -25,6 +26,7 @@ export function ContainerDetailDialog({ deviceId, container, onOpenChange, servi
     <AlertDialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
       <AlertDialogHeader><AlertDialogTitle>{container.name}</AlertDialogTitle><AlertDialogDescription>Current operational Docker information. Container environment variables are not collected or displayed.</AlertDialogDescription></AlertDialogHeader>
       <div className="grid grid-cols-2 gap-3 text-sm"><Field label="State" value={container.state}/><Field label="Health" value={container.health}/><Field label="Image" value={container.image}/><Field label="Container ID" value={container.id}/><Field label="Created" value={container.createdAt ?? "Unavailable"}/><Field label="Started" value={container.startedAt ?? "Unavailable"}/><Field label="Restarts" value={container.restartCount?.toString() ?? "Unavailable"}/><Field label="Restart policy" value={container.restartPolicy ?? "Unavailable"}/><Field label="CPU" value={container.resourceUsage?.cpuPercent !== undefined ? `${container.resourceUsage.cpuPercent.toFixed(1)}%` : "Unavailable"}/><Field label="Memory" value={container.resourceUsage?.memoryUsedBytes !== undefined ? `${Math.round(container.resourceUsage.memoryUsedBytes / 1048576)} MiB` : "Unavailable"}/></div>
+      <HistoricalTrends deviceId={deviceId} entityId={container.id} trends={[{ label: "CPU usage", metric: "containerCpuPercent", unit: "%" }, { label: "Memory usage", metric: "containerMemoryPercent", unit: "%" }]} />
       <Section title="Ports">{container.ports.length ? container.ports.map((port) => <p key={`${port.hostIp}-${port.hostPort}-${port.containerPort}`} className="font-mono text-xs">{port.hostIp ?? ""}{port.hostPort !== undefined ? `:${port.hostPort} → ` : ""}{port.containerPort}/{port.protocol}</p>) : <Empty/>}</Section>
       <Section title="Storage">{container.mounts.length ? container.mounts.map((mount) => <p key={`${mount.source}-${mount.destination}`} className="font-mono text-xs">{mount.mountType}: {mount.source} → {mount.destination} ({mount.readOnly ? "read-only" : "read-write"})</p>) : <Empty/>}</Section>
       <Section title="Networks">{container.networks.length ? container.networks.map((network) => <p key={network.name} className="text-xs">{network.name}{network.ipAddress ? ` — ${network.ipAddress}` : ""}{network.aliases.length ? ` (${network.aliases.join(", ")})` : ""}</p>) : <Empty/>}</Section>

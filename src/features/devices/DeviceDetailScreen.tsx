@@ -33,6 +33,7 @@ import { ContainerActionsCell } from "@/features/devices/ContainerActionsCell";
 import { ContainerDetailDialog } from "@/features/containers/ContainerDetailDialog";
 import { DeviceAdministration } from "@/features/devices/DeviceAdministration";
 import { DeviceVisibility } from "@/features/devices/DeviceVisibility";
+import { HistoricalTrends } from "@/features/monitoring/HistoricalTrends";
 import { useTerminalSessions } from "@/stores/useTerminalSessions";
 import type { Device } from "@/types/device";
 import type { ApplicationError } from "@/types/settings";
@@ -382,6 +383,8 @@ export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetai
 
       <DeviceVisibility network={snapshot?.networkVisibility} storage={snapshot?.storageVisibility} system={snapshot?.systemVisibility} />
 
+      <HistoricalTrends deviceId={deviceId} trends={[{ label: "CPU usage", metric: "cpuUsagePercent", unit: "%" }, { label: "Memory usage", metric: "memoryUsagePercent", unit: "%" }, { label: "Root filesystem", metric: "rootFilesystemUsagePercent", unit: "%" }, { label: "Temperature", metric: "temperatureCelsius", unit: "°C" }, { label: "Device health", metric: "deviceHealth", unit: "" }]} />
+
       <DeviceAdministration deviceId={deviceId} deviceName={device.name} />
 
       <section className="rounded-lg border border-border bg-card p-3.5">
@@ -497,6 +500,7 @@ export function DeviceDetailScreen({ deviceId, initialContainerId }: DeviceDetai
                   </Badge>
                 ) : null}
               </button>
+              {svc.enabled ? <HistoricalTrends deviceId={deviceId} entityId={svc.id} trends={[{ label: "Response time", metric: "responseTimeMs", unit: " ms" }, { label: "Service health", metric: "serviceHealth", unit: "" }]} /> : null}
               {svc.enabled ? <><ServiceHealthDetails health={snapshot?.serviceHealth?.[svc.id]} />{svc.containerName ? <p className="text-xs text-muted-foreground">Container: {svc.containerName}{!containers.some((container) => container.name === svc.containerName) ? " (not currently found)" : ""}</p> : null}</> : null}
               {svc.enabled ? <ServiceHealthBadge health={snapshot?.serviceHealth?.[svc.id]} /> : null}
               </div>

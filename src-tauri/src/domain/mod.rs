@@ -6,6 +6,7 @@ pub mod device;
 pub mod diagnostics;
 pub mod device_visibility;
 pub mod docker_container;
+pub mod historical;
 pub mod health;
 pub mod notification_rule;
 pub mod service_health;

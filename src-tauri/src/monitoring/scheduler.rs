@@ -26,6 +26,7 @@ use crate::storage::alert_repository::{AlertRepository, JsonAlertRepository};
 use crate::storage::config_repository::{JsonSettingsRepository, SettingsRepository};
 use crate::storage::device_repository::{DeviceRepository, JsonDeviceRepository};
 use crate::storage::snapshot_repository::{JsonSnapshotRepository, SnapshotRepository};
+use crate::storage::historical_repository::{HistoricalRepository, JsonHistoricalRepository};
 
 /// Max concurrent device refreshes (spec section 14.3).
 pub const MAX_CONCURRENT_REFRESHES: usize = 4;
@@ -51,6 +52,10 @@ fn device_repository(app: &AppHandle) -> Result<JsonDeviceRepository, Applicatio
 fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, ApplicationError> {
     let dir = app.path().app_config_dir().map_err(config_error)?;
     Ok(JsonSnapshotRepository::new(dir))
+}
+fn historical_repository(app: &AppHandle) -> Result<JsonHistoricalRepository, ApplicationError> {
+    let dir = app.path().app_config_dir().map_err(config_error)?;
+    Ok(JsonHistoricalRepository::new(dir))
 }
 
 fn activity_repository(app: &AppHandle) -> Result<JsonActivityRepository, ApplicationError> {
@@ -153,6 +158,14 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
             remediation: Some("Check disk space and file permissions, then try again.".into()),
             retryable: true,
         })?;
+
+    // Historical persistence is deliberately best-effort: a full disk or a
+    // corrupt history file must never make the current refresh unusable.
+    if let Ok(repo) = historical_repository(app) {
+        if let Err(err) = repo.append_snapshot(&snapshot, chrono::Utc::now()) {
+            log::warn!("could not persist historical monitoring sample: {err}");
+        }
+    }
 
     let _ = app.emit("device://snapshot-updated", &snapshot);
 

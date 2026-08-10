@@ -115,3 +115,9 @@ export interface DeviceSnapshot {
   storageVisibility?: StorageVisibility;
   systemVisibility?: SystemVisibility;
 }
+
+export type HistoricalRange = "oneHour" | "twentyFourHours" | "sevenDays" | "thirtyDays";
+export type HistoricalMetric = "cpuUsagePercent" | "memoryUsagePercent" | "rootFilesystemUsagePercent" | "temperatureCelsius" | "responseTimeMs" | "deviceHealth" | "serviceHealth" | "containerCpuPercent" | "containerMemoryPercent";
+export interface HistoricalNumericPoint { timestamp: string; value: number; minimum: number; maximum: number; }
+export interface HistoricalStatePoint { timestamp: string; state: string; }
+export interface HistoricalSeries { numericPoints: HistoricalNumericPoint[]; statePoints: HistoricalStatePoint[]; }
