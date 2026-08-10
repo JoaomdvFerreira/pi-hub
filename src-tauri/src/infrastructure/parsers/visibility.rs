@@ -126,14 +126,38 @@ mod tests {
     }
 
     #[test]
-    fn storage_filters_pseudo_mounts_and_preserves_unknown_capacity() {
-        let raw = "PIHUB_STORAGE=/dev/mmcblk0p2|/|ext4|1000|400|600|40|ro|ignored\nPIHUB_STORAGE=overlay|/var/lib/docker|overlay|100|10|90|10|rw|ignored\nPIHUB_STORAGE=/dev/sda1|/media/usb|ext4|-|-|-|-|rw|ignored\n";
+    fn storage_preserves_pi_and_generic_device_mounts_and_filters_runtime_filesystems() {
+        let raw = concat!(
+            "PIHUB_STORAGE=/dev/mmcblk0p2|/|ext4|30064771072|15032385536|15032385536|50|rw|ignored\n",
+            "PIHUB_STORAGE=/dev/mmcblk0p1|/boot/firmware|vfat|535822336|104857600|430964736|20|rw|ignored\n",
+            "PIHUB_STORAGE=/dev/nvme0n1p2|/srv|xfs|1000|400|600|40|ro|ignored\n",
+            "PIHUB_STORAGE=proc|/proc|proc|0|0|0|-|rw|ignored\n",
+            "PIHUB_STORAGE=tmpfs|/run|tmpfs|100|10|90|10|rw|ignored\n",
+            "PIHUB_STORAGE=overlay|/var/lib/docker/overlay2/merged|overlay|100|10|90|10|rw|ignored\n",
+        );
         let (storage, warnings) = parse_storage_visibility(raw);
         assert!(warnings.is_empty());
-        assert_eq!(storage.filesystems.len(), 2);
+        assert_eq!(storage.filesystems.len(), 3);
+        assert_eq!(storage.filesystems[0].source, "/dev/mmcblk0p2");
         assert_eq!(storage.filesystems[0].mount_point, "/");
-        assert_eq!(storage.filesystems[0].read_only, Some(true));
-        assert_eq!(storage.filesystems[1].total_bytes, None);
+        assert_eq!(storage.filesystems[0].read_only, Some(false));
+        assert_eq!(storage.filesystems[1].mount_point, "/boot/firmware");
+        assert_eq!(storage.filesystems[1].filesystem_type, "vfat");
+        assert_eq!(storage.filesystems[2].source, "/dev/nvme0n1p2");
+        assert_eq!(storage.filesystems[2].mount_point, "/srv");
+        assert_eq!(storage.filesystems[2].read_only, Some(true));
+    }
+
+    #[test]
+    fn storage_keeps_a_generic_linux_root_device_identifiable() {
+        let (storage, warnings) = parse_storage_visibility(
+            "PIHUB_STORAGE=/dev/nvme0n1p2|/|ext4|1000|400|600|40|rw|ignored\n",
+        );
+
+        assert!(warnings.is_empty());
+        assert_eq!(storage.filesystems.len(), 1);
+        assert_eq!(storage.filesystems[0].source, "/dev/nvme0n1p2");
+        assert_eq!(storage.filesystems[0].mount_point, "/");
     }
 
     #[test]
