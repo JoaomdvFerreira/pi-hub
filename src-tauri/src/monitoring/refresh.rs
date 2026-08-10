@@ -338,4 +338,45 @@ mod tests {
         // The device itself is still online with valid metrics.
         assert!(snapshot.metrics.is_some());
     }
+
+    #[test]
+    fn pi_storage_records_survive_collection_parser_and_snapshot_serialization() {
+        struct PiStorageExecutor;
+        impl RemoteExecutor for PiStorageExecutor {
+            fn execute(
+                &self,
+                _target: &SshTarget,
+                command: &str,
+                _timeout: Duration,
+            ) -> Result<crate::infrastructure::ssh::RemoteExecutionResult, SshError> {
+                let stdout = if command.contains("findmnt -n -P") {
+                    concat!(
+                        "PIHUB_STORAGE=/dev/mmcblk0p2|/|ext4|30064771072|15032385536|15032385536|50|rw|x\n",
+                        "PIHUB_STORAGE=/dev/mmcblk0p1|/boot/firmware|vfat|535822336|104857600|430964736|20|rw|x\n",
+                        "PIHUB_STORAGE=overlay|/var/lib/docker/overlay2/merged|overlay|100|10|90|10|rw|x\n",
+                    )
+                } else {
+                    "PIHUB_OK\n"
+                };
+                Ok(crate::infrastructure::ssh::RemoteExecutionResult {
+                    exit_code: Some(0),
+                    stdout: stdout.into(),
+                    stderr: String::new(),
+                    duration_ms: 5,
+                    timed_out: false,
+                })
+            }
+        }
+
+        let snapshot = refresh_device_sync(&PiStorageExecutor, &sample_device(), None);
+        let storage = snapshot.storage_visibility.as_ref().unwrap();
+        assert_eq!(storage.filesystems.len(), 2);
+        assert_eq!(storage.filesystems[0].source, "/dev/mmcblk0p2");
+        assert_eq!(storage.filesystems[0].mount_point, "/");
+        assert_eq!(storage.filesystems[1].mount_point, "/boot/firmware");
+
+        let payload = serde_json::to_value(snapshot).unwrap();
+        assert_eq!(payload["storageVisibility"]["filesystems"].as_array().unwrap().len(), 2);
+        assert_eq!(payload["storageVisibility"]["filesystems"][0]["mountPoint"], "/");
+    }
 }
