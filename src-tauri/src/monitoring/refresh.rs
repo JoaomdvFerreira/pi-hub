@@ -9,12 +9,14 @@ use crate::domain::settings::ThresholdPolicy;
 use crate::error::ApplicationError;
 use crate::infrastructure::parsers::docker::{collect_docker_containers, DockerCollectionResult};
 use crate::infrastructure::parsers::metrics::collect_system_metrics;
+use crate::infrastructure::parsers::visibility::{collect_network_visibility, collect_storage_visibility, collect_system_visibility};
 use crate::infrastructure::ssh::{RemoteExecutor, SshTarget};
 
 /// Matches spec section 24.3's remote-metrics and Docker-collection
 /// timeouts.
 const METRICS_TIMEOUT: Duration = Duration::from_secs(10);
 const DOCKER_TIMEOUT: Duration = Duration::from_secs(10);
+const VISIBILITY_TIMEOUT: Duration = Duration::from_secs(8);
 /// Spec section 24.3's SSH connection timeout, used for the initial probe.
 const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -77,6 +79,9 @@ pub fn refresh_device_sync_with_policy(
                 previous.and_then(|p| p.metrics.as_ref()),
             ),
             service_health: check_services_with_threshold(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default(), policy.service_unavailable_failures),
+            network_visibility: previous.and_then(|p| p.network_visibility.clone()),
+            storage_visibility: previous.and_then(|p| p.storage_visibility.clone()),
+            system_visibility: previous.and_then(|p| p.system_visibility.clone()),
         };
     }
 
@@ -117,6 +122,10 @@ pub fn refresh_device_sync_with_policy(
             }
         };
 
+    let network_visibility = match collect_network_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("network visibility collection failed".into()); previous.and_then(|p| p.network_visibility.clone()) } };
+    let storage_visibility = match collect_storage_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("storage visibility collection failed".into()); previous.and_then(|p| p.storage_visibility.clone()) } };
+    let system_visibility = match collect_system_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("system visibility collection failed".into()); previous.and_then(|p| p.system_visibility.clone()) } };
+
     let health = assess_health(&DeviceConnectionStatus::Online, metrics.as_ref());
     DeviceSnapshot {
         device_id: device.id.clone(),
@@ -132,6 +141,9 @@ pub fn refresh_device_sync_with_policy(
         last_successful_refresh: Some(captured_at),
         health,
         service_health: check_services_with_threshold(&device.services, &previous.map(|p| p.service_health.clone()).unwrap_or_default(), policy.service_unavailable_failures),
+        network_visibility,
+        storage_visibility,
+        system_visibility,
     }
 }
 
@@ -231,6 +243,9 @@ mod tests {
             last_successful_refresh: Some("2026-01-01T00:00:00Z".into()),
             health: assess_health(&DeviceConnectionStatus::Online, Some(&previous_metrics)),
             service_health: std::collections::HashMap::new(),
+            network_visibility: None,
+            storage_visibility: None,
+            system_visibility: None,
         };
 
         let executor = FakeRemoteExecutor::offline();

@@ -135,7 +135,10 @@ mod tests {
             stale: false,
             last_successful_refresh: None,
         health: crate::domain::health::assess_health(&status, None),
-        service_health: std::collections::HashMap::new(),
+            service_health: std::collections::HashMap::new(),
+            network_visibility: None,
+            storage_visibility: None,
+            system_visibility: None,
         }
     }
 

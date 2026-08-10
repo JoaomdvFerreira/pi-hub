@@ -2550,14 +2550,14 @@
           "npm test",
           "npm run build"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-046",
           "DEP-047",
           "DEP-048"
         ],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:27:39.520Z"
+        "updatedAt": "2026-08-10T10:31:37.672Z"
       },
       {
         "id": "WU070",
@@ -2585,12 +2585,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-049"
         ],
         "createdAt": "2026-08-10T10:20:56.284Z",
-        "updatedAt": "2026-08-10T10:20:56.284Z"
+        "updatedAt": "2026-08-10T10:31:37.672Z"
       }
     ],
     "dependencies": [
@@ -6131,17 +6131,70 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:27:39.520Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:27:39.520Z"
+    },
+    {
+      "id": "C058",
+      "workUnitId": "WU069",
+      "packetId": "PKT-058",
+      "summary": "Integrated M11 visibility into refresh snapshots and Device Details with explicit unavailable states.",
+      "completed": [
+        "Independent snapshot fields",
+        "Network, storage, and system Device Details sections",
+        "Frontend rendering tests"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/snapshot.rs",
+        "src-tauri/src/monitoring/refresh.rs",
+        "src/features/devices/DeviceVisibility.tsx",
+        "src/features/devices/DeviceDetailScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "202 Rust tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 frontend tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "Production build passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Populated and partial data are clear",
+          "result": "passed",
+          "evidence": "Dedicated summary cards render values and explicit unavailable text."
+        },
+        {
+          "criterion": "No color-only meaning",
+          "result": "passed",
+          "evidence": "All status/access information is represented as text."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T10:31:37.672Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-057",
-    "workUnitId": "WU068",
+    "id": "PKT-058",
+    "workUnitId": "WU069",
     "milestoneId": "M015",
-    "createdAt": "2026-08-10T10:25:57.242Z",
+    "createdAt": "2026-08-10T10:27:44.633Z",
     "format": "markdown",
-    "contentHash": "sha256:9662ba77824d45e989480b7a9f541697c9dbd29b196008b6fc53ef78ffcdf402",
+    "contentHash": "sha256:bc4e24f01ac370482ad6eb64045132ae9f88bdd37125a9cc396c430c4d02362d",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6160,7 +6213,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:27:39.520Z",
+  "lastUpdatedAt": "2026-08-10T10:31:37.672Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -7869,6 +7922,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:27:39.520Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C058",
+      "current": {
+        "observationId": "sha256:9525365f574667770ccfac7917fd8d6f11dfe2fc8d2f68ef20bff2804e94bcd5",
+        "checkpointId": "C058",
+        "workUnitId": "WU069",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T10:31:37.672Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T10:31:37.672Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:9525365f574667770ccfac7917fd8d6f11dfe2fc8d2f68ef20bff2804e94bcd5",
+          "checkpointId": "C058",
+          "workUnitId": "WU069",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T10:31:37.672Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T10:31:37.672Z"
         }
       ]
     }
