@@ -58,4 +58,8 @@ Docker confirmation warns that containers and hosted services may stop/restart, 
 
 Automated coverage includes fixed command catalogue/noninteractive privilege classification, expected-disruption persistence and fail-safe expiry, M8 scoped offline suppression with unrelated service alert preservation, frontend action catalogue and Power-On exclusion, and the repository frontend and Rust test suites. Live Restart Device, Shut Down Device, Restart Docker, and Restart Tailscale validation is intentionally not performed without explicit authorization; it remains residual manual validation.
 
-M11–M13 remain planned/not started. No M13 document-hygiene pass is part of this milestone.
+## Historical status note
+
+M10 is complete. Its M11-M13 planning statements describe the status at M10 closure; current milestone status is maintained in the [roadmap](../roadmap/post-mvp-product-roadmap.md).
+
+At M10 closure, M11-M13 were planned/not started. This historical record does not claim later milestone status; M13 Document Hygiene remains outside M10 scope.

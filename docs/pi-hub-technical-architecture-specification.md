@@ -1,10 +1,12 @@
 # Pi-Hub — Technical Architecture Specification
 
-**Version:** 0.1  
-**Status:** Draft for implementation  
+**Version:** 0.1
+**Status:** Historical MVP architecture baseline; superseded for current behavior
 **Target platform:** Windows 11 x64  
 **Application type:** Desktop system-tray utility  
 **Primary stack:** Tauri 2, React, TypeScript, and Rust
+
+> This document records the original MVP architecture. Current operational behavior and M6-M12 additions are maintained in the [current product contract](current-product-contract.md), [roadmap](roadmap/post-mvp-product-roadmap.md), approved requirements, and milestone records. The original decisions remain historical context rather than a claim that later capabilities are unimplemented.
 
 ## 1. Purpose
 

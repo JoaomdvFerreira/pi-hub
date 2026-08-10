@@ -1,6 +1,6 @@
 # Pi-Hub — M12 Historical Monitoring
 
-Status: Approved and in implementation  
+Status: Implemented
 Depends on: M11 — Network, Storage, and System Visibility  
 Next milestone: M13 — Document Hygiene
 
@@ -26,4 +26,4 @@ M12 adds local, bounded historical monitoring. It stores sampled device, service
 4. Device, service, and container detail trend charts with range controls and explicit loading, empty, partial, and error states.
 5. Integration, focused tests, AIQT evidence, canonical validation, and closure.
 
-M13 remains planned/not started and is solely responsible for document hygiene.
+At M12 closure, M13 remained planned/not started and was solely responsible for document hygiene. Current milestone status is maintained in the [roadmap](../roadmap/post-mvp-product-roadmap.md).

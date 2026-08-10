@@ -1,7 +1,9 @@
 # Pi-Hub — M7 Service Health and Operational Activity
 
 Version: 0.1  
-Status: Approved for implementation  
+Status: Implemented
+
+> Historical record: later-milestone planning statements describe the M7-era plan. See the [roadmap](../roadmap/post-mvp-product-roadmap.md) for current status.
 Date: 2026-08-10  
 Depends on: M6 — Device Health and Diagnostics completed and merged  
 Next milestone: M8 — Alerts and Threshold Governance

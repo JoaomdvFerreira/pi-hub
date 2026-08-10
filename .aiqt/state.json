@@ -164,7 +164,7 @@
         "id": "M013",
         "title": "M13 - Document Hygiene",
         "objective": "Perform a final documentation-quality and governance-reconciliation pass.",
-        "status": "ready",
+        "status": "planned",
         "workUnitIds": [
           "WU050"
         ]
@@ -206,6 +206,19 @@
           "WU073",
           "WU074",
           "WU075"
+        ]
+      },
+      {
+        "id": "M017",
+        "title": "M13 Document Hygiene",
+        "objective": "Reconcile Pi-Hub documentation with the product and repository implemented through M12.",
+        "status": "done",
+        "workUnitIds": [
+          "WU076",
+          "WU077",
+          "WU078",
+          "WU079",
+          "WU080"
         ]
       }
     ],
@@ -1934,13 +1947,21 @@
         "validationCommands": [
           "git diff --check"
         ],
-        "status": "ready",
+        "status": "replanned",
         "dependencies": [
           "DEP-031",
           "DEP-054"
         ],
         "createdAt": "2026-08-10T07:21:13.196Z",
-        "updatedAt": "2026-08-10T10:50:50.728Z"
+        "updatedAt": "2026-08-10T11:14:59.761Z",
+        "replanReason": "Replace the M13 placeholder with five approved Document Hygiene work units.",
+        "replacedByWorkUnitIds": [
+          "WU076",
+          "WU077",
+          "WU078",
+          "WU079",
+          "WU080"
+        ]
       },
       {
         "id": "WU051",
@@ -2770,6 +2791,181 @@
         ],
         "createdAt": "2026-08-10T10:44:47.393Z",
         "updatedAt": "2026-08-10T10:50:50.728Z"
+      },
+      {
+        "id": "WU076",
+        "milestoneId": "M017",
+        "title": "WU13-01 Documentation inventory and truth audit",
+        "objective": "Audit documentation against M1-M12 and identify canonical ownership.",
+        "scope": [
+          "Documentation inventory",
+          "Truth audit",
+          "Canonical ownership"
+        ],
+        "outOfScope": [
+          "Product changes"
+        ],
+        "acceptanceCriteria": [
+          "Meaningful documentation reviewed",
+          "Conflicts reported"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "README.md",
+          "docs",
+          ".aiqt"
+        ],
+        "validationCommands": [
+          "aiqt status"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-059",
+          "DEP-060"
+        ],
+        "createdAt": "2026-08-10T11:14:59.761Z",
+        "updatedAt": "2026-08-10T11:16:15.064Z"
+      },
+      {
+        "id": "WU077",
+        "milestoneId": "M017",
+        "title": "WU13-02 Core product and roadmap reconciliation",
+        "objective": "Reconcile README, roadmap, milestone status, and primary navigation.",
+        "scope": [
+          "README",
+          "Roadmap",
+          "Milestone status",
+          "Navigation"
+        ],
+        "outOfScope": [
+          "New product behavior"
+        ],
+        "acceptanceCriteria": [
+          "M1-M12 status accurate",
+          "M13 represented accurately",
+          "Primary docs link to details"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "README.md",
+          "docs/roadmap",
+          "docs/milestones"
+        ],
+        "validationCommands": [
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-055"
+        ],
+        "createdAt": "2026-08-10T11:14:59.761Z",
+        "updatedAt": "2026-08-10T11:18:15.320Z"
+      },
+      {
+        "id": "WU078",
+        "milestoneId": "M017",
+        "title": "WU13-03 Technical, security, and operational reconciliation",
+        "objective": "Correct technical, security, operational, and developer documentation to match product contracts.",
+        "scope": [
+          "SSH/security",
+          "Monitoring",
+          "Administration",
+          "Historical monitoring"
+        ],
+        "outOfScope": [
+          "Policy changes",
+          "Remote operations"
+        ],
+        "acceptanceCriteria": [
+          "Security boundaries accurate",
+          "Monitoring concepts distinct",
+          "Unsupported commands absent"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs",
+          "AGENTS.md",
+          "README.md"
+        ],
+        "validationCommands": [
+          "git diff --check"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-056"
+        ],
+        "createdAt": "2026-08-10T11:14:59.761Z",
+        "updatedAt": "2026-08-10T11:20:30.084Z"
+      },
+      {
+        "id": "WU079",
+        "milestoneId": "M017",
+        "title": "WU13-04 Deduplication, archival, terminology, and navigation",
+        "objective": "Consolidate duplicated or stale documentation and correct navigation.",
+        "scope": [
+          "Canonical links",
+          "Terminology",
+          "Archival status",
+          "Internal links"
+        ],
+        "outOfScope": [
+          "Cosmetic mass rewrite"
+        ],
+        "acceptanceCriteria": [
+          "Guidance consolidated or linked",
+          "History truthful",
+          "Internal links valid"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs",
+          "README.md"
+        ],
+        "validationCommands": [
+          "git diff --check"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-057"
+        ],
+        "createdAt": "2026-08-10T11:14:59.761Z",
+        "updatedAt": "2026-08-10T11:21:55.942Z"
+      },
+      {
+        "id": "WU080",
+        "milestoneId": "M017",
+        "title": "WU13-05 Final documentation baseline and closure",
+        "objective": "Validate the documentation baseline, record residual debt, and close M13.",
+        "scope": [
+          "Documentation validation",
+          "AIQT evidence",
+          "Milestone closure"
+        ],
+        "outOfScope": [
+          "New milestones",
+          "Product code"
+        ],
+        "acceptanceCriteria": [
+          "No material stale references",
+          "No product code change",
+          "M13 complete"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          ".aiqt",
+          "docs/milestones/m13-document-hygiene.md"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs",
+          "git diff --check",
+          "aiqt status"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-058"
+        ],
+        "createdAt": "2026-08-10T11:14:59.761Z",
+        "updatedAt": "2026-08-10T11:24:38.141Z"
       }
     ],
     "dependencies": [
@@ -3148,6 +3344,48 @@
         "id": "DEP-054",
         "fromId": "WU075",
         "toId": "WU050",
+        "type": "blocks",
+        "reason": "M13 is the final planned milestone."
+      },
+      {
+        "id": "DEP-055",
+        "fromId": "WU076",
+        "toId": "WU077",
+        "type": "blocks",
+        "reason": "Core reconciliation follows the audit."
+      },
+      {
+        "id": "DEP-056",
+        "fromId": "WU077",
+        "toId": "WU078",
+        "type": "blocks",
+        "reason": "Technical reconciliation follows primary docs."
+      },
+      {
+        "id": "DEP-057",
+        "fromId": "WU078",
+        "toId": "WU079",
+        "type": "blocks",
+        "reason": "Consolidation follows contract reconciliation."
+      },
+      {
+        "id": "DEP-058",
+        "fromId": "WU079",
+        "toId": "WU080",
+        "type": "blocks",
+        "reason": "Closure follows the baseline."
+      },
+      {
+        "id": "DEP-059",
+        "fromId": "WU044",
+        "toId": "WU076",
+        "type": "blocks",
+        "reason": "M13 is the final planned milestone."
+      },
+      {
+        "id": "DEP-060",
+        "fromId": "WU075",
+        "toId": "WU076",
         "type": "blocks",
         "reason": "M13 is the final planned milestone."
       }
@@ -6676,17 +6914,314 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T10:50:50.728Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T10:50:50.728Z"
+    },
+    {
+      "id": "C065",
+      "workUnitId": "WU076",
+      "packetId": "PKT-066",
+      "summary": "Completed the M13 documentation inventory and truth audit.",
+      "completed": [
+        "Reviewed meaningful Markdown documentation, repository governance files, AIQT state, and implementation contracts relevant to M6-M12.",
+        "Identified the README, roadmap, milestone documents, requirements, AGENTS.md, milestone skill, PR template, and AIQT graph as affected surfaces.",
+        "Identified stale status and terminology claims for correction; no implementation-versus-approved-requirement conflict was found."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/inputs/m13-work-units.json",
+        "docs/milestones/m13-document-hygiene.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "rg --files -g '*.md' -g '*.mdx' -g 'AGENTS.md' -g 'README.md'",
+          "result": "passed",
+          "summary": "Inventory identified meaningful documentation locations."
+        },
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "AIQT graph is readable and M13 was refined into five work units."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Meaningful documentation locations reviewed",
+          "result": "passed",
+          "evidence": "README, AGENTS, roadmap, specifications, requirement, release guide, M6-M12 records, AIQT state, and PR governance were audited."
+        },
+        {
+          "criterion": "Conflicts reported",
+          "result": "passed",
+          "evidence": "Status and terminology drift was identified for correction; implementation contracts match approved security boundaries."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T11:16:15.064Z"
+    },
+    {
+      "id": "C066",
+      "workUnitId": "WU077",
+      "packetId": "PKT-067",
+      "summary": "Reconciled Pi-Hub's primary product overview, documentation navigation, and roadmap status.",
+      "completed": [
+        "Replaced the stale README milestone links with a current M1-M12 feature overview, durable security boundaries, monitoring concept definitions, setup, and canonical documentation navigation.",
+        "Added one current-product contract as the canonical operational/security reference instead of duplicating detailed behavior across entry points.",
+        "Rewrote the roadmap as concise delivered milestone history and marked M13 as the final milestone in implementation."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "README.md",
+        "docs/current-product-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and Vite production build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors remain in the documentation diff."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "M1-M12 status accurate",
+          "result": "passed",
+          "evidence": "Roadmap now lists all delivered M1-M12 outcomes."
+        },
+        {
+          "criterion": "M13 represented accurately",
+          "result": "passed",
+          "evidence": "README and roadmap identify M13 as the final documentation milestone in implementation."
+        },
+        {
+          "criterion": "Primary docs link to details",
+          "result": "passed",
+          "evidence": "README links to roadmap, current contract, historical specifications, milestones, and release procedure."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T11:18:15.320Z"
+    },
+    {
+      "id": "C067",
+      "workUnitId": "WU078",
+      "packetId": "PKT-068",
+      "summary": "Reconciled detailed technical, security, and operational documentation with the implemented product.",
+      "completed": [
+        "Established docs/current-product-contract.md as the canonical current behavior source for security boundaries, monitoring semantics, retention, M11 read-only visibility, M12 bounded history, and M10 administration.",
+        "Marked M6-M12 milestone records implemented and converted later-milestone claims in M10-M12 into historically-scoped closure notes.",
+        "Marked functional and technical MVP specifications as historical baselines and linked them to current canonical documentation."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/current-product-contract.md",
+        "docs/pi-hub-functional-specification.md",
+        "docs/pi-hub-technical-architecture-specification.md",
+        "docs/milestones/m6-device-health-and-diagnostics.md",
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/milestones/m8-alerts-and-threshold-governance.md",
+        "docs/milestones/m9-docker-operational-visibility.md",
+        "docs/milestones/m10-controlled-device-administration.md",
+        "docs/milestones/m11-network-storage-system-visibility.md",
+        "docs/milestones/m12-historical-monitoring.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "rg -n -i 'power[ -]?on|arbitrary (remote )?(command|shell)|host.?key|planned/not started|draft for implementation|approved for implementation|in implementation' README.md AGENTS.md docs -g '*.md'",
+          "result": "passed",
+          "summary": "Current guidance confirms boundaries; remaining planned wording is historical milestone context or the active M13 state."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "Documentation diff has no whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Security boundaries accurate",
+          "result": "passed",
+          "evidence": "Current contract, README, AGENTS, requirements, and milestone records prohibit arbitrary commands, stored secrets, automatic host-key trust, and Power On."
+        },
+        {
+          "criterion": "Monitoring concepts distinct",
+          "result": "passed",
+          "evidence": "README and current contract define separate Device Health, Service Health, Alerts, Activity, and Historical Monitoring semantics."
+        },
+        {
+          "criterion": "Unsupported commands absent",
+          "result": "passed",
+          "evidence": "No current documentation claims arbitrary command or Power On support."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T11:20:30.084Z"
+    },
+    {
+      "id": "C068",
+      "workUnitId": "WU079",
+      "packetId": "PKT-069",
+      "summary": "Consolidated canonical documentation, preserved historical context, and validated internal navigation.",
+      "completed": [
+        "Centralized current operational truth in docs/current-product-contract.md and linked README, roadmap, and historical specs to canonical owners.",
+        "Added explicit historical-status notes to completed M6-M12 milestone records where later planning language could otherwise mislead.",
+        "Removed the orphaned generated Pi Control design export after primary navigation was reconciled.",
+        "Validated all repository-relative Markdown links."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "README.md",
+        "docs/current-product-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "docs/pi-hub-functional-specification.md",
+        "docs/pi-hub-technical-architecture-specification.md",
+        "docs/milestones/m6-device-health-and-diagnostics.md",
+        "docs/milestones/m7-service-health-and-operational-activity.md",
+        "docs/milestones/m8-alerts-and-threshold-governance.md",
+        "docs/milestones/m9-docker-operational-visibility.md",
+        "docs/milestones/m10-controlled-device-administration.md",
+        "docs/milestones/m11-network-storage-system-visibility.md",
+        "docs/milestones/m12-historical-monitoring.md",
+        "docs/design/Pi Control.dc.html"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "PowerShell relative Markdown link check",
+          "result": "passed",
+          "summary": "All repository-relative Markdown links from README, AGENTS, and docs resolve."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors in the documentation diff."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Guidance consolidated or linked",
+          "result": "passed",
+          "evidence": "Current behavior has a single dedicated contract and entry points link to it."
+        },
+        {
+          "criterion": "History truthful",
+          "result": "passed",
+          "evidence": "Milestone records retain their original scope and now label later-planning statements as historical."
+        },
+        {
+          "criterion": "Internal links valid",
+          "result": "passed",
+          "evidence": "Repository-relative Markdown link validation passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T11:21:55.942Z"
+    },
+    {
+      "id": "C069",
+      "workUnitId": "WU080",
+      "packetId": "PKT-070",
+      "summary": "Validated and closed the M13 documentation baseline.",
+      "completed": [
+        "Completed WU13-01 through WU13-05 with documentation-only changes.",
+        "Reconciled README, roadmap, product contract, historical milestone status, security/operational terminology, and repository navigation.",
+        "Recorded the bounded AIQT duplicate-planning-entry residual debt in the M13 closure record.",
+        "Ran canonical validation, Markdown relative-link validation, stale-reference searches, and reviewed the final file scope."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/m13-work-units.json",
+        ".aiqt/inputs/checkpoint-m13-wu01.json",
+        ".aiqt/inputs/checkpoint-m13-wu02.json",
+        ".aiqt/inputs/checkpoint-m13-wu03.json",
+        ".aiqt/inputs/checkpoint-m13-wu04.json",
+        ".aiqt/inputs/checkpoint-m13-wu05.json",
+        "README.md",
+        "docs/current-product-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "docs/milestones/m13-document-hygiene.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed; lint reported 4 pre-existing warnings."
+        },
+        {
+          "command": "PowerShell relative Markdown link check",
+          "result": "passed",
+          "summary": "All repository-relative Markdown links resolve."
+        },
+        {
+          "command": "rg stale-reference searches",
+          "result": "passed",
+          "summary": "Current status and security terminology are reconciled; historical planning wording is labeled as historical context."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        },
+        {
+          "command": "git diff --name-only",
+          "result": "passed",
+          "summary": "Final diff contains only documentation and AIQT workflow metadata; no product code changed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "No material stale references",
+          "result": "passed",
+          "evidence": "README, roadmap, current contract, and milestone status were reconciled; historical records preserve their closure-era context."
+        },
+        {
+          "criterion": "No product code change",
+          "result": "passed",
+          "evidence": "Final diff is limited to docs, README, and .aiqt metadata/inputs."
+        },
+        {
+          "criterion": "M13 complete",
+          "result": "passed",
+          "evidence": "All five M13 work units have completed evidence and M13 document/roadmap mark it implemented."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-10T11:24:38.141Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-064",
-    "workUnitId": "WU075",
-    "milestoneId": "M016",
-    "createdAt": "2026-08-10T10:50:50.103Z",
+    "id": "PKT-070",
+    "workUnitId": "WU080",
+    "milestoneId": "M017",
+    "createdAt": "2026-08-10T11:21:57.204Z",
     "format": "markdown",
-    "contentHash": "sha256:c2fcb60bec114d017626c09825c7439d4355ce98853110f5cf2b05a07ef5da5e",
+    "contentHash": "sha256:eb8fd5d1a0da0561a7f65d9908df662e7e623c2d46e15f0ac74314c695c347ae",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -6705,7 +7240,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T10:50:50.728Z",
+  "lastUpdatedAt": "2026-08-10T11:24:38.141Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -8624,6 +9159,156 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T10:50:50.728Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C065",
+      "current": {
+        "observationId": "sha256:40316671ef1b2b4f9d17dbec749f794d362bcdc25f44b22aff9f8f892e73622c",
+        "checkpointId": "C065",
+        "workUnitId": "WU076",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T11:16:15.064Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T11:16:15.064Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:40316671ef1b2b4f9d17dbec749f794d362bcdc25f44b22aff9f8f892e73622c",
+          "checkpointId": "C065",
+          "workUnitId": "WU076",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T11:16:15.064Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T11:16:15.064Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C066",
+      "current": {
+        "observationId": "sha256:4d6de1821d610d5057222f7da558663deb247cc6be4feb98e2da7000a152afb1",
+        "checkpointId": "C066",
+        "workUnitId": "WU077",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T11:18:15.320Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T11:18:15.320Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:4d6de1821d610d5057222f7da558663deb247cc6be4feb98e2da7000a152afb1",
+          "checkpointId": "C066",
+          "workUnitId": "WU077",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T11:18:15.320Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T11:18:15.320Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C067",
+      "current": {
+        "observationId": "sha256:312c23758d7e30640ae2d77d723e8a87374db624edc9a3557e4ebdfc7ea5bd75",
+        "checkpointId": "C067",
+        "workUnitId": "WU078",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T11:20:30.084Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T11:20:30.084Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:312c23758d7e30640ae2d77d723e8a87374db624edc9a3557e4ebdfc7ea5bd75",
+          "checkpointId": "C067",
+          "workUnitId": "WU078",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T11:20:30.084Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T11:20:30.084Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C068",
+      "current": {
+        "observationId": "sha256:de2644840418789120e1601e8e520822a2eecfe4b105b4437481b7321fec1ea2",
+        "checkpointId": "C068",
+        "workUnitId": "WU079",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T11:21:55.942Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T11:21:55.942Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:de2644840418789120e1601e8e520822a2eecfe4b105b4437481b7321fec1ea2",
+          "checkpointId": "C068",
+          "workUnitId": "WU079",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T11:21:55.942Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T11:21:55.942Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C069",
+      "current": {
+        "observationId": "sha256:160fe313d64f32514deb984d5b916490d86496d1f129d8d06aaf4350dc6d6c2a",
+        "checkpointId": "C069",
+        "workUnitId": "WU080",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-10T11:24:38.141Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-10T11:24:38.141Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:160fe313d64f32514deb984d5b916490d86496d1f129d8d06aaf4350dc6d6c2a",
+          "checkpointId": "C069",
+          "workUnitId": "WU080",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-10T11:24:38.141Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-10T11:24:38.141Z"
         }
       ]
     }
