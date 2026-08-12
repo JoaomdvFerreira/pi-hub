@@ -9,7 +9,7 @@ impl SyntheticProfile { pub fn device_count(self) -> usize { match self { Self::
 /// executor data. It performs no network operation and is intended for the
 /// deterministic count/scaling evidence consumed by WU14-04.
 pub fn run(profile: SyntheticProfile) -> SyntheticWorkloadResult {
- let executor=FakeRemoteExecutor::online("PIHUB_HOSTNAME=fixture\nPIHUB_UPTIME_SECONDS=60\nPIHUB_DOCKER_AVAILABLE=0\nPIHUB_SYS_CORES=4\n"); let mut online=0; let mut containers=0;
+ let executor=FakeRemoteExecutor::instrumented_online("PIHUB_HOSTNAME=fixture\nPIHUB_UPTIME_SECONDS=60\nPIHUB_DOCKER_AVAILABLE=0\nPIHUB_SYS_CORES=4\n"); let mut online=0; let mut containers=0;
  for index in 0..profile.device_count() { let device=Device { id:format!("fixture-{index}"), name:"Synthetic device".into(), host:"fixture.invalid".into(), ssh_port:22, ssh_username:"fixture".into(), description:None, device_type:DeviceType::RaspberryPi, monitoring_enabled:true, refresh_interval_seconds:None, notify_on_device_offline:true, notify_on_container_failure:true, notify_on_container_unhealthy:true, services:vec![], created_at:"2026-01-01T00:00:00Z".into(), updated_at:"2026-01-01T00:00:00Z".into() }; let snapshot=refresh_device_sync_with_policy(&executor,&device,None,&ThresholdPolicy::default()); if !snapshot.stale { online+=1 }; containers+=snapshot.containers.len(); }
  SyntheticWorkloadResult { devices:profile.device_count(), online_snapshots:online, container_count:containers }
 }

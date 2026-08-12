@@ -3124,12 +3124,12 @@
           "cargo test",
           "npm test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-063"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T07:40:46.482Z"
+        "updatedAt": "2026-08-12T07:53:23.557Z"
       },
       {
         "id": "WU085",
@@ -3162,12 +3162,12 @@
           "npm test",
           "npm run build"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-064"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T07:53:23.557Z"
       },
       {
         "id": "WU086",
@@ -3197,12 +3197,12 @@
           "cargo test",
           "cargo build"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-065"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T07:53:23.557Z"
       },
       {
         "id": "WU087",
@@ -7791,17 +7791,74 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T07:40:46.482Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:40:46.482Z"
+    },
+    {
+      "id": "C073",
+      "workUnitId": "WU084",
+      "packetId": "PKT-074",
+      "summary": "Completed WU14-04 deterministic pre-optimization baseline and request/backend audit.",
+      "completed": [
+        "Ran Idle and fixture-backed normal refresh plus 2/5/10-device synthetic scenarios under the in-app diagnostics controller.",
+        "Recorded a linear six-SSH-operation model per successful device refresh and existing four-permit/per-device-claim concurrency policy.",
+        "Published evidence with unavailable reasons for interactive UI/history/live-resource scenarios and separated WU14-05/WU14-06 investigations.",
+        "Corrected test-only diagnostics collection isolation so parallel unrelated tests cannot contaminate deterministic benchmark evidence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu04.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/infrastructure/ssh/fake.rs",
+        "src-tauri/src/monitoring/synthetic.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --lib",
+          "result": "passed",
+          "summary": "211 passed, 1 ignored; deterministic profile tests pass in the full parallel suite."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "All approved scenarios have evidence or a documented unavailable reason",
+          "result": "passed",
+          "evidence": "The baseline report records deterministic evidence and explicit non-fabricated unavailable reasons for interactive/live-only scenarios."
+        },
+        {
+          "criterion": "Measured hotspots and duplicate work are identified",
+          "result": "passed",
+          "evidence": "Six separate SSH executions per successful refresh are confirmed; no duplicate fixture operation classes or refresh amplification are observed."
+        },
+        {
+          "criterion": "No machine-specific CI thresholds are introduced",
+          "result": "passed",
+          "evidence": "Evidence records deterministic counts only; fixture durations below millisecond resolution are not converted into thresholds."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T07:53:23.557Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-073",
-    "workUnitId": "WU083",
+    "id": "PKT-074",
+    "workUnitId": "WU084",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T07:32:50.095Z",
+    "createdAt": "2026-08-12T07:47:35.079Z",
     "format": "markdown",
-    "contentHash": "sha256:b63ead86ec29fea6ef830ec9ea973b619c11beb0a171a685ce5860e239a86b2d",
+    "contentHash": "sha256:57c457414030cd4d6a84072f541ebbafc34614291de38157f32235d3cc7cd172",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7820,7 +7877,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T07:40:46.482Z",
+  "lastUpdatedAt": "2026-08-12T07:53:23.557Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -9979,6 +10036,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T07:40:46.482Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C073",
+      "current": {
+        "observationId": "sha256:3f594b518ca5df0ae21e94983866aeb305078f7b85252810ff2cb911c2b3a680",
+        "checkpointId": "C073",
+        "workUnitId": "WU084",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:53:23.557Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:53:23.557Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:3f594b518ca5df0ae21e94983866aeb305078f7b85252810ff2cb911c2b3a680",
+          "checkpointId": "C073",
+          "workUnitId": "WU084",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:53:23.557Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:53:23.557Z"
         }
       ]
     }
