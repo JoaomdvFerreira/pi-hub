@@ -77,7 +77,7 @@ The current in-memory router has no URL/query state. WU14-05 must decide whether
 
 ## WU14-02 implementation note
 
-WU14-02 resolves the core packaging decision as the local workspace crate `src-tauri/crates/pihub-benchmark-core`. It contains no Pi-Hub, SSH, Docker, or Tauri imports; Pi-Hub owns the Tauri state, typed commands, sampler task, and Settings surface. Windows sampling uses the current Pi-Hub process handle for working set, private bytes, and handle count. CPU/thread values remain unavailable in this work unit rather than relying on fragile attribution. WebView2 child processes are not included: reliable ownership cannot be established from the parent process handle alone, so their absence is explicit rather than heuristic.
+WU14-02 resolves the core packaging decision as the local workspace crate `src-tauri/crates/pihub-benchmark-core`. It contains no Pi-Hub, SSH, Docker, or Tauri imports; Pi-Hub owns the Tauri state, typed commands, sampler task, and Settings surface. Windows sampling uses the current Pi-Hub process handle for working set, private bytes, handle count, and sample-to-sample kernel/user CPU time. CPU is normalized to total available logical-processor capacity; thread count remains unavailable rather than relying on fragile attribution. WebView2 child processes are not included: reliable ownership cannot be established from the parent process handle alone, so their absence is explicit rather than heuristic.
 
 ## WU14-03 implementation note
 

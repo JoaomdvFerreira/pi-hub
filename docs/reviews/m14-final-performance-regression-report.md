@@ -63,3 +63,9 @@ The correction replaces that path with the typed `export_performance_benchmark_r
 While a benchmark is Running, the Settings panel now shows `Running · mm:ss` with the existing sample count. The elapsed display derives from the active session's existing start timestamp and creates one local one-second timer only while running; it does not poll diagnostics or add inactive diagnostics work. Start clears a prior report, and Stop/unmount/status transition clears the timer.
 
 The correction is covered by native atomic-write, typed-command, success/failure-feedback, running-timer, Stop cleanup, and no-idle-polling component tests. A newly built Windows installer is required for operator retest.
+
+## Post-closure Windows CPU measurement correction
+
+Installed-build operator evidence found valid memory, private-memory, handle, and operation samples while `processCpuPercent` was always `null`. The cause was explicit: the Windows sampler returned `None` for that optional field and had no process-timing collection.
+
+The sampler now reads the current Pi-Hub process's Windows kernel and user CPU times with `GetProcessTimes`. It derives usage from successive timing samples and wall-time samples, then normalizes by the active logical-processor count: `100%` means the Pi-Hub process consumed all logical-processor capacity during that interval; a process using one fully busy core on a four-logical-processor system reports `25%`. The first sample, failed timing read, non-monotonic time, zero elapsed interval, unavailable processor count, and out-of-range result remain unavailable rather than fabricated. This does not attribute WebView2 child processes, add polling, alter the report schema, or create sampler work while diagnostics are inactive.

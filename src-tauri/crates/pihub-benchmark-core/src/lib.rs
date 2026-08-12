@@ -8,9 +8,9 @@ impl BenchmarkConfig { pub fn validate(&self) -> Result<(), String> { if self.na
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)] #[serde(rename_all="camelCase")]
 pub struct RuntimeSample { pub process_cpu_percent: Option<f32>, pub resident_memory_bytes: Option<u64>, pub private_memory_bytes: Option<u64>, pub thread_count: Option<u32>, pub handle_count: Option<u32> }
-pub trait RuntimeSampler: Send + Sync { fn sample(&self) -> RuntimeSample; }
+pub trait RuntimeSampler: Send + Sync { fn sample(&mut self) -> RuntimeSample; }
 #[derive(Clone, Debug, Default)] pub struct FakeRuntimeSampler { pub sample: RuntimeSample }
-impl RuntimeSampler for FakeRuntimeSampler { fn sample(&self) -> RuntimeSample { self.sample.clone() } }
+impl RuntimeSampler for FakeRuntimeSampler { fn sample(&mut self) -> RuntimeSample { self.sample.clone() } }
 #[derive(Clone, Debug, Serialize, Deserialize)] #[serde(rename_all="camelCase")]
 pub struct MetricSample { pub elapsed_ms: u64, #[serde(flatten)] pub metrics: RuntimeSample }
 #[derive(Clone, Debug, Default, Serialize, Deserialize)] #[serde(rename_all="camelCase")]
