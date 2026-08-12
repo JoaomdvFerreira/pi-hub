@@ -22,7 +22,7 @@ This document is the roadmap-level source for milestone history and sequencing. 
 | M12 | Implemented | Local, bounded historical monitoring for device, service, and container trends. |
 | M13 | Implemented | Documentation-governance reconciliation; final planned milestone. |
 | M14 | Implemented | Performance benchmarking, runtime hardening, and Device Detail tab UX. |
-| M15 | In progress — WU15-01 | Device Update Intelligence & Maintenance Readiness; read-only, manual-check-first. |
+| M15 | Implemented — operator validation residual | Device Update Intelligence & Maintenance Readiness; read-only, manual-check-first. |
 
 The approved scope for M6-M14 is recorded in [milestone documents](../milestones/). M10's shutdown-specific requirement remains [the controlled shutdown requirement](../requirements/controlled-device-shutdown-requirement.md).
 
@@ -36,4 +36,4 @@ It will not become a general SSH client, file manager, Docker Compose editor, ar
 
 Human-readable product, requirement, and milestone documentation belongs under `docs/`. AIQT is the canonical structured execution/workflow state in `.aiqt/`. They must agree on materially represented milestone identity, scope, and status without duplicating complete Markdown documents into the workflow state.
 
-M13 was the final milestone in the prior roadmap. M14 is implemented. M15 has begun with its contract-design work unit; no update-inspection backend or UI behavior exists until later M15 work units deliver it.
+M13 was the final milestone in the prior roadmap. M14 and M15 are implemented. M15's remaining operator residual is documented in its final closure review; M16 remains planned and unstarted.

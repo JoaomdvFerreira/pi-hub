@@ -1,6 +1,6 @@
 # Pi-Hub — M15 Device Update Intelligence & Maintenance Readiness
 
-Status: In progress — WU15-01 contract frozen  
+Status: Complete — read-only operator validation residual
 Target release: v0.4.0, paired with M16 only if implementation evidence supports it  
 Predecessor: M14 / v0.3.1  
 Primary mode: read-only
@@ -32,3 +32,5 @@ Update intelligence is a distinct **Software Updates** section in Device Detail 
 ## Boundary and handoff
 
 M15 produces intelligence only. M16 may add separately governed, explicit update execution and verification, reusing M15 support detection, package state, persistence shape, and diagnostic labels rather than creating a parallel model.
+
+M15 closed with deterministic regression evidence and canonical validation. Its only residual is a read-only operator check on configured Raspberry Pi OS and Debian devices, documented in the [final closure review](../reviews/m15-final-regression-closure.md). M16 remains planned and unstarted.

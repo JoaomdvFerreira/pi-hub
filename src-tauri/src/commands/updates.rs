@@ -212,7 +212,7 @@ fn check_with(
     repo: &dyn SnapshotRepository,
     checked: DateTime<Utc>,
 ) -> Result<UpdateCheckResult, ApplicationError> {
-    let mut check_measure = crate::performance_diagnostics::measure("device_updates.check");
+    let check_measure = crate::performance_diagnostics::measure("device_updates.check");
     let target = target(device);
     let mut result = UpdateCheckResult::empty(device.id.clone());
     result.checked_at = Some(checked.to_rfc3339());
