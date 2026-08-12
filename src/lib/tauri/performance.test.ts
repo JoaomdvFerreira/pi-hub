@@ -12,7 +12,7 @@ describe("performance diagnostics commands", () => {
     getPerformanceBenchmarkReport();
     stopPerformanceBenchmark();
     exportPerformanceBenchmarkReport();
-    expect(invoke).toHaveBeenNthCalledWith(1, "start_performance_benchmark", { config: undefined });
+    expect(invoke).toHaveBeenNthCalledWith(1, "start_performance_benchmark");
     expect(invoke).toHaveBeenNthCalledWith(2, "get_performance_benchmark_status");
     expect(invoke).toHaveBeenNthCalledWith(3, "get_performance_benchmark_report");
     expect(invoke).toHaveBeenNthCalledWith(4, "stop_performance_benchmark");

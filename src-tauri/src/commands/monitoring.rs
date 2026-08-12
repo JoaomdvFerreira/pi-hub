@@ -10,7 +10,7 @@ use crate::domain::activity::ActivityEvent;
 use crate::domain::historical::{HistoricalMetric, HistoricalRange, HistoricalSeries};
 use crate::storage::historical_repository::{HistoricalRepository, JsonHistoricalRepository};
 use crate::performance_diagnostics::PerformanceDiagnostics;
-use pihub_benchmark_core::{BenchmarkConfig, BenchmarkReport, BenchmarkStatus};
+use pihub_benchmark_core::{BenchmarkReport, BenchmarkStatus};
 use crate::monitoring::synthetic::{self, SyntheticProfile, SyntheticWorkloadResult};
 
 fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, ApplicationError> {
@@ -106,8 +106,8 @@ fn export_benchmark_report_to_dir(report: &BenchmarkReport, directory: &Path) ->
 }
 
 #[tauri::command]
-pub fn start_performance_benchmark(app: AppHandle, config: Option<BenchmarkConfig>) -> Result<BenchmarkStatus, ApplicationError> {
-    app.state::<PerformanceDiagnostics>().start(config.unwrap_or_default()).map_err(benchmark_error)
+pub fn start_performance_benchmark(app: AppHandle) -> Result<BenchmarkStatus, ApplicationError> {
+    app.state::<PerformanceDiagnostics>().start(Default::default()).map_err(benchmark_error)
 }
 #[tauri::command]
 pub fn stop_performance_benchmark(app: AppHandle) -> Result<Option<BenchmarkReport>, ApplicationError> { Ok(app.state::<PerformanceDiagnostics>().stop()) }

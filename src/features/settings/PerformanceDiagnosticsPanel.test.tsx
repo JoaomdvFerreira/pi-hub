@@ -17,7 +17,7 @@ import { PerformanceDiagnosticsPanel } from "./PerformanceDiagnosticsPanel";
 const idle: BenchmarkStatus = { state: "idle" };
 const running: BenchmarkStatus = { state: "running", session: { id: "session", name: "Manual", scenario: "manual", startedAtUnixMs: 1_000, durationMs: 0 }, sampleCount: 0 };
 const stopped: BenchmarkStatus = { state: "stopped", session: { ...running.session!, durationMs: 2_000, endedAtUnixMs: 3_000 } };
-const report: BenchmarkReport = { session: stopped.session!, config: { name: "Manual", scenario: "manual", sampleIntervalMs: 1_000, maxDurationMs: 900_000, maxSamples: 900 }, samples: [], operations: [], warnings: [] };
+const report: BenchmarkReport = { session: stopped.session!, config: { scenario: "manual", sampleIntervalMs: 1_000, maxDurationMs: 900_000, maxSamples: 900 }, samples: [], operations: [], warnings: [] };
 
 describe("PerformanceDiagnosticsPanel", () => {
   beforeEach(() => {

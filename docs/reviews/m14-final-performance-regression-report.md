@@ -75,3 +75,9 @@ The sampler now reads the current Pi-Hub process's Windows kernel and user CPU t
 Installed-build operator validation found that the Activity device selector derived its options from persisted activity IDs and rendered those IDs directly, exposing raw UUIDs. It now resolves each activity device ID against the current inventory for the option label while retaining the exact ID as the option value and filter key; `All devices` is unchanged. Activity for a device no longer present in inventory remains selectable as `Deleted device`, rather than disappearing or exposing its UUID.
 
 Focused component coverage proves inventory-name labels, exact-ID filtering, the unchanged all-devices option, and the deleted-device fallback. A newly built Windows installer should be checked in Activity to confirm current inventory names and the deleted-device label in the selector.
+
+## Pre-merge benchmark export privacy correction
+
+Pre-merge review found that `BenchmarkConfig` accepted free-form `name` and `scenario` strings and serialized them into session and export metadata. The command now accepts no configuration from the frontend, and the core uses a closed `Manual`/`Synthetic` scenario enum with trusted derived display names. The report retains its bounded timing and configuration fields but contains no caller-supplied benchmark text.
+
+The core regression submits credential-like JSON metadata and proves deserialization rejects it, then serializes an exported report and proves the secret is absent while the trusted `Manual`/`manual` values remain. The typed frontend boundary proves the start command has no configuration payload. This resolves the export-privacy blocker; the final PR risk is **42/100 — Yellow**. Installed-build CPU and Activity-label retests remain separate operator evidence requirements.

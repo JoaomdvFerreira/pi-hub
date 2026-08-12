@@ -1,6 +1,7 @@
 use std::{sync::{Arc, OnceLock}, time::Instant};
 #[cfg(test)] use std::time::Duration;
 use pihub_benchmark_core::{BenchmarkConfig, BenchmarkController, BenchmarkReport, BenchmarkStatus, OperationMeasurement, RuntimeSample, RuntimeSampler};
+#[cfg(test)] use pihub_benchmark_core::BenchmarkScenario;
 
 static CONTROLLER: OnceLock<Arc<BenchmarkController>> = OnceLock::new();
 #[cfg(test)] thread_local! { static TEST_MEASUREMENT_SCOPE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
@@ -112,7 +113,7 @@ impl RuntimeSampler for PlatformRuntimeSampler { fn sample(&mut self) -> Runtime
         let _scope = TestMeasurementScope::enable();
         let diagnostics=PerformanceDiagnostics::default(); let _=diagnostics.stop();
         for (profile, devices) in [(crate::monitoring::synthetic::SyntheticProfile::Small,2_u64),(crate::monitoring::synthetic::SyntheticProfile::Medium,5),(crate::monitoring::synthetic::SyntheticProfile::LargerLocal,10)] {
-            diagnostics.start(BenchmarkConfig { name:"Synthetic baseline".into(), scenario:"synthetic".into(), max_samples:1, ..Default::default() }).unwrap();
+            diagnostics.start(BenchmarkConfig { scenario: BenchmarkScenario::Synthetic, max_samples:1, ..Default::default() }).unwrap();
             crate::monitoring::synthetic::run(profile); let report=diagnostics.stop().unwrap();
             let operation=|name:&str| report.operations.iter().find(|item|item.name==name);
             let count=|name:&str| operation(name).map(|item|item.count).unwrap_or(0);
