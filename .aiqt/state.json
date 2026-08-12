@@ -236,6 +236,19 @@
           "WU087",
           "WU088"
         ]
+      },
+      {
+        "id": "M019",
+        "title": "M15 — Device Update Intelligence & Maintenance Readiness",
+        "objective": "Provide explicit, read-only per-device APT update intelligence while preserving M14 runtime and query boundaries.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU089",
+          "WU090",
+          "WU091",
+          "WU092",
+          "WU093"
+        ]
       }
     ],
     "workUnits": [
@@ -3276,6 +3289,179 @@
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
         "updatedAt": "2026-08-12T09:39:58.235Z"
+      },
+      {
+        "id": "WU089",
+        "milestoneId": "M019",
+        "title": "WU15-01 Update Intelligence Contract & APT Evidence Design",
+        "objective": "Freeze M15's supported APT, evidence, state, bounds, fixtures, and validation contracts without product implementation.",
+        "scope": [
+          "Integrate milestone and evidence contracts",
+          "Record downstream dependencies"
+        ],
+        "outOfScope": [
+          "Backend implementation",
+          "UI implementation",
+          "Any APT mutation or polling"
+        ],
+        "acceptanceCriteria": [
+          "Contracts are explicit and reconciled with M14",
+          "AIQT records all M15 work units and dependencies"
+        ],
+        "agentContextRefs": [
+          "project.objective",
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "docs/milestones/",
+          "docs/design/",
+          "docs/roadmap/"
+        ],
+        "validationCommands": [
+          "aiqt status",
+          "git diff --check"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-12T13:31:32.521Z",
+        "updatedAt": "2026-08-12T13:32:34.665Z"
+      },
+      {
+        "id": "WU090",
+        "milestoneId": "M019",
+        "title": "WU15-02 Read-only Backend & Persistence",
+        "objective": "Implement typed fixed APT evidence operations, partial semantics, bounds, persistence, diagnostics, and deterministic tests.",
+        "scope": [
+          "Read-only backend",
+          "Latest-result persistence",
+          "Fixtures and tests"
+        ],
+        "outOfScope": [
+          "UI",
+          "APT mutation",
+          "Polling"
+        ],
+        "acceptanceCriteria": [
+          "Required and optional evidence follows WU15-01",
+          "Results are bounded and persisted"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src-tauri/"
+        ],
+        "validationCommands": [
+          "cargo test"
+        ],
+        "status": "ready",
+        "dependencies": [
+          "DEP-069"
+        ],
+        "createdAt": "2026-08-12T13:31:32.521Z",
+        "updatedAt": "2026-08-12T13:32:34.665Z"
+      },
+      {
+        "id": "WU091",
+        "milestoneId": "M019",
+        "title": "WU15-03 Device Detail Software Updates UI",
+        "objective": "Expose cached update intelligence and explicit checking in Device Detail System with query/action gates.",
+        "scope": [
+          "System-tab section",
+          "Explicit action",
+          "UI state tests"
+        ],
+        "outOfScope": [
+          "New top-level tab",
+          "Automatic checks"
+        ],
+        "acceptanceCriteria": [
+          "System tab gates cached reads",
+          "Only explicit action runs remote check"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "src/features/devices/"
+        ],
+        "validationCommands": [
+          "npm test"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-070"
+        ],
+        "createdAt": "2026-08-12T13:31:32.521Z",
+        "updatedAt": "2026-08-12T13:31:32.521Z"
+      },
+      {
+        "id": "WU092",
+        "milestoneId": "M019",
+        "title": "WU15-04 Performance, Failure & Real-device Validation",
+        "objective": "Validate update-check bounds, diagnostics, partial failures, and safe real-device behavior.",
+        "scope": [
+          "Performance evidence",
+          "Failure matrix",
+          "Read-only operator validation"
+        ],
+        "outOfScope": [
+          "Mutating live validation"
+        ],
+        "acceptanceCriteria": [
+          "Evidence documents costs and remaining manual checks"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "docs/reviews/"
+        ],
+        "validationCommands": [
+          "cargo test",
+          "npm test"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-071",
+          "DEP-072"
+        ],
+        "createdAt": "2026-08-12T13:31:32.521Z",
+        "updatedAt": "2026-08-12T13:31:32.521Z"
+      },
+      {
+        "id": "WU093",
+        "milestoneId": "M019",
+        "title": "WU15-05 Regression Gates & Milestone Closure",
+        "objective": "Close M15 only with deterministic gates, evidence, and canonical validation.",
+        "scope": [
+          "Regression review",
+          "Documentation",
+          "AIQT closure"
+        ],
+        "outOfScope": [
+          "M16 implementation"
+        ],
+        "acceptanceCriteria": [
+          "All M15 exit evidence is recorded",
+          "M16 remains unstarted"
+        ],
+        "agentContextRefs": [
+          "context.constraints"
+        ],
+        "suggestedFiles": [
+          "docs/",
+          ".aiqt/"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-073"
+        ],
+        "createdAt": "2026-08-12T13:31:32.521Z",
+        "updatedAt": "2026-08-12T13:31:32.521Z"
       }
     ],
     "dependencies": [
@@ -3754,6 +3940,41 @@
         "toId": "WU088",
         "type": "blocks",
         "reason": "Closure follows all evidence-backed implementation work."
+      },
+      {
+        "id": "DEP-069",
+        "fromId": "WU089",
+        "toId": "WU090",
+        "type": "blocks",
+        "reason": "The frozen evidence contract governs backend operations and persistence."
+      },
+      {
+        "id": "DEP-070",
+        "fromId": "WU090",
+        "toId": "WU091",
+        "type": "blocks",
+        "reason": "The UI requires typed persisted update results and action APIs."
+      },
+      {
+        "id": "DEP-071",
+        "fromId": "WU090",
+        "toId": "WU092",
+        "type": "blocks",
+        "reason": "Validation requires implemented instrumentation and failure behavior."
+      },
+      {
+        "id": "DEP-072",
+        "fromId": "WU091",
+        "toId": "WU092",
+        "type": "blocks",
+        "reason": "End-to-end query and duplicate-action validation requires the UI."
+      },
+      {
+        "id": "DEP-073",
+        "fromId": "WU092",
+        "toId": "WU093",
+        "type": "blocks",
+        "reason": "Closure requires performance and real-device evidence."
       }
     ]
   },
@@ -8097,17 +8318,71 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T09:39:58.235Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T09:39:58.235Z"
+    },
+    {
+      "id": "C078",
+      "workUnitId": "WU089",
+      "packetId": "PKT-079",
+      "summary": "Reconciled the M15 milestone and froze the read-only APT evidence, state, bounds, diagnostics, fixture, validation, and downstream-work-unit contracts without implementing product functionality.",
+      "completed": [
+        "Integrated the M15 milestone record and roadmap state.",
+        "Frozen supported APT capability detection, fixed read-only evidence operations, partial-data semantics, seven-day metadata freshness, held-package handling, reboot tri-state, and unavailable security classification.",
+        "Defined latest-only atomic persistence, output/package bounds, System-tab query/action gating, stable diagnostics labels, deterministic fixtures, real-device validation, and WU15-02 through WU15-05 dependencies."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "docs/milestones/m15-device-update-intelligence-maintenance-readiness.md",
+        "docs/design/m15-apt-read-only-evidence-contract.md",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "M019/WU089 is the active valid workflow state; M15 contains five serialized work units."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors in the documentation/configuration diff."
+        },
+        {
+          "command": "node -e JSON.parse(...) for .aiqt state/project",
+          "result": "passed",
+          "summary": "AIQT JSON parsed successfully."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Contracts are explicit and reconciled with M14",
+          "result": "passed",
+          "evidence": "The APT evidence contract binds fixed typed-operation, latest-state, diagnostics, and System-tab gate decisions to existing repository abstractions."
+        },
+        {
+          "criterion": "AIQT records all M15 work units and dependencies",
+          "result": "passed",
+          "evidence": "M019 with WU089-WU093 and five blocking edges is in .aiqt/state.json."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T13:32:34.665Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-078",
-    "workUnitId": "WU088",
-    "milestoneId": "M018",
-    "createdAt": "2026-08-12T09:35:37.575Z",
+    "id": "PKT-079",
+    "workUnitId": "WU089",
+    "milestoneId": "M019",
+    "createdAt": "2026-08-12T13:31:33.790Z",
     "format": "markdown",
-    "contentHash": "sha256:4cec8d274ba0b0ae8ca982b0ce2b6019286fb76c461e4f299ce0b79d5d826101",
+    "contentHash": "sha256:df44d272d4e0cd1cdc7247e77c20c3ac905dc9149d50cc4488046b5c79edc1e6",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -8126,7 +8401,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T09:39:58.235Z",
+  "lastUpdatedAt": "2026-08-12T13:32:34.665Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10435,6 +10710,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T09:39:58.235Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C078",
+      "current": {
+        "observationId": "sha256:df8cfae5efcf52666bc23bca52dc69b8af6818214a2533f47ca9338eb3754381",
+        "checkpointId": "C078",
+        "workUnitId": "WU089",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T13:32:34.665Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T13:32:34.665Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:df8cfae5efcf52666bc23bca52dc69b8af6818214a2533f47ca9338eb3754381",
+          "checkpointId": "C078",
+          "workUnitId": "WU089",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T13:32:34.665Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T13:32:34.665Z"
         }
       ]
     }
