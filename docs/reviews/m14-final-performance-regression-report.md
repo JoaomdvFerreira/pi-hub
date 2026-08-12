@@ -69,3 +69,9 @@ The correction is covered by native atomic-write, typed-command, success/failure
 Installed-build operator evidence found valid memory, private-memory, handle, and operation samples while `processCpuPercent` was always `null`. The cause was explicit: the Windows sampler returned `None` for that optional field and had no process-timing collection.
 
 The sampler now reads the current Pi-Hub process's Windows kernel and user CPU times with `GetProcessTimes`. It derives usage from successive timing samples and wall-time samples, then normalizes by the active logical-processor count: `100%` means the Pi-Hub process consumed all logical-processor capacity during that interval; a process using one fully busy core on a four-logical-processor system reports `25%`. The first sample, failed timing read, non-monotonic time, zero elapsed interval, unavailable processor count, and out-of-range result remain unavailable rather than fabricated. This does not attribute WebView2 child processes, add polling, alter the report schema, or create sampler work while diagnostics are inactive.
+
+## Post-closure Activity device-selector correction
+
+Installed-build operator validation found that the Activity device selector derived its options from persisted activity IDs and rendered those IDs directly, exposing raw UUIDs. It now resolves each activity device ID against the current inventory for the option label while retaining the exact ID as the option value and filter key; `All devices` is unchanged. Activity for a device no longer present in inventory remains selectable as `Deleted device`, rather than disappearing or exposing its UUID.
+
+Focused component coverage proves inventory-name labels, exact-ID filtering, the unchanged all-devices option, and the deleted-device fallback. A newly built Windows installer should be checked in Activity to confirm current inventory names and the deleted-device label in the selector.
