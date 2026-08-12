@@ -1,4 +1,5 @@
 use tauri::{AppHandle, Manager};
+use std::path::{Path, PathBuf};
 
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::error::ApplicationError;
@@ -87,6 +88,23 @@ pub fn get_historical_series(app: AppHandle, device_id: String, entity_id: Optio
 
 fn benchmark_error(message: String) -> ApplicationError { ApplicationError { code: "BenchmarkError".into(), message, remediation: Some("Stop the active session or review the benchmark configuration.".into()), retryable: false } }
 
+fn export_error(message: String) -> ApplicationError {
+    ApplicationError {
+        code: "BenchmarkExportError".into(),
+        message,
+        remediation: Some("Check that your Downloads folder is available and writable, then try again.".into()),
+        retryable: true,
+    }
+}
+
+fn export_benchmark_report_to_dir(report: &BenchmarkReport, directory: &Path) -> Result<PathBuf, ApplicationError> {
+    let path = directory.join(format!("pihub-performance-report-{}.json", report.session.id));
+    let bytes = serde_json::to_vec_pretty(report).map_err(|err| export_error(format!("could not serialize performance report: {err}")))?;
+    crate::storage::atomic::write_atomic(&path, &bytes)
+        .map_err(|err| export_error(format!("could not save performance report: {err}")))?;
+    Ok(path)
+}
+
 #[tauri::command]
 pub fn start_performance_benchmark(app: AppHandle, config: Option<BenchmarkConfig>) -> Result<BenchmarkStatus, ApplicationError> {
     app.state::<PerformanceDiagnostics>().start(config.unwrap_or_default()).map_err(benchmark_error)
@@ -98,4 +116,36 @@ pub fn get_performance_benchmark_status(app: AppHandle) -> BenchmarkStatus { app
 #[tauri::command]
 pub fn get_performance_benchmark_report(app: AppHandle) -> Option<BenchmarkReport> { app.state::<PerformanceDiagnostics>().report() }
 #[tauri::command]
+pub fn export_performance_benchmark_report(app: AppHandle) -> Result<String, ApplicationError> {
+    let diagnostics = app.state::<PerformanceDiagnostics>();
+    let BenchmarkStatus::Stopped { .. } = diagnostics.status() else {
+        return Err(export_error("a completed performance report is not available yet".into()));
+    };
+    let report = diagnostics.report().ok_or_else(|| export_error("a completed performance report is not available yet".into()))?;
+    let directory = app.path().download_dir().map_err(|err| export_error(format!("could not resolve the Downloads folder: {err}")))?;
+    Ok(export_benchmark_report_to_dir(&report, &directory)?.display().to_string())
+}
+#[tauri::command]
 pub fn run_synthetic_benchmark_profile(profile: SyntheticProfile) -> SyntheticWorkloadResult { synthetic::run(profile) }
+
+#[cfg(test)]
+mod benchmark_export_tests {
+    use super::*;
+    use tempfile::tempdir;
+
+    fn report() -> BenchmarkReport {
+        let controller = pihub_benchmark_core::BenchmarkController::new();
+        controller.start(Default::default()).unwrap();
+        controller.stop().unwrap()
+    }
+
+    #[test]
+    fn export_writes_the_completed_report_as_json_to_the_selected_directory() {
+        let directory = tempdir().unwrap();
+        let report = report();
+        let path = export_benchmark_report_to_dir(&report, directory.path()).unwrap();
+        assert!(path.starts_with(directory.path()));
+        assert_eq!(path.file_name().unwrap().to_string_lossy(), format!("pihub-performance-report-{}.json", report.session.id));
+        assert_eq!(serde_json::from_slice::<BenchmarkReport>(&std::fs::read(path).unwrap()).unwrap().session.id, report.session.id);
+    }
+}

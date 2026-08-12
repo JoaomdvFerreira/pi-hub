@@ -53,3 +53,13 @@ Operator checklist for a clean Windows installation:
 4. Start one diagnostics session, run one normal device refresh, stop/export the report, and record SSH aggregate duration, Pi-Hub working/private bytes, handles, and the session timestamp with device identities redacted.
 
 M15 remains planned and unstarted.
+
+## Post-closure installed-build correction
+
+Operator evidence confirmed that completed diagnostics sessions work but browser-style report export is not reliable in the installed Windows WebView. The original frontend handler only created a Blob and clicked a temporary anchor; it never invoked Tauri, opened a native dialog, requested a capability, or wrote a file. The installed build could therefore ignore the browser download with no feedback.
+
+The correction replaces that path with the typed `export_performance_benchmark_report` Tauri command. It exports only a stopped, already-redacted report to the native Downloads directory using the existing atomic-write helper, returns the exact saved path, and presents explicit success or failure feedback. No Tauri dialog/filesystem plugin or capability was previously installed, so no new plugin or permission surface was added.
+
+While a benchmark is Running, the Settings panel now shows `Running · mm:ss` with the existing sample count. The elapsed display derives from the active session's existing start timestamp and creates one local one-second timer only while running; it does not poll diagnostics or add inactive diagnostics work. Start clears a prior report, and Stop/unmount/status transition clears the timer.
+
+The correction is covered by native atomic-write, typed-command, success/failure-feedback, running-timer, Stop cleanup, and no-idle-polling component tests. A newly built Windows installer is required for operator retest.

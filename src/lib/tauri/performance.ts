@@ -4,3 +4,4 @@ export const getPerformanceBenchmarkStatus = () => invoke<BenchmarkStatus>("get_
 export const startPerformanceBenchmark = (config?: BenchmarkConfig) => invoke<BenchmarkStatus>("start_performance_benchmark", { config });
 export const stopPerformanceBenchmark = () => invoke<BenchmarkReport | null>("stop_performance_benchmark");
 export const getPerformanceBenchmarkReport = () => invoke<BenchmarkReport | null>("get_performance_benchmark_report");
+export const exportPerformanceBenchmarkReport = () => invoke<string>("export_performance_benchmark_report");
