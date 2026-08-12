@@ -1,7 +1,7 @@
 # Pi-Hub post-MVP product roadmap
 
 Version: 0.3
-Status: M1-M13 implemented
+Status: M1-M13 implemented; M14 in progress
 Date: 2026-08-10
 
 ## Authority
@@ -21,8 +21,10 @@ This document is the roadmap-level source for milestone history and sequencing. 
 | M11 | Implemented | Read-only network, storage, and system visibility. |
 | M12 | Implemented | Local, bounded historical monitoring for device, service, and container trends. |
 | M13 | Implemented | Documentation-governance reconciliation; final planned milestone. |
+| M14 | In progress | Performance benchmarking, runtime hardening, and Device Detail tab UX. |
+| M15 | Planned | Device Update Intelligence; must not begin until M14 closes. |
 
-The approved scope for M6-M13 is recorded in [milestone documents](../milestones/). M10's shutdown-specific requirement remains [the controlled shutdown requirement](../requirements/controlled-device-shutdown-requirement.md).
+The approved scope for M6-M14 is recorded in [milestone documents](../milestones/). M10's shutdown-specific requirement remains [the controlled shutdown requirement](../requirements/controlled-device-shutdown-requirement.md).
 
 ## Product boundaries
 
@@ -34,4 +36,4 @@ It will not become a general SSH client, file manager, Docker Compose editor, ar
 
 Human-readable product, requirement, and milestone documentation belongs under `docs/`. AIQT is the canonical structured execution/workflow state in `.aiqt/`. They must agree on materially represented milestone identity, scope, and status without duplicating complete Markdown documents into the workflow state.
 
-M13 was the final planned milestone. No post-M13 product roadmap work is committed by this document.
+M13 was the final milestone in the prior roadmap. M14 is the approved current milestone; M15 remains planned and must not start before M14 closure.
