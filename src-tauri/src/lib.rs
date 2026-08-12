@@ -5,6 +5,7 @@ mod error;
 mod infrastructure;
 mod monitoring;
 mod platform;
+mod performance_diagnostics;
 mod state;
 mod storage;
 
@@ -65,6 +66,10 @@ pub fn run() {
             commands::monitoring::get_activity,
             commands::monitoring::get_device_activity,
             commands::monitoring::get_historical_series,
+            commands::monitoring::start_performance_benchmark,
+            commands::monitoring::stop_performance_benchmark,
+            commands::monitoring::get_performance_benchmark_status,
+            commands::monitoring::get_performance_benchmark_report,
             commands::containers::perform_container_action,
             commands::containers::get_container_logs,
             commands::administration::perform_administration_operation,
@@ -78,6 +83,7 @@ pub fn run() {
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
         ))
         .manage(platform::pty::PtySessionManager::default())
+        .manage(performance_diagnostics::PerformanceDiagnostics::default())
         .setup(|app| {
             log::info!("Pi-Hub starting up");
 

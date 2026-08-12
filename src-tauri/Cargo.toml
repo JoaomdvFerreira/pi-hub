@@ -5,6 +5,9 @@ description = "Pi-Hub: a Windows system-tray control center for personal self-ho
 authors = ["João Ferreira"]
 edition = "2021"
 
+[workspace]
+members = ["crates/pihub-benchmark-core"]
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
@@ -35,10 +38,11 @@ chrono = { version = "0.4", default-features = false, features = ["clock", "std"
 url = "2"
 tokio = { version = "1", features = ["rt", "sync", "time", "macros"] }
 reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls"] }
+pihub-benchmark-core = { path = "crates/pihub-benchmark-core" }
 
 [target.'cfg(windows)'.dependencies]
 webview2-com = "0.38"
-windows = "0.61"
+windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_ProcessStatus", "Win32_System_Threading"] }
 
 [dev-dependencies]
 tempfile = "3"

@@ -74,3 +74,7 @@ The current in-memory router has no URL/query state. WU14-05 must decide whether
 1. Should the reusable core be a workspace crate now, or an internal crate-like module with a CI import-boundary test? Both meet M14; the workspace crate more visibly proves reuse but adds Cargo workspace scope.
 2. Which supported Windows API/sampler library can reliably distinguish Pi-Hub from WebView2 child-process attribution without excessive platform dependency or sampling overhead? The report may mark child attribution unavailable.
 3. What build/environment metadata is useful while still excluding user/device identity? Proposed minimum: app version, OS family/version, architecture, and diagnostics-core version.
+
+## WU14-02 implementation note
+
+WU14-02 resolves the core packaging decision as the local workspace crate `src-tauri/crates/pihub-benchmark-core`. It contains no Pi-Hub, SSH, Docker, or Tauri imports; Pi-Hub owns the Tauri state, typed commands, sampler task, and Settings surface. Windows sampling uses the current Pi-Hub process handle for working set, private bytes, and handle count. CPU/thread values remain unavailable in this work unit rather than relying on fragile attribution. WebView2 child processes are not included: reliable ownership cannot be established from the parent process handle alone, so their absence is explicit rather than heuristic.

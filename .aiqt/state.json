@@ -3056,12 +3056,12 @@
           "cargo test",
           "npm test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-061"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:52:11.379Z"
+        "updatedAt": "2026-08-12T07:06:41.255Z"
       },
       {
         "id": "WU083",
@@ -3089,12 +3089,12 @@
         "validationCommands": [
           "cargo test"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-062"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T07:06:41.255Z"
       },
       {
         "id": "WU084",
@@ -7650,17 +7650,93 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T06:52:11.379Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T06:52:11.379Z"
+    },
+    {
+      "id": "C071",
+      "workUnitId": "WU082",
+      "packetId": "PKT-072",
+      "summary": "Completed WU14-02 with a reusable bounded benchmark core, current-process sampler adapter, typed Tauri diagnostics API, and minimal Settings diagnostics UI.",
+      "completed": [
+        "Resolved the packaging decision as local workspace crate pihub-benchmark-core, with no Pi-Hub, SSH, Docker, or Tauri imports.",
+        "Implemented one-active-session lifecycle, bounded samples/duration, aggregate operation measurements, explicit in-memory report retrieval/export, RuntimeSampler, and deterministic fake sampler.",
+        "Added typed start, stop, status, and report Tauri commands plus a Settings Performance Diagnostics panel without idle polling.",
+        "Implemented reliable Windows current-process working set, private bytes, and handle count sampling; deliberately excluded unreliable WebView2 child-process attribution."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu02.json",
+        "docs/design/m14-performance-contract-baseline.md",
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/crates/pihub-benchmark-core/Cargo.toml",
+        "src-tauri/crates/pihub-benchmark-core/src/lib.rs",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/commands/monitoring.rs",
+        "src-tauri/src/lib.rs",
+        "src/types/performance.ts",
+        "src/lib/tauri/performance.ts",
+        "src/lib/tauri/performance.test.ts",
+        "src/features/settings/PerformanceDiagnosticsPanel.tsx",
+        "src/features/settings/GlobalSettingsScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test -p pihub-benchmark-core",
+          "result": "passed",
+          "summary": "Three core tests pass: inactive no-op, single bounded session, and aggregate-only operation records."
+        },
+        {
+          "command": "npm test -- --run src/lib/tauri/performance.test.ts",
+          "result": "passed",
+          "summary": "Typed frontend diagnostics command boundary test passes."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed; lint retained four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "One bounded active session",
+          "result": "passed",
+          "evidence": "Core rejects a concurrent start, caps samples and duration, and stops idempotently into an in-memory report."
+        },
+        {
+          "criterion": "No sampler while inactive",
+          "result": "passed",
+          "evidence": "The Tauri adapter only spawns a sampler after start; its loop exits on inactive state. Core inactive measurement returns before state locking or allocation."
+        },
+        {
+          "criterion": "Core has no Pi-Hub domain/SSH/Docker/Tauri imports",
+          "result": "passed",
+          "evidence": "The isolated workspace crate depends only on serde and uuid; platform/Tauri adapters remain in Pi-Hub."
+        },
+        {
+          "criterion": "Report is redacted and exportable",
+          "result": "passed",
+          "evidence": "The report contains normalized labels and aggregates only; the Settings UI exports explicit JSON, and no identity/credential/raw-command fields are accepted by the core."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T07:06:41.255Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-071",
-    "workUnitId": "WU081",
+    "id": "PKT-072",
+    "workUnitId": "WU082",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T06:51:23.159Z",
+    "createdAt": "2026-08-12T06:56:47.080Z",
     "format": "markdown",
-    "contentHash": "sha256:829933d825f8aa2a965d90429e9f98e7906659574046ce125a6bc2bdd084d434",
+    "contentHash": "sha256:8f7c5cf09ed64e52905e6fb149f140449db84ad1e6d1564c08bbb1622c3dfa5e",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7679,7 +7755,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T06:52:11.379Z",
+  "lastUpdatedAt": "2026-08-12T07:06:41.255Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -9778,6 +9854,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T06:52:11.379Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C071",
+      "current": {
+        "observationId": "sha256:b7afbcb89e2a64b0a5c58ff3c97558bf434c61c8ae82368c475d1d8c357597cd",
+        "checkpointId": "C071",
+        "workUnitId": "WU082",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:06:41.255Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:06:41.255Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:b7afbcb89e2a64b0a5c58ff3c97558bf434c61c8ae82368c475d1d8c357597cd",
+          "checkpointId": "C071",
+          "workUnitId": "WU082",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:06:41.255Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:06:41.255Z"
         }
       ]
     }
