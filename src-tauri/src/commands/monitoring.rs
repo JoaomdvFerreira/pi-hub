@@ -10,6 +10,7 @@ use crate::domain::historical::{HistoricalMetric, HistoricalRange, HistoricalSer
 use crate::storage::historical_repository::{HistoricalRepository, JsonHistoricalRepository};
 use crate::performance_diagnostics::PerformanceDiagnostics;
 use pihub_benchmark_core::{BenchmarkConfig, BenchmarkReport, BenchmarkStatus};
+use crate::monitoring::synthetic::{self, SyntheticProfile, SyntheticWorkloadResult};
 
 fn snapshot_repository(app: &AppHandle) -> Result<JsonSnapshotRepository, ApplicationError> {
     let dir = app
@@ -32,7 +33,10 @@ pub async fn refresh_device(
     app: AppHandle,
     id: String,
 ) -> Result<DeviceSnapshot, ApplicationError> {
-    scheduler::refresh_one(&app, &id).await
+    let mut measurement = crate::performance_diagnostics::measure("tauri.refresh_device");
+    let result = scheduler::refresh_one(&app, &id).await;
+    if let Ok(snapshot)=&result { if let Some(item)=measurement.as_mut() { item.set_bytes(serde_json::to_vec(snapshot).map(|value| value.len() as u64).unwrap_or(0)); } } else if let Some(item)=measurement.as_mut() { item.fail(); }
+    result
 }
 
 /// Refreshes every monitoring-enabled device concurrently (bounded by the
@@ -51,7 +55,10 @@ pub fn get_latest_snapshot(
     app: AppHandle,
     id: String,
 ) -> Result<Option<DeviceSnapshot>, ApplicationError> {
-    Ok(snapshot_repository(&app)?.get(&id))
+    let mut measurement = crate::performance_diagnostics::measure("tauri.get_latest_snapshot");
+    let result = snapshot_repository(&app)?.get(&id);
+    if let Some(snapshot)=&result { if let Some(item)=measurement.as_mut() { item.set_bytes(serde_json::to_vec(snapshot).map(|value| value.len() as u64).unwrap_or(0)); } }
+    Ok(result)
 }
 
 #[tauri::command]
@@ -62,14 +69,20 @@ pub fn get_activity(app: AppHandle) -> Result<Vec<ActivityEvent>, ApplicationErr
 
 #[tauri::command]
 pub fn get_device_activity(app: AppHandle, device_id: String) -> Result<Vec<ActivityEvent>, ApplicationError> {
+    let mut measurement = crate::performance_diagnostics::measure("activity.read");
     let dir = app.path().app_config_dir().map_err(|err| ApplicationError { code: "ConfigurationError".into(), message: format!("could not resolve the application config directory: {err}"), remediation: None, retryable: false })?;
-    Ok(JsonActivityRepository::new(dir).load_for_device(&device_id))
+    let result = JsonActivityRepository::new(dir).load_for_device(&device_id);
+    if let Some(item)=measurement.as_mut() { item.set_bytes(serde_json::to_vec(&result).map(|value| value.len() as u64).unwrap_or(0)); }
+    Ok(result)
 }
 
 #[tauri::command]
 pub fn get_historical_series(app: AppHandle, device_id: String, entity_id: Option<String>, metric: HistoricalMetric, range: HistoricalRange) -> Result<HistoricalSeries, ApplicationError> {
+    let mut measurement = crate::performance_diagnostics::measure("history.query");
     let dir = app.path().app_config_dir().map_err(|err| ApplicationError { code: "ConfigurationError".into(), message: format!("could not resolve the application config directory: {err}"), remediation: None, retryable: false })?;
-    Ok(JsonHistoricalRepository::new(dir).query(&device_id, entity_id.as_deref(), metric, range, chrono::Utc::now()))
+    let result = JsonHistoricalRepository::new(dir).query(&device_id, entity_id.as_deref(), metric, range, chrono::Utc::now());
+    if let Some(item)=measurement.as_mut() { item.set_bytes(serde_json::to_vec(&result).map(|value| value.len() as u64).unwrap_or(0)); }
+    Ok(result)
 }
 
 fn benchmark_error(message: String) -> ApplicationError { ApplicationError { code: "BenchmarkError".into(), message, remediation: Some("Stop the active session or review the benchmark configuration.".into()), retryable: false } }
@@ -84,3 +97,5 @@ pub fn stop_performance_benchmark(app: AppHandle) -> Result<Option<BenchmarkRepo
 pub fn get_performance_benchmark_status(app: AppHandle) -> BenchmarkStatus { app.state::<PerformanceDiagnostics>().status() }
 #[tauri::command]
 pub fn get_performance_benchmark_report(app: AppHandle) -> Option<BenchmarkReport> { app.state::<PerformanceDiagnostics>().report() }
+#[tauri::command]
+pub fn run_synthetic_benchmark_profile(profile: SyntheticProfile) -> SyntheticWorkloadResult { synthetic::run(profile) }

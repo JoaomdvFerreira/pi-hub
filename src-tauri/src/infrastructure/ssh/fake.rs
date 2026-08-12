@@ -8,11 +8,11 @@ use super::executor::{RemoteExecutionResult, RemoteExecutor, SshTarget};
 /// tests (and later monitoring-scheduler tests) to simulate SSH outcomes
 /// without a real SSH server, per the integration-test strategy in
 /// docs/pi-hub-technical-architecture-specification.md section 25.3.
-pub struct FakeRemoteExecutor {
+#[allow(dead_code)] pub struct FakeRemoteExecutor {
     result: Result<RemoteExecutionResult, SshError>,
 }
 
-impl FakeRemoteExecutor {
+#[allow(dead_code)] impl FakeRemoteExecutor {
     pub fn returning(result: Result<RemoteExecutionResult, SshError>) -> Self {
         Self { result }
     }

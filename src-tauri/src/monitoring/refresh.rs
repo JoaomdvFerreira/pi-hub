@@ -48,6 +48,7 @@ pub fn refresh_device_sync_with_policy(
     previous: Option<&DeviceSnapshot>,
     policy: &ThresholdPolicy,
 ) -> DeviceSnapshot {
+    let mut refresh_measurement = crate::performance_diagnostics::measure("monitoring.device_refresh");
     let started = Instant::now();
     let captured_at = chrono::Utc::now().to_rfc3339();
     let target = SshTarget {
@@ -57,6 +58,7 @@ pub fn refresh_device_sync_with_policy(
     };
 
     if let Err(err) = executor.probe(&target, PROBE_TIMEOUT) {
+        if let Some(item)=refresh_measurement.as_mut() { item.fail(); }
         return DeviceSnapshot {
             device_id: device.id.clone(),
             connection_status: err.to_connection_status(),
@@ -87,6 +89,7 @@ pub fn refresh_device_sync_with_policy(
 
     let mut warnings = Vec::new();
 
+    let _metrics_measurement = crate::performance_diagnostics::measure("visibility.system");
     let metrics = match collect_system_metrics(executor, &target, METRICS_TIMEOUT) {
         Ok((metrics, parse_warnings)) => {
             warnings.extend(parse_warnings.into_iter().map(|w| w.0));
@@ -102,6 +105,7 @@ pub fn refresh_device_sync_with_policy(
         }
     };
 
+    let _docker_measurement = crate::performance_diagnostics::measure("docker.collect");
     let (docker_available, containers) =
         match collect_docker_containers(executor, &target, DOCKER_TIMEOUT) {
             Ok(DockerCollectionResult::Available {
@@ -122,7 +126,9 @@ pub fn refresh_device_sync_with_policy(
             }
         };
 
+    let _network_measurement = crate::performance_diagnostics::measure("visibility.network");
     let network_visibility = match collect_network_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("network visibility collection failed".into()); previous.and_then(|p| p.network_visibility.clone()) } };
+    let _storage_measurement = crate::performance_diagnostics::measure("visibility.storage");
     let storage_visibility = match collect_storage_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("storage visibility collection failed".into()); previous.and_then(|p| p.storage_visibility.clone()) } };
     let system_visibility = match collect_system_visibility(executor, &target, VISIBILITY_TIMEOUT) { Ok((value, parse_warnings)) => { warnings.extend(parse_warnings.into_iter().map(|w| w.0)); Some(value) }, Err(_) => { warnings.push("system visibility collection failed".into()); previous.and_then(|p| p.system_visibility.clone()) } };
 

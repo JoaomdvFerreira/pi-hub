@@ -1,8 +1,11 @@
-use std::sync::Arc;
-use pihub_benchmark_core::{BenchmarkConfig, BenchmarkController, BenchmarkReport, BenchmarkStatus, RuntimeSample, RuntimeSampler};
+use std::sync::{Arc, OnceLock};
+use pihub_benchmark_core::{BenchmarkConfig, BenchmarkController, BenchmarkReport, BenchmarkStatus, OperationMeasurement, RuntimeSample, RuntimeSampler};
+
+static CONTROLLER: OnceLock<Arc<BenchmarkController>> = OnceLock::new();
+pub fn measure(label: &'static str) -> Option<OperationMeasurement<'static>> { CONTROLLER.get().map(|controller| controller.measure(label)) }
 
 pub struct PerformanceDiagnostics { controller: Arc<BenchmarkController> }
-impl Default for PerformanceDiagnostics { fn default() -> Self { Self { controller: Arc::new(BenchmarkController::new()) } } }
+impl Default for PerformanceDiagnostics { fn default() -> Self { let controller = CONTROLLER.get_or_init(|| Arc::new(BenchmarkController::new())).clone(); Self { controller } } }
 impl PerformanceDiagnostics {
     pub fn start(&self, config: BenchmarkConfig) -> Result<BenchmarkStatus, String> {
         self.controller.start(config)?;
@@ -39,3 +42,14 @@ impl RuntimeSampler for PlatformRuntimeSampler {
 }
 #[cfg(not(windows))]
 impl RuntimeSampler for PlatformRuntimeSampler { fn sample(&self) -> RuntimeSample { RuntimeSample::default() } }
+
+#[cfg(test)] mod tests {
+    use super::*;
+    #[test] fn synthetic_refresh_aggregates_only_stable_labels_when_active() {
+        let diagnostics=PerformanceDiagnostics::default(); let _=diagnostics.stop();
+        diagnostics.start(BenchmarkConfig { max_samples: 4, ..Default::default() }).unwrap();
+        crate::monitoring::synthetic::run(crate::monitoring::synthetic::SyntheticProfile::Small);
+        let report=diagnostics.stop().unwrap(); let labels: Vec<_>=report.operations.iter().map(|item| item.name.as_str()).collect();
+        assert!(labels.contains(&"monitoring.device_refresh")); assert!(labels.contains(&"docker.collect")); assert!(labels.iter().all(|label| !label.contains("fixture") && !label.contains('@')));
+    }
+}

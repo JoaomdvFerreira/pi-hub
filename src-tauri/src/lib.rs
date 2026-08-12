@@ -70,6 +70,7 @@ pub fn run() {
             commands::monitoring::stop_performance_benchmark,
             commands::monitoring::get_performance_benchmark_status,
             commands::monitoring::get_performance_benchmark_report,
+            commands::monitoring::run_synthetic_benchmark_profile,
             commands::containers::perform_container_action,
             commands::containers::get_container_logs,
             commands::administration::perform_administration_operation,

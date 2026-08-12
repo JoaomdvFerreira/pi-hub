@@ -3089,12 +3089,12 @@
         "validationCommands": [
           "cargo test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-062"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T07:06:41.255Z"
+        "updatedAt": "2026-08-12T07:40:46.482Z"
       },
       {
         "id": "WU084",
@@ -3124,12 +3124,12 @@
           "cargo test",
           "npm test"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-063"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T07:40:46.482Z"
       },
       {
         "id": "WU085",
@@ -7726,17 +7726,82 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T07:06:41.255Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:06:41.255Z"
+    },
+    {
+      "id": "C072",
+      "workUnitId": "WU083",
+      "packetId": "PKT-073",
+      "summary": "Completed WU14-03 instrumentation and deterministic synthetic workloads.",
+      "completed": [
+        "Instrumented refresh, SSH, service, Docker, visibility, snapshot/history/activity/alert, and selected typed IPC paths with generic labels.",
+        "Added 2/5/10-device synthetic refresh profiles using existing fake executor, refresh orchestration, and parsers without network access.",
+        "Verified active aggregation and inactive no-op behavior through focused tests."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu03.json",
+        "docs/design/m14-performance-contract-baseline.md",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/monitoring/refresh.rs",
+        "src-tauri/src/monitoring/synthetic.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src-tauri/src/commands/monitoring.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/domain/service_health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test synthetic_refresh_aggregates_only_stable_labels_when_active --lib",
+          "result": "passed",
+          "summary": "Active synthetic refresh records generic aggregate labels only."
+        },
+        {
+          "command": "cargo test synthetic --lib",
+          "result": "passed",
+          "summary": "2/5/10-device profiles run deterministically without network."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Stable labels have bounded aggregation",
+          "result": "passed",
+          "evidence": "All adapter labels are fixed constants and core retains aggregates only."
+        },
+        {
+          "criterion": "2/5/10-device profiles run without Pis or VMs",
+          "result": "passed",
+          "evidence": "Synthetic profile tests execute production refresh/parsing with fixed executor data."
+        },
+        {
+          "criterion": "Sensitive data is absent from reports",
+          "result": "passed",
+          "evidence": "Labels are static and payload metrics are serialized byte totals only."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T07:40:46.482Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-072",
-    "workUnitId": "WU082",
+    "id": "PKT-073",
+    "workUnitId": "WU083",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T06:56:47.080Z",
+    "createdAt": "2026-08-12T07:32:50.095Z",
     "format": "markdown",
-    "contentHash": "sha256:8f7c5cf09ed64e52905e6fb149f140449db84ad1e6d1564c08bbb1622c3dfa5e",
+    "contentHash": "sha256:b63ead86ec29fea6ef830ec9ea973b619c11beb0a171a685ce5860e239a86b2d",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7755,7 +7820,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T07:06:41.255Z",
+  "lastUpdatedAt": "2026-08-12T07:40:46.482Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -9884,6 +9949,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T07:06:41.255Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C072",
+      "current": {
+        "observationId": "sha256:5ab7a24746fffb6faa2e70744ef4c618915281abde08beaf2e32ea319ce6e220",
+        "checkpointId": "C072",
+        "workUnitId": "WU083",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:40:46.482Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:40:46.482Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:5ab7a24746fffb6faa2e70744ef4c618915281abde08beaf2e32ea319ce6e220",
+          "checkpointId": "C072",
+          "workUnitId": "WU083",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:40:46.482Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:40:46.482Z"
         }
       ]
     }

@@ -69,8 +69,10 @@ fn alert_repository(app: &AppHandle) -> Result<JsonAlertRepository, ApplicationE
 }
 
 fn record_activity(app: &AppHandle, event: ActivityEvent) {
+    let mut measurement = crate::performance_diagnostics::measure("activity.write");
     if let Ok(repo) = activity_repository(app) {
         if let Err(err) = repo.append(event) {
+            if let Some(item)=measurement.as_mut() { item.fail(); }
             log::warn!("could not persist activity event: {err}");
         }
     }
@@ -150,6 +152,7 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
         retryable: true,
     })?;
 
+    let mut snapshot_measurement = crate::performance_diagnostics::measure("snapshot.write");
     snapshot_repo
         .upsert(&snapshot)
         .map_err(|err| ApplicationError {
@@ -158,11 +161,14 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
             remediation: Some("Check disk space and file permissions, then try again.".into()),
             retryable: true,
         })?;
+    if let Some(item)=snapshot_measurement.as_mut() { item.set_bytes(serde_json::to_vec(&snapshot).map(|value| value.len() as u64).unwrap_or(0)); }
 
     // Historical persistence is deliberately best-effort: a full disk or a
     // corrupt history file must never make the current refresh unusable.
+    let mut history_measurement = crate::performance_diagnostics::measure("history.persist");
     if let Ok(repo) = historical_repository(app) {
         if let Err(err) = repo.append_snapshot(&snapshot, chrono::Utc::now()) {
+            if let Some(item)=history_measurement.as_mut() { item.fail(); }
             log::warn!("could not persist historical monitoring sample: {err}");
         }
     }
@@ -172,6 +178,7 @@ async fn do_refresh(app: &AppHandle, device_id: &str) -> Result<DeviceSnapshot, 
     // Alert transitions are persisted before any notification can be shown. This is
     // intentionally separate from M7 Activity: alerts are current conditions, while
     // Activity is an audit trail of their meaningful lifecycle changes.
+    let _alert_measurement = crate::performance_diagnostics::measure("alert.evaluate");
     let alert_transitions = {
         let repo = alert_repository(app)?;
         let mut file = repo.load();
