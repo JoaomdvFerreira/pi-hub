@@ -89,6 +89,7 @@ fn execute(
 fn failure(error: SshError) -> UpdateFailure {
     let kind = match error {
         SshError::RemoteCommandTimeout | SshError::ConnectionTimeout => UpdateFailureKind::Timeout,
+        SshError::RemoteCommandError { .. } => UpdateFailureKind::RequiredCommand,
         _ => UpdateFailureKind::Transport,
     };
     UpdateFailure {
@@ -139,6 +140,18 @@ fn package(raw: &str) -> Result<UpdatePackages, String> {
         truncated: total as usize > MAX_UPDATE_DETAILS,
         packages,
     })
+}
+fn kept_back(raw: &str) -> Result<KeptBackPackages, String> {
+    let mut packages = vec![]; let mut total = 0_u32;
+    for name in raw.lines().filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK=")) {
+        if name.is_empty() || name.len() > MAX_FIELD_BYTES { return Err("invalidKeptBack".into()); }
+        total = total.saturating_add(1); if packages.len() < MAX_UPDATE_DETAILS { packages.push(name.to_string()); }
+    }
+    let reported_total = raw.lines().filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK_COUNT=")).collect::<Vec<_>>();
+    if reported_total.len() != 1 { return Err("invalidKeptBackCount".into()); }
+    let reported_total = reported_total[0].parse::<u32>().map_err(|_| "invalidKeptBackCount")?;
+    if total > reported_total { return Err("invalidKeptBackCount".into()); }
+    Ok(KeptBackPackages { total_count: Some(reported_total), packages, truncated: total as usize > MAX_UPDATE_DETAILS })
 }
 fn holds(raw: &str) -> Result<HeldPackages, String> {
     let mut packages = vec![];
@@ -258,23 +271,18 @@ fn check_with(
     }
     result.support.status = SupportStatus::Supported;
     result.support.package_manager = Some("aptDpkg".into());
-    let packages = match execute(
+    let packages_raw = match execute(
         executor,
         &target,
         RemoteOperation::UpdatePackages,
         Duration::from_secs(15),
         "device_updates.packages",
-    )
-    .and_then(|raw| {
-        package(&raw).map_err(|message| UpdateFailure {
-            kind: UpdateFailureKind::MalformedOutput,
-            message,
-        })
-    }) {
+    ) {
         Ok(v) => v,
         Err(f) => return save_or_return(repo, result, Some(f), check_measure),
     };
-    result.updates = packages;
+    result.updates = match package(&packages_raw).map_err(|message| UpdateFailure { kind: UpdateFailureKind::MalformedOutput, message }) { Ok(v) => v, Err(f) => return save_or_return(repo, result, Some(f), check_measure) };
+    result.kept_back_packages = match kept_back(&packages_raw).map_err(|message| UpdateFailure { kind: UpdateFailureKind::MalformedOutput, message }) { Ok(v) => v, Err(f) => return save_or_return(repo, result, Some(f), check_measure) };
     match execute(
         executor,
         &target,
@@ -347,7 +355,7 @@ fn check_with(
     };
     result.status = if result.package_metadata.status == MetadataStatus::Stale {
         UpdateStatus::Stale
-    } else if result.updates.total_count == Some(0) {
+    } else if result.updates.total_count == Some(0) && result.kept_back_packages.total_count == Some(0) {
         UpdateStatus::UpToDate
     } else {
         UpdateStatus::UpdatesAvailable
@@ -478,9 +486,10 @@ mod tests {
         holds: &str,
         mtime: &str,
     ) -> Vec<Result<RemoteExecutionResult, SshError>> {
+        let kept_back_count = if packages.contains("PIHUB_UPDATE_KEPT_BACK_COUNT=") { "" } else { "PIHUB_UPDATE_KEPT_BACK_COUNT=0\n" };
         vec![
             ok(detect()),
-            ok(&format!("{packages}PIHUB_UPDATE_PACKAGES_DONE=1\n")),
+            ok(&format!("{packages}{kept_back_count}PIHUB_UPDATE_PACKAGES_DONE=1\n")),
             ok(&format!("{holds}PIHUB_UPDATE_HOLDS_DONE=1\n")),
             ok(&format!("PIHUB_UPDATE_METADATA_MTIME={mtime}\n")),
             ok("PIHUB_UPDATE_REBOOT=unknown\n"),
@@ -497,6 +506,31 @@ mod tests {
     #[test]
     fn rejects_missing_completion() {
         assert!(package("PIHUB_UPDATE_PACKAGE=Inst x [1] (2)\n").is_err());
+    }
+    #[test]
+    fn parses_real_style_upgrade_and_kept_back_records() {
+        let raw = "PIHUB_UPDATE_PACKAGE=Inst bash [5.2] (5.3 Debian:stable [amd64])\nPIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK=firmware\nPIHUB_UPDATE_KEPT_BACK_COUNT=2\nPIHUB_UPDATE_PACKAGES_DONE=1\n";
+        assert_eq!(package(raw).unwrap().total_count, Some(1));
+        assert_eq!(kept_back(raw).unwrap().packages, ["linux-image", "firmware"]);
+    }
+    #[test]
+    fn kept_back_details_are_bounded() {
+        let raw = (0..201)
+            .map(|x| format!("PIHUB_UPDATE_KEPT_BACK=p{x}\n"))
+            .collect::<String>();
+        let got = kept_back(&format!("{raw}PIHUB_UPDATE_KEPT_BACK_COUNT=201\n")).unwrap();
+        assert_eq!(got.total_count, Some(201));
+        assert_eq!(got.packages.len(), 200);
+        assert!(got.truncated);
+        assert!(kept_back("PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=0\n").is_err());
+    }
+    #[test]
+    fn legacy_persisted_result_defaults_kept_back_evidence() {
+        let mut legacy = serde_json::to_value(UpdateCheckResult::empty("d".into())).unwrap();
+        legacy.as_object_mut().unwrap().remove("keptBackPackages");
+        let restored: UpdateCheckResult = serde_json::from_value(legacy).unwrap();
+        assert_eq!(restored.kept_back_packages.total_count, None);
+        assert!(restored.kept_back_packages.packages.is_empty());
     }
     #[test]
     fn holds_are_bounded() {
@@ -539,7 +573,7 @@ mod tests {
             &device(),
             &Script::new(vec![
                 ok(detect()),
-                ok("PIHUB_UPDATE_PACKAGES_DONE=1\n"),
+                ok("PIHUB_UPDATE_KEPT_BACK_COUNT=0\nPIHUB_UPDATE_PACKAGES_DONE=1\n"),
                 Err(SshError::RemoteCommandTimeout),
                 ok("PIHUB_UPDATE_METADATA_MTIME=none\n"),
                 ok("PIHUB_UPDATE_REBOOT=required\n"),
@@ -550,6 +584,19 @@ mod tests {
         .unwrap();
         assert!(partial.warnings.contains(&"heldPackagesUnknown".into()));
         assert_eq!(partial.reboot, RebootState::Required);
+        let normal_and_kept = check_with(&device(), &Script::new(full("PIHUB_UPDATE_PACKAGE=Inst bash [5.2] (5.3 Debian:stable [amd64])\nPIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=1\n", "", "999999")), &repo, now).unwrap();
+        assert_eq!(normal_and_kept.status, UpdateStatus::UpdatesAvailable);
+        assert_eq!(normal_and_kept.updates.total_count, Some(1));
+        assert_eq!(normal_and_kept.kept_back_packages.packages, ["linux-image"]);
+        let kept_only = check_with(&device(), &Script::new(full("PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=1\n", "PIHUB_UPDATE_HOLD=unrelated\n", "999999")), &repo, now).unwrap();
+        assert_eq!(kept_only.status, UpdateStatus::UpdatesAvailable);
+        assert_eq!(kept_only.updates.total_count, Some(0));
+        assert_eq!(kept_only.kept_back_packages.packages, ["linux-image"]);
+        assert_eq!(kept_only.held_packages.packages, ["unrelated"]);
+        let summary_only = check_with(&device(), &Script::new(full("PIHUB_UPDATE_KEPT_BACK_COUNT=5\n", "", "999999")), &repo, now).unwrap();
+        assert_eq!(summary_only.status, UpdateStatus::UpdatesAvailable);
+        assert_eq!(summary_only.kept_back_packages.total_count, Some(5));
+        assert!(summary_only.kept_back_packages.packages.is_empty());
     }
     #[test]
     fn real_orchestration_classifies_required_failure() {
@@ -575,6 +622,15 @@ mod tests {
         )
         .unwrap();
         assert_eq!(timeout.failure.unwrap().kind, UpdateFailureKind::Timeout);
+        let exit_100 = check_with(
+            &device(),
+            &Script::new(vec![ok(detect()), Err(SshError::RemoteCommandError { exit_code: Some(100), stderr: "Unable to fetch some archives".into() })]),
+            &repo,
+            Utc::now(),
+        )
+        .unwrap();
+        assert_eq!(exit_100.status, UpdateStatus::CheckFailed);
+        assert_eq!(exit_100.failure.unwrap().kind, UpdateFailureKind::RequiredCommand);
     }
     #[test]
     fn diagnostics_capture_real_check_labels() {
