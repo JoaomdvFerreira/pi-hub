@@ -69,8 +69,11 @@ impl RuntimeSampler for PlatformRuntimeSampler { fn sample(&self) -> RuntimeSamp
         for (profile, devices) in [(crate::monitoring::synthetic::SyntheticProfile::Small,2_u64),(crate::monitoring::synthetic::SyntheticProfile::Medium,5),(crate::monitoring::synthetic::SyntheticProfile::LargerLocal,10)] {
             diagnostics.start(BenchmarkConfig { name:"Synthetic baseline".into(), scenario:"synthetic".into(), max_samples:1, ..Default::default() }).unwrap();
             crate::monitoring::synthetic::run(profile); let report=diagnostics.stop().unwrap();
-            let count=|name:&str| report.operations.iter().find(|item|item.name==name).map(|item|item.count).unwrap_or(0);
+            let operation=|name:&str| report.operations.iter().find(|item|item.name==name);
+            let count=|name:&str| operation(name).map(|item|item.count).unwrap_or(0);
             assert_eq!(count("monitoring.device_refresh"),devices); assert_eq!(count("ssh.execute"),devices*6); assert_eq!(count("docker.collect"),devices); assert_eq!(count("visibility.network"),devices); assert_eq!(count("visibility.storage"),devices); assert_eq!(count("visibility.system"),devices);
+            assert_eq!(operation("ssh.execute").map(|item| item.failures), Some(0));
+            assert_eq!(operation("ssh.execute").and_then(|item| item.bytes), Some(devices * 6 * crate::monitoring::synthetic::ONLINE_FIXTURE_OUTPUT.len() as u64));
         }
     }
 }

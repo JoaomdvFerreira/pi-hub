@@ -62,7 +62,13 @@ impl RemoteExecutor for FakeRemoteExecutor {
     ) -> Result<RemoteExecutionResult, SshError> {
         let mut measurement = self.instrument.then(|| crate::performance_diagnostics::measure("ssh.execute")).flatten();
         let result = self.result.clone();
-        if result.is_err() { if let Some(item) = measurement.as_mut() { item.fail(); } }
+        if let Ok(execution) = &result {
+            if let Some(item) = measurement.as_mut() {
+                item.set_bytes((execution.stdout.len() + execution.stderr.len()) as u64);
+            }
+        } else if let Some(item) = measurement.as_mut() {
+            item.fail();
+        }
         result
     }
 }

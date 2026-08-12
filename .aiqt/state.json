@@ -3232,13 +3232,13 @@
           "cargo test",
           "npm test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-066",
           "DEP-067"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T08:38:36.167Z"
+        "updatedAt": "2026-08-12T09:13:58.404Z"
       },
       {
         "id": "WU088",
@@ -3270,12 +3270,12 @@
           "git diff --check",
           "aiqt status"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-068"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T09:13:58.404Z"
       }
     ],
     "dependencies": [
@@ -7963,17 +7963,84 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T08:38:36.167Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T08:38:36.167Z"
+    },
+    {
+      "id": "C076",
+      "workUnitId": "WU087",
+      "packetId": "PKT-077",
+      "summary": "Completed WU14-07 evidence-based runtime optimization review without weakening refresh semantics.",
+      "completed": [
+        "Reviewed the confirmed six-SSH-execution refresh candidate and rejected batching, data reuse, probe removal, multiplexing, and per-device collector parallelism because current evidence does not demonstrate a safe gain without coupling failure, timeout, capacity, or host-key behavior.",
+        "Added active-only successful SSH result-byte aggregation to the real and fake executors so deterministic profiles now report safe aggregate bytes without retaining payloads.",
+        "Re-ran the 2/5/10 deterministic profiles: request counts remain 12/30/60, failures remain zero, durations remain below aggregate millisecond resolution, and result bytes are 1080/2700/5400."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu07.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src-tauri/src/infrastructure/ssh/fake.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/monitoring/synthetic.rs",
+        "src-tauri/src/performance_diagnostics.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test deterministic_profiles_produce_linear_refresh_request_counts --lib",
+          "result": "passed",
+          "summary": "Protects 2/5/10 request counts, zero SSH failures, and result-byte totals."
+        },
+        {
+          "command": "cargo test synthetic_refresh_aggregates_only_stable_labels_when_active --lib",
+          "result": "passed",
+          "summary": "Preserves active-only stable-label aggregation."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; frontend lint retains four warnings."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Every optimization has a measured reason and result",
+          "result": "passed",
+          "evidence": "The WU14-07 report records the before/after profile evidence and explicit safety rationale for every reviewed candidate; none met the acceptance bar."
+        },
+        {
+          "criterion": "Semantics remain unchanged",
+          "result": "passed",
+          "evidence": "The successful-refresh model remains six independently bounded SSH executions per device; monitoring cadence, query gates, failure isolation, and host-key verification are unchanged."
+        },
+        {
+          "criterion": "Regression coverage protects the result",
+          "result": "passed",
+          "evidence": "The deterministic profile regression now asserts request count, zero failures, and safe aggregate byte totals for all three profile sizes."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T09:13:58.404Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-076",
-    "workUnitId": "WU086",
+    "id": "PKT-077",
+    "workUnitId": "WU087",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T08:29:52.388Z",
+    "createdAt": "2026-08-12T09:08:11.175Z",
     "format": "markdown",
-    "contentHash": "sha256:33b1068c8c8d0fb82821e1fcbd5c82b0feb679d415ef1d6295c422a04e0bcbdb",
+    "contentHash": "sha256:bea10d391c058358637eedd7c82fb8fc964f3be3eb1ea46918235a53d5c6be9e",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7992,7 +8059,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T08:38:36.167Z",
+  "lastUpdatedAt": "2026-08-12T09:13:58.404Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10241,6 +10308,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T08:38:36.167Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C076",
+      "current": {
+        "observationId": "sha256:11d057de1c7d61d4d089a2a27148a6cc4c84a6135e11152e0c437349e0a720b2",
+        "checkpointId": "C076",
+        "workUnitId": "WU087",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T09:13:58.404Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T09:13:58.404Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:11d057de1c7d61d4d089a2a27148a6cc4c84a6135e11152e0c437349e0a720b2",
+          "checkpointId": "C076",
+          "workUnitId": "WU087",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T09:13:58.404Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T09:13:58.404Z"
         }
       ]
     }

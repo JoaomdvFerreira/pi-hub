@@ -50,7 +50,13 @@ impl RemoteExecutor for OpenSshExecutor {
 
         let outcome = match run_with_timeout(&mut cmd, timeout) { Ok(outcome) => outcome, Err(err) => { if let Some(item)=measurement.as_mut() { item.fail(); } return Err(SshError::Spawn(err.to_string())) } };
         let result = classify_outcome(outcome);
-        if result.is_err() { if let Some(item)=measurement.as_mut() { item.fail(); } }
+        if let Ok(execution) = &result {
+            if let Some(item) = measurement.as_mut() {
+                item.set_bytes((execution.stdout.len() + execution.stderr.len()) as u64);
+            }
+        } else if let Some(item) = measurement.as_mut() {
+            item.fail();
+        }
         if matches!(result, Err(SshError::RemoteCommandTimeout | SshError::ConnectionTimeout)) { let _timeout = crate::performance_diagnostics::measure("ssh.timeout"); }
         result
     }
