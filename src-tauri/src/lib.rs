@@ -5,6 +5,7 @@ mod error;
 mod infrastructure;
 mod monitoring;
 mod platform;
+mod performance_diagnostics;
 mod state;
 mod storage;
 
@@ -65,6 +66,12 @@ pub fn run() {
             commands::monitoring::get_activity,
             commands::monitoring::get_device_activity,
             commands::monitoring::get_historical_series,
+            commands::monitoring::start_performance_benchmark,
+            commands::monitoring::stop_performance_benchmark,
+            commands::monitoring::get_performance_benchmark_status,
+            commands::monitoring::get_performance_benchmark_report,
+            commands::monitoring::export_performance_benchmark_report,
+            commands::monitoring::run_synthetic_benchmark_profile,
             commands::containers::perform_container_action,
             commands::containers::get_container_logs,
             commands::administration::perform_administration_operation,
@@ -78,6 +85,7 @@ pub fn run() {
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
         ))
         .manage(platform::pty::PtySessionManager::default())
+        .manage(performance_diagnostics::PerformanceDiagnostics::default())
         .setup(|app| {
             log::info!("Pi-Hub starting up");
 
@@ -134,8 +142,32 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
-                api.prevent_close();
-                let _ = window.hide();
+                use storage::config_repository::SettingsRepository;
+
+                // A missing or unreadable settings file resolves to the
+                // domain default (minimize to tray), so a close request never
+                // gets stuck between the two lifecycle states.
+                let minimize_to_tray = window
+                    .app_handle()
+                    .path()
+                    .app_config_dir()
+                    .ok()
+                    .map(|config_dir| {
+                        storage::config_repository::JsonSettingsRepository::new(config_dir)
+                            .load()
+                            .minimize_to_tray
+                    })
+                    .unwrap_or(true);
+
+                match platform::tray::close_action(minimize_to_tray) {
+                    platform::tray::CloseAction::HideToTray => {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    }
+                    platform::tray::CloseAction::ExitApplication => {
+                        platform::tray::exit_app(window.app_handle());
+                    }
+                }
             }
         })
         .run(tauri::generate_context!())

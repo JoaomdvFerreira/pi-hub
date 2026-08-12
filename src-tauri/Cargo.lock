@@ -2704,10 +2704,11 @@ dependencies = [
 
 [[package]]
 name = "pi-hub"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "chrono",
  "log",
+ "pihub-benchmark-core",
  "portable-pty",
  "reqwest 0.12.28",
  "serde",
@@ -2727,6 +2728,15 @@ dependencies = [
  "uuid",
  "webview2-com",
  "windows",
+]
+
+[[package]]
+name = "pihub-benchmark-core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "uuid",
 ]
 
 [[package]]

@@ -1,0 +1,41 @@
+{
+  "summary":"Completed WU14-01: integrated the approved M14 contracts and froze the performance baseline design without product implementation changes.",
+  "completed":[
+    "Integrated the M14 milestone, reusable diagnostics architecture, and Device Detail tabs/query contract under docs/milestones.",
+    "Appended the M14 AIQT graph with WU14-01 through WU14-08 and dependency checkpoints, preserving historical graph entries.",
+    "Documented production runtime paths, stable labels, bounded session/report and privacy contract, isolated Rust boundary, deterministic fixture profiles, baseline scenario matrix, evidence/invariant distinction, and tab/query ownership.",
+    "Recorded only genuine WU14-02 design decisions requiring later operator or implementation evidence."
+  ],
+  "notCompleted":[],
+  "filesChanged":[
+    ".aiqt/inputs/m14-work-units.json",
+    ".aiqt/runlog.jsonl",
+    ".aiqt/state.json",
+    "docs/design/m14-performance-contract-baseline.md",
+    "docs/milestones/m14-device-detail-tabs-ux-query-contract.md",
+    "docs/milestones/m14-performance-diagnostics-architecture.md",
+    "docs/milestones/m14-performance-runtime-device-detail-ux.md",
+    "docs/roadmap/post-mvp-product-roadmap.md"
+  ],
+  "validationResult":"passed",
+  "acceptanceCriteriaResult":"passed",
+  "validationCommands":[
+    {"command":"aiqt status","result":"passed","summary":"M14 was appended as canonical M018, WU081 became the active work unit, and workflow state passed."},
+    {"command":"PowerShell M14 Markdown relative-link check","result":"passed","summary":"All repository-relative links in the M14 documents and affected roadmap resolve."},
+    {"command":"git diff --check","result":"passed","summary":"No whitespace errors in M14 documentation or AIQT workflow changes."}
+  ],
+  "acceptanceCriteria":[
+    {"criterion":"Stable operation labels and bounded session/report model are documented","result":"passed","evidence":"docs/design/m14-performance-contract-baseline.md defines label families, lifecycle, bounds, aggregates, report shape, fast path, and redaction."},
+    {"criterion":"Core boundary excludes Pi-Hub models and platform adapters","result":"passed","evidence":"The baseline design requires a core-only Rust module/crate with no Pi-Hub domain, SSH, Docker, Tauri, Activity, or Alert imports."},
+    {"criterion":"Baseline scenarios and evidence/invariant distinction are defined","result":"passed","evidence":"The 2/5/10-device fixture profiles and complete local baseline scenario matrix distinguish machine evidence from deterministic gates."},
+    {"criterion":"All existing Device Detail sections and query ownership are mapped","result":"passed","evidence":"The design artifact maps every current section to persistent header or one approved tab, including current hooks and typed query ownership."},
+    {"criterion":"Later WU dependencies are explicit","result":"passed","evidence":"The milestone record, AIQT graph, and design artifact define WU14-02 through WU14-08 prerequisites and checkpoints."}
+  ],
+  "issues":[],
+  "targetStatus":"done",
+  "notes":[
+    "Risk score: 18/100 (low): documentation and AIQT planning only; no product code, version, release, live-device, tray, or configuration change.",
+    "The current in-memory router does not provide URL tab state; WU14-05 must select the smallest safe native routing evolution.",
+    "WU14-02 must choose the internal-module versus workspace-crate packaging and assess reliable Windows/WebView2 process attribution without violating the inactive-overhead constraint."
+  ]
+}

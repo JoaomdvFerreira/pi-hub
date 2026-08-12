@@ -4,7 +4,6 @@ pub mod openssh;
 pub mod operation;
 mod process;
 
-#[cfg(test)]
 pub mod fake;
 
 // Re-exported for the M3 monitoring work units (snapshot/scheduler code

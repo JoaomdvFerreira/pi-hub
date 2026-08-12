@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ActivityEvent } from "@/types/activity";
 
 const { getDeviceActivity, listen } = vi.hoisted(() => ({ getDeviceActivity: vi.fn(), listen: vi.fn() }));
@@ -8,8 +8,8 @@ vi.mock("@tauri-apps/api/event", () => ({ listen }));
 
 import { useDeviceActivity } from "./useDeviceActivity";
 
-function RecentActivity({ deviceId }: { deviceId: string }) {
-  const activity = useDeviceActivity(deviceId);
+function RecentActivity({ deviceId, enabled = true }: { deviceId: string; enabled?: boolean }) {
+  const activity = useDeviceActivity(deviceId, enabled);
   return <>{activity.length === 0 ? "empty" : activity.map((event) => <p key={event.id}>{event.summary}</p>)}</>;
 }
 
@@ -25,8 +25,14 @@ function deferred<T>() {
 }
 
 beforeEach(() => { listen.mockResolvedValue(vi.fn()); });
+afterEach(cleanup);
 
 describe("useDeviceActivity", () => {
+  it("does not request persisted activity while its tab is inactive", () => {
+    render(<RecentActivity deviceId="device-a-id" enabled={false} />);
+    expect(getDeviceActivity).not.toHaveBeenCalled();
+    expect(listen).not.toHaveBeenCalled();
+  });
   it("loads persisted activity through the device-specific boundary and retains a genuine empty state", async () => {
     getDeviceActivity.mockResolvedValueOnce([deviceAActivity]).mockResolvedValueOnce([]);
     const view = render(<RecentActivity deviceId="device-a-id" />);

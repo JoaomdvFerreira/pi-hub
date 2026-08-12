@@ -16,6 +16,23 @@ const TRAY_ID: &str = "main-tray";
 const TERMINAL_ID_PREFIX: &str = "terminal:";
 const SERVICE_ID_PREFIX: &str = "service:";
 
+/// The two supported outcomes for a main-window close request. Keeping this
+/// policy independent of Tauri objects makes the preference contract testable
+/// without a live Windows shell.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CloseAction {
+    HideToTray,
+    ExitApplication,
+}
+
+pub fn close_action(minimize_to_tray: bool) -> CloseAction {
+    if minimize_to_tray {
+        CloseAction::HideToTray
+    } else {
+        CloseAction::ExitApplication
+    }
+}
+
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let menu = build_menu(app)?;
 
@@ -238,8 +255,25 @@ pub fn show_main_window(app: &AppHandle) {
 ///    once you open the tray" most users have seen from *some* app at one
 ///    point). Doing it here guarantees the icon is gone immediately for
 ///    every deliberate exit through this menu, not just eventually.
-fn exit_app(app: &AppHandle) {
+pub fn exit_app(app: &AppHandle) {
     app.state::<PtySessionManager>().close_all();
     let _ = app.remove_tray_by_id(TRAY_ID);
     app.exit(0);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{close_action, CloseAction};
+
+    #[test]
+    fn close_hides_only_when_minimize_to_tray_is_enabled() {
+        assert_eq!(close_action(true), CloseAction::HideToTray);
+        assert_eq!(close_action(false), CloseAction::ExitApplication);
+    }
+
+    #[test]
+    fn close_action_is_deterministic_for_the_persisted_preference() {
+        assert_eq!(close_action(true), close_action(true));
+        assert_eq!(close_action(false), close_action(false));
+    }
 }

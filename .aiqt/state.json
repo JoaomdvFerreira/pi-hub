@@ -220,6 +220,22 @@
           "WU079",
           "WU080"
         ]
+      },
+      {
+        "id": "M018",
+        "title": "M14 Performance Benchmarking, Runtime Hardening & Device Detail UX",
+        "objective": "Establish opt-in, bounded in-application performance diagnostics; harden runtime behavior; and reorganize Device Detail with tab-scoped data loading.",
+        "status": "done",
+        "workUnitIds": [
+          "WU081",
+          "WU082",
+          "WU083",
+          "WU084",
+          "WU085",
+          "WU086",
+          "WU087",
+          "WU088"
+        ]
       }
     ],
     "workUnits": [
@@ -2966,6 +2982,300 @@
         ],
         "createdAt": "2026-08-10T11:14:59.761Z",
         "updatedAt": "2026-08-10T11:24:38.141Z"
+      },
+      {
+        "id": "WU081",
+        "milestoneId": "M018",
+        "title": "WU14-01 Performance Contract & Baseline Design",
+        "objective": "Freeze the performance vocabulary, reusable-core boundary, baseline evidence plan, and Device Detail query-ownership design before product optimization.",
+        "scope": [
+          "Runtime-path inventory",
+          "Benchmark contract",
+          "Deterministic scenario design",
+          "Device Detail tab/query mapping",
+          "WU14-02 through WU14-08 checkpoints"
+        ],
+        "outOfScope": [
+          "Benchmark engine",
+          "Runtime optimization",
+          "UI refactor",
+          "Windows fixes",
+          "Version bump"
+        ],
+        "acceptanceCriteria": [
+          "Stable operation labels and bounded session/report model are documented",
+          "Core boundary excludes Pi-Hub models and platform adapters",
+          "Baseline scenarios and evidence/invariant distinction are defined",
+          "All existing Device Detail sections and query ownership are mapped",
+          "Later WU dependencies are explicit"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs/milestones/m14-performance-runtime-device-detail-ux.md",
+          "docs/milestones/m14-performance-diagnostics-architecture.md",
+          "docs/milestones/m14-device-detail-tabs-ux-query-contract.md",
+          "docs/design/m14-performance-contract-baseline.md",
+          ".aiqt"
+        ],
+        "validationCommands": [
+          "aiqt status",
+          "git diff --check"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T06:52:11.379Z"
+      },
+      {
+        "id": "WU082",
+        "milestoneId": "M018",
+        "title": "WU14-02 Reusable Benchmark Core & Performance Diagnostics",
+        "objective": "Implement the reusable bounded Rust benchmark core, typed commands, sampler, and minimal in-app diagnostics surface.",
+        "scope": [
+          "Rust core",
+          "Sampler",
+          "Typed diagnostics API",
+          "Diagnostics UI"
+        ],
+        "outOfScope": [
+          "Production-path optimization",
+          "Live-device benchmark requirement"
+        ],
+        "acceptanceCriteria": [
+          "One bounded active session",
+          "No sampler while inactive",
+          "Core has no Pi-Hub domain/SSH/Docker/Tauri imports",
+          "Report is redacted and exportable"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri",
+          "src"
+        ],
+        "validationCommands": [
+          "cargo test",
+          "npm test"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-061"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T07:06:41.255Z"
+      },
+      {
+        "id": "WU083",
+        "milestoneId": "M018",
+        "title": "WU14-03 Pi-Hub Instrumentation & Synthetic Workloads",
+        "objective": "Instrument selected production paths and provide deterministic fixture-backed local workload profiles.",
+        "scope": [
+          "Operation adapters",
+          "Counters",
+          "Synthetic profiles"
+        ],
+        "outOfScope": [
+          "Evidence-driven optimization"
+        ],
+        "acceptanceCriteria": [
+          "Stable labels have bounded aggregation",
+          "2/5/10-device profiles run without Pis or VMs",
+          "Sensitive data is absent from reports"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri",
+          "tests"
+        ],
+        "validationCommands": [
+          "cargo test"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-062"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T07:40:46.482Z"
+      },
+      {
+        "id": "WU084",
+        "milestoneId": "M018",
+        "title": "WU14-04 Baseline Run & Request/Backend Audit",
+        "objective": "Collect and document pre-optimization local baseline evidence and request/backend audit.",
+        "scope": [
+          "Baseline sessions",
+          "Request counts",
+          "Hotspot audit"
+        ],
+        "outOfScope": [
+          "Broad optimization"
+        ],
+        "acceptanceCriteria": [
+          "All approved scenarios have evidence or a documented unavailable reason",
+          "Measured hotspots and duplicate work are identified",
+          "No machine-specific CI thresholds are introduced"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs/reviews",
+          "src-tauri",
+          "src"
+        ],
+        "validationCommands": [
+          "cargo test",
+          "npm test"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-063"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T07:53:23.557Z"
+      },
+      {
+        "id": "WU085",
+        "milestoneId": "M018",
+        "title": "WU14-05 Device Detail Tabs, Frontend Performance & Historical Layout",
+        "objective": "Implement accessible Device Detail tabs, tab-scoped expensive loading, and Historical containment fixes supported by baseline evidence.",
+        "scope": [
+          "Tabs",
+          "Query gating",
+          "Stale-response safety",
+          "Historical layout"
+        ],
+        "outOfScope": [
+          "Monitoring cadence change",
+          "New global cache"
+        ],
+        "acceptanceCriteria": [
+          "All sections remain reachable",
+          "Historical and Activity load only on their tabs",
+          "No duplicate scheduler",
+          "7d/30d stay contained"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src/features/devices",
+          "src/features/monitoring",
+          "src/stores"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-064"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T08:20:12.395Z"
+      },
+      {
+        "id": "WU086",
+        "milestoneId": "M018",
+        "title": "WU14-06 Windows Launch & Tray Lifecycle Hardening",
+        "objective": "Use evidence to resolve Windows Start/icon discoverability and tray/explicit Exit lifecycle behavior.",
+        "scope": [
+          "Bundle metadata",
+          "Explicit exit",
+          "Windows process evidence"
+        ],
+        "outOfScope": [
+          "Desktop shortcut workaround",
+          "Unrelated tray redesign"
+        ],
+        "acceptanceCriteria": [
+          "Start discovery/icon configuration is coherent",
+          "Explicit Exit clears intended app work and tray",
+          "Shell-only residuals are distinguished from process leaks"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri",
+          "docs/reviews"
+        ],
+        "validationCommands": [
+          "cargo test",
+          "cargo build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-065"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T08:38:36.167Z"
+      },
+      {
+        "id": "WU087",
+        "milestoneId": "M018",
+        "title": "WU14-07 Evidence-Based Runtime Optimization",
+        "objective": "Apply only improvements supported by before/after evidence and add regression coverage.",
+        "scope": [
+          "Measured optimization",
+          "Before/after evidence",
+          "Regression tests"
+        ],
+        "outOfScope": [
+          "Speculative refactoring"
+        ],
+        "acceptanceCriteria": [
+          "Every optimization has a measured reason and result",
+          "Semantics remain unchanged",
+          "Regression coverage protects the result"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src",
+          "src-tauri",
+          "docs/reviews"
+        ],
+        "validationCommands": [
+          "cargo test",
+          "npm test"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-066",
+          "DEP-067"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T09:13:58.404Z"
+      },
+      {
+        "id": "WU088",
+        "milestoneId": "M018",
+        "title": "WU14-08 Performance Regression Gates & Closure",
+        "objective": "Establish deterministic gates, final evidence, documentation, AIQT closure, and release readiness for M14.",
+        "scope": [
+          "Regression invariants",
+          "Final report",
+          "Closure validation"
+        ],
+        "outOfScope": [
+          "M15",
+          "Release publication"
+        ],
+        "acceptanceCriteria": [
+          "Deterministic regression gates pass",
+          "Final before/after evidence exists",
+          "M14 exit criteria and AIQT state match implementation"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs",
+          ".aiqt",
+          "scripts"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs",
+          "git diff --check",
+          "aiqt status"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-068"
+        ],
+        "createdAt": "2026-08-12T06:51:21.841Z",
+        "updatedAt": "2026-08-12T09:39:58.235Z"
       }
     ],
     "dependencies": [
@@ -3388,6 +3698,62 @@
         "toId": "WU076",
         "type": "blocks",
         "reason": "M13 is the final planned milestone."
+      },
+      {
+        "id": "DEP-061",
+        "fromId": "WU081",
+        "toId": "WU082",
+        "type": "blocks",
+        "reason": "Implementation must follow the frozen contract."
+      },
+      {
+        "id": "DEP-062",
+        "fromId": "WU082",
+        "toId": "WU083",
+        "type": "blocks",
+        "reason": "Instrumentation uses the implemented core."
+      },
+      {
+        "id": "DEP-063",
+        "fromId": "WU083",
+        "toId": "WU084",
+        "type": "blocks",
+        "reason": "Baseline evidence requires instrumentation and profiles."
+      },
+      {
+        "id": "DEP-064",
+        "fromId": "WU084",
+        "toId": "WU085",
+        "type": "blocks",
+        "reason": "Frontend changes must be evidence-led."
+      },
+      {
+        "id": "DEP-065",
+        "fromId": "WU084",
+        "toId": "WU086",
+        "type": "blocks",
+        "reason": "Windows lifecycle work uses baseline/process evidence."
+      },
+      {
+        "id": "DEP-066",
+        "fromId": "WU085",
+        "toId": "WU087",
+        "type": "blocks",
+        "reason": "Final runtime optimization follows tab/query changes."
+      },
+      {
+        "id": "DEP-067",
+        "fromId": "WU086",
+        "toId": "WU087",
+        "type": "blocks",
+        "reason": "Final optimization follows Windows hardening."
+      },
+      {
+        "id": "DEP-068",
+        "fromId": "WU087",
+        "toId": "WU088",
+        "type": "blocks",
+        "reason": "Closure follows all evidence-backed implementation work."
       }
     ]
   },
@@ -7211,17 +7577,537 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-10T11:24:38.141Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-10T11:24:38.141Z"
+    },
+    {
+      "id": "C070",
+      "workUnitId": "WU081",
+      "packetId": "PKT-071",
+      "summary": "Completed WU14-01: integrated the approved M14 contracts and froze the performance baseline design without product implementation changes.",
+      "completed": [
+        "Integrated the M14 milestone, reusable diagnostics architecture, and Device Detail tabs/query contract under docs/milestones.",
+        "Appended the M14 AIQT graph with WU14-01 through WU14-08 and dependency checkpoints, preserving historical graph entries.",
+        "Documented production runtime paths, stable labels, bounded session/report and privacy contract, isolated Rust boundary, deterministic fixture profiles, baseline scenario matrix, evidence/invariant distinction, and tab/query ownership.",
+        "Recorded only genuine WU14-02 design decisions requiring later operator or implementation evidence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/inputs/m14-work-units.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/state.json",
+        "docs/design/m14-performance-contract-baseline.md",
+        "docs/milestones/m14-device-detail-tabs-ux-query-contract.md",
+        "docs/milestones/m14-performance-diagnostics-architecture.md",
+        "docs/milestones/m14-performance-runtime-device-detail-ux.md",
+        "docs/roadmap/post-mvp-product-roadmap.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "M14 was appended as canonical M018, WU081 became the active work unit, and workflow state passed."
+        },
+        {
+          "command": "PowerShell M14 Markdown relative-link check",
+          "result": "passed",
+          "summary": "All repository-relative links in the M14 documents and affected roadmap resolve."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors in M14 documentation or AIQT workflow changes."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Stable operation labels and bounded session/report model are documented",
+          "result": "passed",
+          "evidence": "docs/design/m14-performance-contract-baseline.md defines label families, lifecycle, bounds, aggregates, report shape, fast path, and redaction."
+        },
+        {
+          "criterion": "Core boundary excludes Pi-Hub models and platform adapters",
+          "result": "passed",
+          "evidence": "The baseline design requires a core-only Rust module/crate with no Pi-Hub domain, SSH, Docker, Tauri, Activity, or Alert imports."
+        },
+        {
+          "criterion": "Baseline scenarios and evidence/invariant distinction are defined",
+          "result": "passed",
+          "evidence": "The 2/5/10-device fixture profiles and complete local baseline scenario matrix distinguish machine evidence from deterministic gates."
+        },
+        {
+          "criterion": "All existing Device Detail sections and query ownership are mapped",
+          "result": "passed",
+          "evidence": "The design artifact maps every current section to persistent header or one approved tab, including current hooks and typed query ownership."
+        },
+        {
+          "criterion": "Later WU dependencies are explicit",
+          "result": "passed",
+          "evidence": "The milestone record, AIQT graph, and design artifact define WU14-02 through WU14-08 prerequisites and checkpoints."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T06:52:11.379Z"
+    },
+    {
+      "id": "C071",
+      "workUnitId": "WU082",
+      "packetId": "PKT-072",
+      "summary": "Completed WU14-02 with a reusable bounded benchmark core, current-process sampler adapter, typed Tauri diagnostics API, and minimal Settings diagnostics UI.",
+      "completed": [
+        "Resolved the packaging decision as local workspace crate pihub-benchmark-core, with no Pi-Hub, SSH, Docker, or Tauri imports.",
+        "Implemented one-active-session lifecycle, bounded samples/duration, aggregate operation measurements, explicit in-memory report retrieval/export, RuntimeSampler, and deterministic fake sampler.",
+        "Added typed start, stop, status, and report Tauri commands plus a Settings Performance Diagnostics panel without idle polling.",
+        "Implemented reliable Windows current-process working set, private bytes, and handle count sampling; deliberately excluded unreliable WebView2 child-process attribution."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu02.json",
+        "docs/design/m14-performance-contract-baseline.md",
+        "src-tauri/Cargo.toml",
+        "src-tauri/Cargo.lock",
+        "src-tauri/crates/pihub-benchmark-core/Cargo.toml",
+        "src-tauri/crates/pihub-benchmark-core/src/lib.rs",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/commands/monitoring.rs",
+        "src-tauri/src/lib.rs",
+        "src/types/performance.ts",
+        "src/lib/tauri/performance.ts",
+        "src/lib/tauri/performance.test.ts",
+        "src/features/settings/PerformanceDiagnosticsPanel.tsx",
+        "src/features/settings/GlobalSettingsScreen.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test -p pihub-benchmark-core",
+          "result": "passed",
+          "summary": "Three core tests pass: inactive no-op, single bounded session, and aggregate-only operation records."
+        },
+        {
+          "command": "npm test -- --run src/lib/tauri/performance.test.ts",
+          "result": "passed",
+          "summary": "Typed frontend diagnostics command boundary test passes."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed; lint retained four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "One bounded active session",
+          "result": "passed",
+          "evidence": "Core rejects a concurrent start, caps samples and duration, and stops idempotently into an in-memory report."
+        },
+        {
+          "criterion": "No sampler while inactive",
+          "result": "passed",
+          "evidence": "The Tauri adapter only spawns a sampler after start; its loop exits on inactive state. Core inactive measurement returns before state locking or allocation."
+        },
+        {
+          "criterion": "Core has no Pi-Hub domain/SSH/Docker/Tauri imports",
+          "result": "passed",
+          "evidence": "The isolated workspace crate depends only on serde and uuid; platform/Tauri adapters remain in Pi-Hub."
+        },
+        {
+          "criterion": "Report is redacted and exportable",
+          "result": "passed",
+          "evidence": "The report contains normalized labels and aggregates only; the Settings UI exports explicit JSON, and no identity/credential/raw-command fields are accepted by the core."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:06:41.255Z"
+    },
+    {
+      "id": "C072",
+      "workUnitId": "WU083",
+      "packetId": "PKT-073",
+      "summary": "Completed WU14-03 instrumentation and deterministic synthetic workloads.",
+      "completed": [
+        "Instrumented refresh, SSH, service, Docker, visibility, snapshot/history/activity/alert, and selected typed IPC paths with generic labels.",
+        "Added 2/5/10-device synthetic refresh profiles using existing fake executor, refresh orchestration, and parsers without network access.",
+        "Verified active aggregation and inactive no-op behavior through focused tests."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu03.json",
+        "docs/design/m14-performance-contract-baseline.md",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/monitoring/refresh.rs",
+        "src-tauri/src/monitoring/synthetic.rs",
+        "src-tauri/src/monitoring/scheduler.rs",
+        "src-tauri/src/commands/monitoring.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/domain/service_health.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test synthetic_refresh_aggregates_only_stable_labels_when_active --lib",
+          "result": "passed",
+          "summary": "Active synthetic refresh records generic aggregate labels only."
+        },
+        {
+          "command": "cargo test synthetic --lib",
+          "result": "passed",
+          "summary": "2/5/10-device profiles run deterministically without network."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Stable labels have bounded aggregation",
+          "result": "passed",
+          "evidence": "All adapter labels are fixed constants and core retains aggregates only."
+        },
+        {
+          "criterion": "2/5/10-device profiles run without Pis or VMs",
+          "result": "passed",
+          "evidence": "Synthetic profile tests execute production refresh/parsing with fixed executor data."
+        },
+        {
+          "criterion": "Sensitive data is absent from reports",
+          "result": "passed",
+          "evidence": "Labels are static and payload metrics are serialized byte totals only."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:40:46.482Z"
+    },
+    {
+      "id": "C073",
+      "workUnitId": "WU084",
+      "packetId": "PKT-074",
+      "summary": "Completed WU14-04 deterministic pre-optimization baseline and request/backend audit.",
+      "completed": [
+        "Ran Idle and fixture-backed normal refresh plus 2/5/10-device synthetic scenarios under the in-app diagnostics controller.",
+        "Recorded a linear six-SSH-operation model per successful device refresh and existing four-permit/per-device-claim concurrency policy.",
+        "Published evidence with unavailable reasons for interactive UI/history/live-resource scenarios and separated WU14-05/WU14-06 investigations.",
+        "Corrected test-only diagnostics collection isolation so parallel unrelated tests cannot contaminate deterministic benchmark evidence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu04.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src-tauri/src/performance_diagnostics.rs",
+        "src-tauri/src/infrastructure/ssh/fake.rs",
+        "src-tauri/src/monitoring/synthetic.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --lib",
+          "result": "passed",
+          "summary": "211 passed, 1 ignored; deterministic profile tests pass in the full parallel suite."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "All approved scenarios have evidence or a documented unavailable reason",
+          "result": "passed",
+          "evidence": "The baseline report records deterministic evidence and explicit non-fabricated unavailable reasons for interactive/live-only scenarios."
+        },
+        {
+          "criterion": "Measured hotspots and duplicate work are identified",
+          "result": "passed",
+          "evidence": "Six separate SSH executions per successful refresh are confirmed; no duplicate fixture operation classes or refresh amplification are observed."
+        },
+        {
+          "criterion": "No machine-specific CI thresholds are introduced",
+          "result": "passed",
+          "evidence": "Evidence records deterministic counts only; fixture durations below millisecond resolution are not converted into thresholds."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:53:23.557Z"
+    },
+    {
+      "id": "C074",
+      "workUnitId": "WU085",
+      "packetId": "PKT-075",
+      "summary": "Completed WU14-05 Device Detail tabs, query gating, and Historical containment.",
+      "completed": [
+        "Refactored Device Detail into persistent actions and Overview, Monitoring, Services, Containers, System, and Activity tabpanels.",
+        "Gated Historical mounting to Monitoring and persisted Activity mounting to Activity; retained snapshot/background monitoring behavior without new refresh loops.",
+        "Added containment to Historical cards/charts and recorded deterministic before/after request counts."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu05.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/monitoring/HistoricalTrends.tsx",
+        "src/features/monitoring/HistoricalTrends.test.tsx",
+        "src/stores/useDeviceActivity.ts",
+        "src/stores/useDeviceActivity.test.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/stores/useDeviceActivity.test.tsx src/features/monitoring/HistoricalTrends.test.tsx",
+          "result": "passed",
+          "summary": "10 focused Activity-gating, stale-device, settled-query, range, and containment tests pass."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "All sections remain reachable",
+          "result": "passed",
+          "evidence": "Six accessible tabpanels expose Overview, Monitoring, Services, Containers, System, and Activity; administration remains persistent."
+        },
+        {
+          "criterion": "Historical and Activity load only on their tabs",
+          "result": "passed",
+          "evidence": "Historical components mount only in Monitoring; Activity hook has an inactive no-request path and mounts only in Activity."
+        },
+        {
+          "criterion": "No duplicate scheduler",
+          "result": "passed",
+          "evidence": "The refactor reuses useDeviceSnapshots and existing refresh action without creating effects, timers, or scheduler calls."
+        },
+        {
+          "criterion": "7d/30d stay contained",
+          "result": "passed",
+          "evidence": "Historical cards, grid and chart use min-width-zero/overflow containment; long-series regression covers 160 points."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T08:20:12.395Z"
+    },
+    {
+      "id": "C075",
+      "workUnitId": "WU086",
+      "packetId": "PKT-076",
+      "summary": "Hardened WU14-06 Windows launch and tray lifecycle behavior without changing monitoring cadence or optimization paths.",
+      "completed": [
+        "Verified current Tauri NSIS/MSI package metadata and Start Menu shortcut behavior from the local schema and generated installer inventory.",
+        "Made window close honor the persisted minimizeToTray preference and route a non-tray close through the deliberate exit cleanup path.",
+        "Added deterministic close-policy regression tests and recorded live-session measurement limitations."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/platform/tray.rs",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test platform::tray::tests --lib",
+          "result": "passed",
+          "summary": "Two deterministic close-policy tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Windows Start discoverability and icon metadata are coherent without a Desktop shortcut.",
+          "result": "passed",
+          "evidence": "The Tauri config declares Pi-Hub, com.pihub.app, publisher, and icon.ico; local NSIS/MSI Pi-Hub_0.3.0 artifacts exist; the local Tauri schema documents its default Start Menu shortcut."
+        },
+        {
+          "criterion": "Close versus explicit Exit follows deterministic lifecycle semantics.",
+          "result": "passed",
+          "evidence": "CloseAction unit tests cover minimize-to-tray enabled/disabled; both deliberate exits use PTY close, tray removal, and app.exit(0)."
+        },
+        {
+          "criterion": "Live Windows process measurements are not fabricated.",
+          "result": "passed",
+          "evidence": "No Pi-Hub process or interactive installed session was present, so memory and shutdown-duration metrics are explicitly unavailable."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T08:38:36.167Z"
+    },
+    {
+      "id": "C076",
+      "workUnitId": "WU087",
+      "packetId": "PKT-077",
+      "summary": "Completed WU14-07 evidence-based runtime optimization review without weakening refresh semantics.",
+      "completed": [
+        "Reviewed the confirmed six-SSH-execution refresh candidate and rejected batching, data reuse, probe removal, multiplexing, and per-device collector parallelism because current evidence does not demonstrate a safe gain without coupling failure, timeout, capacity, or host-key behavior.",
+        "Added active-only successful SSH result-byte aggregation to the real and fake executors so deterministic profiles now report safe aggregate bytes without retaining payloads.",
+        "Re-ran the 2/5/10 deterministic profiles: request counts remain 12/30/60, failures remain zero, durations remain below aggregate millisecond resolution, and result bytes are 1080/2700/5400."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu07.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src-tauri/src/infrastructure/ssh/fake.rs",
+        "src-tauri/src/infrastructure/ssh/openssh.rs",
+        "src-tauri/src/monitoring/synthetic.rs",
+        "src-tauri/src/performance_diagnostics.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test deterministic_profiles_produce_linear_refresh_request_counts --lib",
+          "result": "passed",
+          "summary": "Protects 2/5/10 request counts, zero SSH failures, and result-byte totals."
+        },
+        {
+          "command": "cargo test synthetic_refresh_aggregates_only_stable_labels_when_active --lib",
+          "result": "passed",
+          "summary": "Preserves active-only stable-label aggregation."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; frontend lint retains four warnings."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Every optimization has a measured reason and result",
+          "result": "passed",
+          "evidence": "The WU14-07 report records the before/after profile evidence and explicit safety rationale for every reviewed candidate; none met the acceptance bar."
+        },
+        {
+          "criterion": "Semantics remain unchanged",
+          "result": "passed",
+          "evidence": "The successful-refresh model remains six independently bounded SSH executions per device; monitoring cadence, query gates, failure isolation, and host-key verification are unchanged."
+        },
+        {
+          "criterion": "Regression coverage protects the result",
+          "result": "passed",
+          "evidence": "The deterministic profile regression now asserts request count, zero failures, and safe aggregate byte totals for all three profile sizes."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T09:13:58.404Z"
+    },
+    {
+      "id": "C077",
+      "workUnitId": "WU088",
+      "packetId": "PKT-078",
+      "summary": "Completed WU14-08 regression gates, final evidence, and M14 closure readiness.",
+      "completed": [
+        "Consolidated deterministic gates for inactive/bounded diagnostics, 2/5/10 refresh scaling, Device Detail query gating, settled Historical query identity, history bounds, and per-device refresh overlap prevention.",
+        "Published the final before/after report, exit-criteria assessment, accepted residuals, and exact clean-install/live-session operator checklist.",
+        "Confirmed that the accepted six independently bounded SSH executions per successful refresh remain unchanged and M15 remains planned/unstarted.",
+        "Ran focused frontend and Rust gates plus canonical validation successfully."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu08.json",
+        "docs/milestones/m14-performance-runtime-device-detail-ux.md",
+        "docs/reviews/m14-final-performance-regression-report.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "src/features/devices/DeviceDetailScreen.test.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/features/devices/DeviceDetailScreen.test.tsx src/features/monitoring/HistoricalTrends.test.tsx src/stores/useDeviceActivity.test.tsx",
+          "result": "passed",
+          "summary": "11 focused Device Detail, Historical, and Activity query-gating regressions pass."
+        },
+        {
+          "command": "cargo test -p pihub-benchmark-core; cargo test deterministic_profiles_produce_linear_refresh_request_counts --lib; cargo test retention_and_downsampling_are_bounded --lib; cargo test try_claim_prevents_a_duplicate_in_progress_refresh --lib",
+          "result": "passed",
+          "summary": "Core bounds, synthetic scaling, historical point bounds, and duplicate-refresh prevention pass."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed; lint retains four warnings."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Deterministic regression gates pass",
+          "result": "passed",
+          "evidence": "The final report maps every proven M14 behavior to executed focused regression coverage."
+        },
+        {
+          "criterion": "Final before/after evidence exists",
+          "result": "passed",
+          "evidence": "docs/reviews/m14-final-performance-regression-report.md records backend/request, 2/5/10, Device Detail, Historical, inactive, optimization, and unavailable-live evidence."
+        },
+        {
+          "criterion": "M14 exit criteria and AIQT state match implementation",
+          "result": "passed",
+          "evidence": "The report classifies all exit criteria PASS or PASS with accepted residual; this final checkpoint transitions WU088 and M018 to done while M15 remains planned."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T09:39:58.235Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-070",
-    "workUnitId": "WU080",
-    "milestoneId": "M017",
-    "createdAt": "2026-08-10T11:21:57.204Z",
+    "id": "PKT-078",
+    "workUnitId": "WU088",
+    "milestoneId": "M018",
+    "createdAt": "2026-08-12T09:35:37.575Z",
     "format": "markdown",
-    "contentHash": "sha256:eb8fd5d1a0da0561a7f65d9908df662e7e623c2d46e15f0ac74314c695c347ae",
+    "contentHash": "sha256:4cec8d274ba0b0ae8ca982b0ce2b6019286fb76c461e4f299ce0b79d5d826101",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7240,7 +8126,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-10T11:24:38.141Z",
+  "lastUpdatedAt": "2026-08-12T09:39:58.235Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -9309,6 +10195,246 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-10T11:24:38.141Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C070",
+      "current": {
+        "observationId": "sha256:367d0c0096066e33c636977d7a28a9b98fc9c863b5dee5be2ca962b100be980b",
+        "checkpointId": "C070",
+        "workUnitId": "WU081",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T06:52:11.379Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T06:52:11.379Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:367d0c0096066e33c636977d7a28a9b98fc9c863b5dee5be2ca962b100be980b",
+          "checkpointId": "C070",
+          "workUnitId": "WU081",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T06:52:11.379Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T06:52:11.379Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C071",
+      "current": {
+        "observationId": "sha256:b7afbcb89e2a64b0a5c58ff3c97558bf434c61c8ae82368c475d1d8c357597cd",
+        "checkpointId": "C071",
+        "workUnitId": "WU082",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:06:41.255Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:06:41.255Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:b7afbcb89e2a64b0a5c58ff3c97558bf434c61c8ae82368c475d1d8c357597cd",
+          "checkpointId": "C071",
+          "workUnitId": "WU082",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:06:41.255Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:06:41.255Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C072",
+      "current": {
+        "observationId": "sha256:5ab7a24746fffb6faa2e70744ef4c618915281abde08beaf2e32ea319ce6e220",
+        "checkpointId": "C072",
+        "workUnitId": "WU083",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:40:46.482Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:40:46.482Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:5ab7a24746fffb6faa2e70744ef4c618915281abde08beaf2e32ea319ce6e220",
+          "checkpointId": "C072",
+          "workUnitId": "WU083",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:40:46.482Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:40:46.482Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C073",
+      "current": {
+        "observationId": "sha256:3f594b518ca5df0ae21e94983866aeb305078f7b85252810ff2cb911c2b3a680",
+        "checkpointId": "C073",
+        "workUnitId": "WU084",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T07:53:23.557Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T07:53:23.557Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:3f594b518ca5df0ae21e94983866aeb305078f7b85252810ff2cb911c2b3a680",
+          "checkpointId": "C073",
+          "workUnitId": "WU084",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T07:53:23.557Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T07:53:23.557Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C074",
+      "current": {
+        "observationId": "sha256:f44127229453e0b4f2fbcdc7339bbb007ade35626915d7bdcc8c37923fdc7f15",
+        "checkpointId": "C074",
+        "workUnitId": "WU085",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T08:20:12.395Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T08:20:12.395Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f44127229453e0b4f2fbcdc7339bbb007ade35626915d7bdcc8c37923fdc7f15",
+          "checkpointId": "C074",
+          "workUnitId": "WU085",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T08:20:12.395Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T08:20:12.395Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C075",
+      "current": {
+        "observationId": "sha256:96237017b726560deda3ec26b61963e9132d56bfb833821a357ff1c0022fb47c",
+        "checkpointId": "C075",
+        "workUnitId": "WU086",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T08:38:36.167Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T08:38:36.167Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:96237017b726560deda3ec26b61963e9132d56bfb833821a357ff1c0022fb47c",
+          "checkpointId": "C075",
+          "workUnitId": "WU086",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T08:38:36.167Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T08:38:36.167Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C076",
+      "current": {
+        "observationId": "sha256:11d057de1c7d61d4d089a2a27148a6cc4c84a6135e11152e0c437349e0a720b2",
+        "checkpointId": "C076",
+        "workUnitId": "WU087",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T09:13:58.404Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T09:13:58.404Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:11d057de1c7d61d4d089a2a27148a6cc4c84a6135e11152e0c437349e0a720b2",
+          "checkpointId": "C076",
+          "workUnitId": "WU087",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T09:13:58.404Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T09:13:58.404Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C077",
+      "current": {
+        "observationId": "sha256:a17cb47f14898d5c5240c1e6f5b10fa989dfb98f1ec36e32ebfcb5697d9e3061",
+        "checkpointId": "C077",
+        "workUnitId": "WU088",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T09:39:58.235Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T09:39:58.235Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:a17cb47f14898d5c5240c1e6f5b10fa989dfb98f1ec36e32ebfcb5697d9e3061",
+          "checkpointId": "C077",
+          "workUnitId": "WU088",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T09:39:58.235Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T09:39:58.235Z"
         }
       ]
     }

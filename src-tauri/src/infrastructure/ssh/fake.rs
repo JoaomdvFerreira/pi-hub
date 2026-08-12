@@ -8,13 +8,14 @@ use super::executor::{RemoteExecutionResult, RemoteExecutor, SshTarget};
 /// tests (and later monitoring-scheduler tests) to simulate SSH outcomes
 /// without a real SSH server, per the integration-test strategy in
 /// docs/pi-hub-technical-architecture-specification.md section 25.3.
-pub struct FakeRemoteExecutor {
+#[allow(dead_code)] pub struct FakeRemoteExecutor {
     result: Result<RemoteExecutionResult, SshError>,
+    instrument: bool,
 }
 
-impl FakeRemoteExecutor {
+#[allow(dead_code)] impl FakeRemoteExecutor {
     pub fn returning(result: Result<RemoteExecutionResult, SshError>) -> Self {
-        Self { result }
+        Self { result, instrument: false }
     }
 
     pub fn online(stdout: impl Into<String>) -> Self {
@@ -25,6 +26,14 @@ impl FakeRemoteExecutor {
             duration_ms: 5,
             timed_out: false,
         }))
+    }
+
+    /// Opt-in only for deterministic benchmark profiles. Ordinary tests must
+    /// not contribute to a process-wide active benchmark session.
+    pub fn instrumented_online(stdout: impl Into<String>) -> Self {
+        let mut executor = Self::online(stdout);
+        executor.instrument = true;
+        executor
     }
 
     pub fn offline() -> Self {
@@ -51,7 +60,16 @@ impl RemoteExecutor for FakeRemoteExecutor {
         _command: &str,
         _timeout: Duration,
     ) -> Result<RemoteExecutionResult, SshError> {
-        self.result.clone()
+        let mut measurement = self.instrument.then(|| crate::performance_diagnostics::measure("ssh.execute")).flatten();
+        let result = self.result.clone();
+        if let Ok(execution) = &result {
+            if let Some(item) = measurement.as_mut() {
+                item.set_bytes((execution.stdout.len() + execution.stderr.len()) as u64);
+            }
+        } else if let Some(item) = measurement.as_mut() {
+            item.fail();
+        }
+        result
     }
 }
 

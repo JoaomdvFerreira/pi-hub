@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { getAppSettings, saveAppSettings } from "@/lib/tauri/settings";
 import type { AppSettings, ApplicationError, Theme } from "@/types/settings";
 import pkg from "../../../package.json";
+import { PerformanceDiagnosticsPanel } from "@/features/settings/PerformanceDiagnosticsPanel";
 
 const REFRESH_INTERVAL_OPTIONS: { value: string; label: string }[] = [
   { value: "15", label: "15 seconds" },
@@ -161,6 +162,8 @@ export function GlobalSettingsScreen() {
             </div>
           </div>
         </section>
+
+        <PerformanceDiagnosticsPanel />
 
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="mb-1 text-xs font-bold tracking-wide text-muted-foreground">ALERT THRESHOLDS</h2>

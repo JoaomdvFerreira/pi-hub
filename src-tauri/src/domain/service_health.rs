@@ -88,6 +88,7 @@ pub fn check_services_with_threshold(services: &[DeviceService], previous: &Hash
 }
 
 pub fn check_service(raw_url: &str) -> ServiceCheckResult {
+    let mut measurement = crate::performance_diagnostics::measure("service.health_check");
     let url = match reqwest::Url::parse(raw_url) {
         Ok(url) if matches!(url.scheme(), "http" | "https") => url,
         _ => return ServiceCheckResult::failure(None, None, ServiceFailureReason::InvalidUrl),
@@ -97,7 +98,7 @@ pub fn check_service(raw_url: &str) -> ServiceCheckResult {
         Err(_) => return ServiceCheckResult::failure(None, None, ServiceFailureReason::Unknown),
     };
     let started = Instant::now();
-    match client.get(url).send() {
+    let result = match client.get(url).send() {
         Ok(response) => {
             let status = response.status().as_u16();
             let elapsed = started.elapsed().as_millis() as u64;
@@ -109,7 +110,9 @@ pub fn check_service(raw_url: &str) -> ServiceCheckResult {
             } else { ServiceFailureReason::Unknown };
             ServiceCheckResult::failure(None, Some(started.elapsed().as_millis() as u64), reason)
         }
-    }
+    };
+    if !result.is_success() { if let Some(item)=measurement.as_mut() { item.fail(); } }
+    result
 }
 
 #[cfg(test)]
