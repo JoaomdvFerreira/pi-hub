@@ -1,7 +1,7 @@
 # M14 — Final Performance Regression & Closure Report
 
 Date: 2026-08-12  
-Evidence scope: deterministic Rust and component tests, fixture-backed refresh profiles, and static Windows bundle/lifecycle inspection. No claim below substitutes fixtures for a live device, installed Windows session, or WebView process measurement.
+Evidence scope: deterministic Rust and component tests, fixture-backed refresh profiles, static Windows bundle/lifecycle inspection, and operator validation of the final installed Windows 0.3.1 build. No claim below substitutes fixtures for live transport-duration measurement or WebView child-process attribution.
 
 ## Deterministic regression gates
 
@@ -35,22 +35,24 @@ The accepted refresh model remains six independently bounded SSH executions for 
 | Idle/active and recurring-request evidence is documented | PASS | WU14-04/WU14-07 reports and the gates above. |
 | Device Detail tabs and query gates work | PASS | Component gating, Activity identity, and Historical request tests. |
 | Historical charts are contained | PASS | Long-series containment regression. |
-| Windows defects are resolved or precisely evidenced | PASS with accepted residual | Bundle metadata and lifecycle path are verified; current clean installed-session evidence remains operator-only. |
+| Windows defects are resolved or precisely evidenced | PASS | Final installed Windows 0.3.1 validation passed Start Menu/icon, diagnostics timer/export/CPU, and close/minimize-to-tray/Exit checks. |
 | Before/after evidence and deterministic regression gates exist | PASS | This report and WU14-04 through WU14-07 evidence. |
 | Canonical validation passes | PASS | Recorded in the WU14-08 AIQT checkpoint after this report was finalized. |
 
 ## Accepted residuals and operator validation
 
-- Current clean-install Start Menu/icon reproduction remains unavailable in the agent environment; static bundle metadata is coherent, and no Desktop-shortcut workaround was added.
-- Live Pi-Hub process/resource and SSH transport-duration measurements remain unavailable; fixture timings are not capacity claims.
+- Final installed Windows 0.3.1 operator validation passed installer/version, diagnostics Running state/timer, Windows CPU sampling, native JSON export, trusted/redacted benchmark metadata, Activity device-name labels, exact filtering, deleted-device fallback, Start Menu/icon, close/minimize-to-tray/Exit lifecycle, Device Detail tabs, and Historical 7d/30d containment and resize smoke.
+- Live SSH transport-duration measurements remain unavailable; fixture timings are not capacity claims. This is an evidence limitation, not a release blocker.
 - WebView2 child-process attribution remains intentionally excluded because no reliable ownership relation is available without heuristics.
 
-Operator checklist for a clean Windows installation:
+The operator checklist is complete for the final 0.3.1 installer:
 
 1. Install the current signed Pi-Hub artifact after removing older Pi-Hub installs; open Start and confirm the `Pi-Hub` entry, product name, and icon.
 2. Launch from Start, enable and disable **Minimize to tray**, then close the main window in each state; verify the documented hide/explicit-exit behavior.
 3. Use the tray **Exit** command, wait five seconds, and confirm no `Pi-Hub.exe` or managed `ssh.exe` process remains in Task Manager. Ignore a stale notification-area image unless a live process remains.
 4. Start one diagnostics session, run one normal device refresh, stop/export the report, and record SSH aggregate duration, Pi-Hub working/private bytes, handles, and the session timestamp with device identities redacted.
+
+All requested checks passed. M14 has no remaining release-readiness blockers.
 
 M15 remains planned and unstarted.
 
@@ -80,4 +82,4 @@ Focused component coverage proves inventory-name labels, exact-ID filtering, the
 
 Pre-merge review found that `BenchmarkConfig` accepted free-form `name` and `scenario` strings and serialized them into session and export metadata. The command now accepts no configuration from the frontend, and the core uses a closed `Manual`/`Synthetic` scenario enum with trusted derived display names. The report retains its bounded timing and configuration fields but contains no caller-supplied benchmark text.
 
-The core regression submits credential-like JSON metadata and proves deserialization rejects it, then serializes an exported report and proves the secret is absent while the trusted `Manual`/`manual` values remain. The typed frontend boundary proves the start command has no configuration payload. This resolves the export-privacy blocker; the final PR risk is **42/100 — Yellow**. Installed-build CPU and Activity-label retests remain separate operator evidence requirements.
+The core regression submits credential-like JSON metadata and proves deserialization rejects it, then serializes an exported report and proves the secret is absent while the trusted `Manual`/`manual` values remain. The typed frontend boundary proves the start command has no configuration payload. This resolves the export-privacy blocker. Final installed-build validation passed the CPU, export, redaction, and Activity selector checks. The final M14 risk is **24/100 — Green**.
