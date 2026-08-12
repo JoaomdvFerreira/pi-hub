@@ -6,3 +6,4 @@ pub mod launch;
 pub mod monitoring;
 pub mod settings;
 pub mod terminal;
+pub mod updates;

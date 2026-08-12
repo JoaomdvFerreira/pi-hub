@@ -66,6 +66,8 @@ pub fn run() {
             commands::monitoring::get_activity,
             commands::monitoring::get_device_activity,
             commands::monitoring::get_historical_series,
+            commands::updates::get_update_result,
+            commands::updates::check_for_updates,
             commands::monitoring::start_performance_benchmark,
             commands::monitoring::stop_performance_benchmark,
             commands::monitoring::get_performance_benchmark_status,

@@ -3354,12 +3354,12 @@
         "validationCommands": [
           "cargo test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-069"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T13:32:34.665Z"
+        "updatedAt": "2026-08-12T13:57:27.469Z"
       },
       {
         "id": "WU091",
@@ -3388,12 +3388,12 @@
         "validationCommands": [
           "npm test"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-070"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T13:31:32.521Z"
+        "updatedAt": "2026-08-12T13:57:27.469Z"
       },
       {
         "id": "WU092",
@@ -8372,17 +8372,59 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T13:32:34.665Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T13:32:34.665Z"
+    },
+    {
+      "id": "C079",
+      "workUnitId": "WU090",
+      "packetId": "PKT-080",
+      "summary": "Implemented read-only typed APT update intelligence, bounded parsing, atomic latest-result persistence and diagnostics.",
+      "completed": [
+        "Added fixed read-only operations and typed result model",
+        "Added state.json update-result persistence",
+        "Added deterministic parser tests"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/updates.rs",
+        "src-tauri/src/domain/update_intelligence.rs",
+        "src-tauri/src/storage/snapshot_repository.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test -q",
+          "result": "passed",
+          "summary": "222 passed, 1 ignored"
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Required and optional evidence follows WU15-01",
+          "result": "passed",
+          "evidence": "Fixed typed operations isolate optional holds/metadata/reboot evidence."
+        },
+        {
+          "criterion": "Results are bounded and persisted",
+          "result": "passed",
+          "evidence": "Output/detail bounds and atomic latest state are implemented."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T13:57:27.469Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-079",
-    "workUnitId": "WU089",
+    "id": "PKT-080",
+    "workUnitId": "WU090",
     "milestoneId": "M019",
-    "createdAt": "2026-08-12T13:31:33.790Z",
+    "createdAt": "2026-08-12T13:39:57.274Z",
     "format": "markdown",
-    "contentHash": "sha256:df44d272d4e0cd1cdc7247e77c20c3ac905dc9149d50cc4488046b5c79edc1e6",
+    "contentHash": "sha256:3c7be4f0b06a870ea8f05ef63a99f15680dffc913bf8bc0ccd4371d456ce18f0",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -8401,7 +8443,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T13:32:34.665Z",
+  "lastUpdatedAt": "2026-08-12T13:57:27.469Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10740,6 +10782,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T13:32:34.665Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C079",
+      "current": {
+        "observationId": "sha256:ca44b1d9550a0741bd2ab313a5f093a237f054700191d201d40fdf6846822fe9",
+        "checkpointId": "C079",
+        "workUnitId": "WU090",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T13:57:27.469Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T13:57:27.469Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:ca44b1d9550a0741bd2ab313a5f093a237f054700191d201d40fdf6846822fe9",
+          "checkpointId": "C079",
+          "workUnitId": "WU090",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T13:57:27.469Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T13:57:27.469Z"
         }
       ]
     }
