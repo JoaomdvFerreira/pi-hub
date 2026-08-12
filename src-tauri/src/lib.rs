@@ -141,8 +141,32 @@ pub fn run() {
         })
         .on_window_event(|window, event| {
             if let WindowEvent::CloseRequested { api, .. } = event {
-                api.prevent_close();
-                let _ = window.hide();
+                use storage::config_repository::SettingsRepository;
+
+                // A missing or unreadable settings file resolves to the
+                // domain default (minimize to tray), so a close request never
+                // gets stuck between the two lifecycle states.
+                let minimize_to_tray = window
+                    .app_handle()
+                    .path()
+                    .app_config_dir()
+                    .ok()
+                    .map(|config_dir| {
+                        storage::config_repository::JsonSettingsRepository::new(config_dir)
+                            .load()
+                            .minimize_to_tray
+                    })
+                    .unwrap_or(true);
+
+                match platform::tray::close_action(minimize_to_tray) {
+                    platform::tray::CloseAction::HideToTray => {
+                        api.prevent_close();
+                        let _ = window.hide();
+                    }
+                    platform::tray::CloseAction::ExitApplication => {
+                        platform::tray::exit_app(window.app_handle());
+                    }
+                }
             }
         })
         .run(tauri::generate_context!())

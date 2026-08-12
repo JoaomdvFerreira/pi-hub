@@ -3197,12 +3197,12 @@
           "cargo test",
           "cargo build"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-065"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T07:53:23.557Z"
+        "updatedAt": "2026-08-12T08:38:36.167Z"
       },
       {
         "id": "WU087",
@@ -3232,13 +3232,13 @@
           "cargo test",
           "npm test"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-066",
           "DEP-067"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T06:51:21.841Z"
+        "updatedAt": "2026-08-12T08:38:36.167Z"
       },
       {
         "id": "WU088",
@@ -7911,17 +7911,69 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T08:20:12.395Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T08:20:12.395Z"
+    },
+    {
+      "id": "C075",
+      "workUnitId": "WU086",
+      "packetId": "PKT-076",
+      "summary": "Hardened WU14-06 Windows launch and tray lifecycle behavior without changing monitoring cadence or optimization paths.",
+      "completed": [
+        "Verified current Tauri NSIS/MSI package metadata and Start Menu shortcut behavior from the local schema and generated installer inventory.",
+        "Made window close honor the persisted minimizeToTray preference and route a non-tray close through the deliberate exit cleanup path.",
+        "Added deterministic close-policy regression tests and recorded live-session measurement limitations."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/lib.rs",
+        "src-tauri/src/platform/tray.rs",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test platform::tray::tests --lib",
+          "result": "passed",
+          "summary": "Two deterministic close-policy tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Windows Start discoverability and icon metadata are coherent without a Desktop shortcut.",
+          "result": "passed",
+          "evidence": "The Tauri config declares Pi-Hub, com.pihub.app, publisher, and icon.ico; local NSIS/MSI Pi-Hub_0.3.0 artifacts exist; the local Tauri schema documents its default Start Menu shortcut."
+        },
+        {
+          "criterion": "Close versus explicit Exit follows deterministic lifecycle semantics.",
+          "result": "passed",
+          "evidence": "CloseAction unit tests cover minimize-to-tray enabled/disabled; both deliberate exits use PTY close, tray removal, and app.exit(0)."
+        },
+        {
+          "criterion": "Live Windows process measurements are not fabricated.",
+          "result": "passed",
+          "evidence": "No Pi-Hub process or interactive installed session was present, so memory and shutdown-duration metrics are explicitly unavailable."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T08:38:36.167Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-075",
-    "workUnitId": "WU085",
+    "id": "PKT-076",
+    "workUnitId": "WU086",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T08:13:12.284Z",
+    "createdAt": "2026-08-12T08:29:52.388Z",
     "format": "markdown",
-    "contentHash": "sha256:2eeac70b0a04b67b0c429d8a7e03648450c88d10b6d853dac6c962379464b691",
+    "contentHash": "sha256:33b1068c8c8d0fb82821e1fcbd5c82b0feb679d415ef1d6295c422a04e0bcbdb",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7929,20 +7981,18 @@
       "constraints",
       "acceptance",
       "validation",
-      "designGuidance",
-      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": true,
+      "includesDesignGuidance": false,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": true,
+      "includesComponentSystemGuidance": false,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T08:20:12.395Z",
+  "lastUpdatedAt": "2026-08-12T08:38:36.167Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10161,6 +10211,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T08:20:12.395Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C075",
+      "current": {
+        "observationId": "sha256:96237017b726560deda3ec26b61963e9132d56bfb833821a357ff1c0022fb47c",
+        "checkpointId": "C075",
+        "workUnitId": "WU086",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T08:38:36.167Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T08:38:36.167Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:96237017b726560deda3ec26b61963e9132d56bfb833821a357ff1c0022fb47c",
+          "checkpointId": "C075",
+          "workUnitId": "WU086",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T08:38:36.167Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T08:38:36.167Z"
         }
       ]
     }
