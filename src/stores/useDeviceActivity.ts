@@ -12,10 +12,11 @@ interface DeviceActivityState {
  * Persisted recent-activity feed for one device. Device filtering happens in
  * the backend against ActivityEvent.deviceId, retaining device isolation.
  */
-export function useDeviceActivity(deviceId: string): ActivityEvent[] {
+export function useDeviceActivity(deviceId: string, enabled = true): ActivityEvent[] {
   const [activity, setActivity] = useState<DeviceActivityState>({ deviceId, entries: [] });
 
   useEffect(() => {
+    if (!enabled) return;
     let active = true;
     let latestRequest = 0;
     const load = () => {
@@ -31,7 +32,7 @@ export function useDeviceActivity(deviceId: string): ActivityEvent[] {
       if (event.payload === deviceId) load();
     });
     return () => { active = false; unlistenPromise.then((unlisten) => unlisten()); };
-  }, [deviceId]);
+  }, [deviceId, enabled]);
 
   return activity.deviceId === deviceId ? activity.entries : [];
 }

@@ -3162,12 +3162,12 @@
           "npm test",
           "npm run build"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-064"
         ],
         "createdAt": "2026-08-12T06:51:21.841Z",
-        "updatedAt": "2026-08-12T07:53:23.557Z"
+        "updatedAt": "2026-08-12T08:20:12.395Z"
       },
       {
         "id": "WU086",
@@ -7848,17 +7848,80 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T07:53:23.557Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T07:53:23.557Z"
+    },
+    {
+      "id": "C074",
+      "workUnitId": "WU085",
+      "packetId": "PKT-075",
+      "summary": "Completed WU14-05 Device Detail tabs, query gating, and Historical containment.",
+      "completed": [
+        "Refactored Device Detail into persistent actions and Overview, Monitoring, Services, Containers, System, and Activity tabpanels.",
+        "Gated Historical mounting to Monitoring and persisted Activity mounting to Activity; retained snapshot/background monitoring behavior without new refresh loops.",
+        "Added containment to Historical cards/charts and recorded deterministic before/after request counts."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl",
+        ".aiqt/inputs/checkpoint-m14-wu05.json",
+        "docs/reviews/m14-wu04-pre-optimization-baseline.md",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/monitoring/HistoricalTrends.tsx",
+        "src/features/monitoring/HistoricalTrends.test.tsx",
+        "src/stores/useDeviceActivity.ts",
+        "src/stores/useDeviceActivity.test.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/stores/useDeviceActivity.test.tsx src/features/monitoring/HistoricalTrends.test.tsx",
+          "result": "passed",
+          "summary": "10 focused Activity-gating, stale-device, settled-query, range, and containment tests pass."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Canonical Rust/frontend/AIQT/diff validation passed; lint has four pre-existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "All sections remain reachable",
+          "result": "passed",
+          "evidence": "Six accessible tabpanels expose Overview, Monitoring, Services, Containers, System, and Activity; administration remains persistent."
+        },
+        {
+          "criterion": "Historical and Activity load only on their tabs",
+          "result": "passed",
+          "evidence": "Historical components mount only in Monitoring; Activity hook has an inactive no-request path and mounts only in Activity."
+        },
+        {
+          "criterion": "No duplicate scheduler",
+          "result": "passed",
+          "evidence": "The refactor reuses useDeviceSnapshots and existing refresh action without creating effects, timers, or scheduler calls."
+        },
+        {
+          "criterion": "7d/30d stay contained",
+          "result": "passed",
+          "evidence": "Historical cards, grid and chart use min-width-zero/overflow containment; long-series regression covers 160 points."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T08:20:12.395Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-074",
-    "workUnitId": "WU084",
+    "id": "PKT-075",
+    "workUnitId": "WU085",
     "milestoneId": "M018",
-    "createdAt": "2026-08-12T07:47:35.079Z",
+    "createdAt": "2026-08-12T08:13:12.284Z",
     "format": "markdown",
-    "contentHash": "sha256:57c457414030cd4d6a84072f541ebbafc34614291de38157f32235d3cc7cd172",
+    "contentHash": "sha256:2eeac70b0a04b67b0c429d8a7e03648450c88d10b6d853dac6c962379464b691",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -7866,18 +7929,20 @@
       "constraints",
       "acceptance",
       "validation",
+      "designGuidance",
+      "componentSystemGuidance",
       "sourceControlExpectations"
     ],
     "guidanceFlags": {
-      "includesDesignGuidance": false,
+      "includesDesignGuidance": true,
       "includesWorkingDirectoryDiscipline": false,
-      "includesComponentSystemGuidance": false,
+      "includesComponentSystemGuidance": true,
       "includesRecoveryGuidance": false,
       "includesSourceControlGuidance": true
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T07:53:23.557Z",
+  "lastUpdatedAt": "2026-08-12T08:20:12.395Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10066,6 +10131,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T07:53:23.557Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C074",
+      "current": {
+        "observationId": "sha256:f44127229453e0b4f2fbcdc7339bbb007ade35626915d7bdcc8c37923fdc7f15",
+        "checkpointId": "C074",
+        "workUnitId": "WU085",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T08:20:12.395Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T08:20:12.395Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f44127229453e0b4f2fbcdc7339bbb007ade35626915d7bdcc8c37923fdc7f15",
+          "checkpointId": "C074",
+          "workUnitId": "WU085",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T08:20:12.395Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T08:20:12.395Z"
         }
       ]
     }

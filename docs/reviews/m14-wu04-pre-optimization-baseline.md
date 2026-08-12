@@ -50,6 +50,14 @@ The local fixture orchestration/parsing scales linearly from 2 to 10 devices wit
 
 Device Detail currently mounts Activity and Historical surfaces before tabs exist. An interactive Tauri/WebView session with populated history is required to quantify view request counts and range-change behavior. Historical query/downsample instrumentation and typed payload bytes are ready for that evidence.
 
+### WU14-05 result — frontend request model
+
+Before the tab refactor, Device Detail mounted the persisted Activity hook and device Historical Trends on every detail load; configured service history also mounted with the single page. The deterministic pre-refactor request model was therefore one Activity request plus five device Historical requests, plus two Historical requests for every enabled service, before an operator selected any of those surfaces.
+
+After the refactor, default Overview mounts neither `useDeviceActivity` nor `HistoricalTrends`: detail load has zero view-specific Activity/Historical Tauri requests. Selecting Monitoring issues exactly five device-history requests for its current range; selecting Activity issues exactly one exact-device Activity request. Switching to Services can mount two history requests per enabled service, while Containers and System introduce no view-specific typed request. The existing Historical metric-configuration identity test proves settled rerenders add zero requests; a range switch issues one request per currently rendered metric only. This is deterministic component evidence, not a live WebView timing claim.
+
+Historical cards now use `min-width: 0` and `overflow-hidden` containment at every card/grid/chart boundary; range controls scroll within the card rather than causing page-level overflow. The representative long-series regression renders 160 points and asserts that containment boundary.
+
 ### WU14-06 investigation
 
 Windows tray/explicit Exit process and shell-icon behavior require a packaged/live Windows session. This baseline does not infer lifecycle correctness from unit tests.
