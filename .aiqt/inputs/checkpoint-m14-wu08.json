@@ -1,0 +1,66 @@
+{
+  "summary": "Completed WU14-08 regression gates, final evidence, and M14 closure readiness.",
+  "completed": [
+    "Consolidated deterministic gates for inactive/bounded diagnostics, 2/5/10 refresh scaling, Device Detail query gating, settled Historical query identity, history bounds, and per-device refresh overlap prevention.",
+    "Published the final before/after report, exit-criteria assessment, accepted residuals, and exact clean-install/live-session operator checklist.",
+    "Confirmed that the accepted six independently bounded SSH executions per successful refresh remain unchanged and M15 remains planned/unstarted.",
+    "Ran focused frontend and Rust gates plus canonical validation successfully."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    ".aiqt/state.json",
+    ".aiqt/runlog.jsonl",
+    ".aiqt/inputs/checkpoint-m14-wu08.json",
+    "docs/milestones/m14-performance-runtime-device-detail-ux.md",
+    "docs/reviews/m14-final-performance-regression-report.md",
+    "docs/roadmap/post-mvp-product-roadmap.md",
+    "src/features/devices/DeviceDetailScreen.test.tsx"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {
+      "command": "npm test -- --run src/features/devices/DeviceDetailScreen.test.tsx src/features/monitoring/HistoricalTrends.test.tsx src/stores/useDeviceActivity.test.tsx",
+      "result": "passed",
+      "summary": "11 focused Device Detail, Historical, and Activity query-gating regressions pass."
+    },
+    {
+      "command": "cargo test -p pihub-benchmark-core; cargo test deterministic_profiles_produce_linear_refresh_request_counts --lib; cargo test retention_and_downsampling_are_bounded --lib; cargo test try_claim_prevents_a_duplicate_in_progress_refresh --lib",
+      "result": "passed",
+      "summary": "Core bounds, synthetic scaling, historical point bounds, and duplicate-refresh prevention pass."
+    },
+    {
+      "command": "node scripts/validate-agent.mjs",
+      "result": "passed",
+      "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status, and diff check passed; lint retains four warnings."
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed",
+      "summary": "No whitespace errors."
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "criterion": "Deterministic regression gates pass",
+      "result": "passed",
+      "evidence": "The final report maps every proven M14 behavior to executed focused regression coverage."
+    },
+    {
+      "criterion": "Final before/after evidence exists",
+      "result": "passed",
+      "evidence": "docs/reviews/m14-final-performance-regression-report.md records backend/request, 2/5/10, Device Detail, Historical, inactive, optimization, and unavailable-live evidence."
+    },
+    {
+      "criterion": "M14 exit criteria and AIQT state match implementation",
+      "result": "passed",
+      "evidence": "The report classifies all exit criteria PASS or PASS with accepted residual; this final checkpoint transitions WU088 and M018 to done while M15 remains planned."
+    }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 22/100 (green): closure documentation and a focused Device Detail regression test; no monitoring, SSH, diagnostics, or release behavior changed.",
+    "Accepted residuals: clean-install Start Menu/icon, live Pi-Hub process/resource, and live SSH transport-duration measurements require the documented operator checklist; WebView2 child-process attribution remains intentionally unsupported."
+  ]
+}

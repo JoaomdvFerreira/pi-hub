@@ -1,6 +1,6 @@
 # Pi-Hub — M14 Performance Benchmarking, Runtime Hardening & Device Detail UX
 
-Status: In progress  
+Status: Implemented
 Target release: v0.3.1  
 Baseline: Pi-Hub v0.3.0  
 Risk: Medium
@@ -42,4 +42,4 @@ The detailed contracts are [Performance Diagnostics architecture](m14-performanc
 
 ## Exit criteria
 
-M14 closes only when in-app diagnostics and a reusable decoupled core work; deterministic local scenarios run without VMs/Pis; idle/active and recurring-request evidence is documented; Device Detail implements the approved tabs and query gates; Historical charts are contained; Windows defects are resolved or precisely evidenced; before/after evidence and deterministic regression gates exist; and canonical validation passes. M15 Device Update Intelligence must remain unstarted until this milestone closes.
+M14 closed with the documented evidence and deterministic gates in [the final performance regression report](../reviews/m14-final-performance-regression-report.md). The remaining clean-install Windows and live-device measurements are accepted operator-validation residuals, not fabricated benchmark claims. M15 Device Update Intelligence remains planned and unstarted.
