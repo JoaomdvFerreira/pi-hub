@@ -3388,12 +3388,12 @@
         "validationCommands": [
           "npm test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-070"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T13:57:27.469Z"
+        "updatedAt": "2026-08-12T14:33:45.236Z"
       },
       {
         "id": "WU092",
@@ -3421,13 +3421,13 @@
           "cargo test",
           "npm test"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-071",
           "DEP-072"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T13:31:32.521Z"
+        "updatedAt": "2026-08-12T14:33:45.236Z"
       },
       {
         "id": "WU093",
@@ -8414,17 +8414,62 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T13:57:27.469Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T13:57:27.469Z"
+    },
+    {
+      "id": "C080",
+      "workUnitId": "WU091",
+      "packetId": "PKT-081",
+      "summary": "Validated and completed the System-tab Software Updates presentation and explicit action gate.",
+      "completed": [
+        "Rendered metadata age, partial warnings, failure detail, held/reboot evidence, versions and truncation",
+        "Added focused cache/action regression tests"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src/features/devices/SoftwareUpdates.tsx",
+        "src/features/devices/SoftwareUpdates.test.tsx"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/features/devices/SoftwareUpdates.test.tsx",
+          "result": "passed",
+          "summary": "2 focused UI tests passed"
+        },
+        {
+          "command": "npx tsc --noEmit",
+          "result": "passed",
+          "summary": "frontend typecheck passed"
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "System tab gates cached reads",
+          "result": "passed",
+          "evidence": "SoftwareUpdates mounts only from the System panel; its test proves one cached typed fetch."
+        },
+        {
+          "criterion": "Only explicit action runs remote check",
+          "result": "passed",
+          "evidence": "Focused test verifies no check before click and exactly one typed check after click."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T14:33:45.236Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-080",
-    "workUnitId": "WU090",
+    "id": "PKT-081",
+    "workUnitId": "WU091",
     "milestoneId": "M019",
-    "createdAt": "2026-08-12T13:39:57.274Z",
+    "createdAt": "2026-08-12T14:00:09.832Z",
     "format": "markdown",
-    "contentHash": "sha256:3c7be4f0b06a870ea8f05ef63a99f15680dffc913bf8bc0ccd4371d456ce18f0",
+    "contentHash": "sha256:777ec6630cadc04686cc6b4df7152cb978452a145fdaf4de383d59630c2d42b1",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -8443,7 +8488,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T13:57:27.469Z",
+  "lastUpdatedAt": "2026-08-12T14:33:45.236Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10812,6 +10857,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T13:57:27.469Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C080",
+      "current": {
+        "observationId": "sha256:9185a18c03eacc4b2a6a8b1784d23b722f44b91801c56facfae1bce10f8dec62",
+        "checkpointId": "C080",
+        "workUnitId": "WU091",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T14:33:45.236Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T14:33:45.236Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:9185a18c03eacc4b2a6a8b1784d23b722f44b91801c56facfae1bce10f8dec62",
+          "checkpointId": "C080",
+          "workUnitId": "WU091",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T14:33:45.236Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T14:33:45.236Z"
         }
       ]
     }
