@@ -334,6 +334,25 @@ mod tests {
     fn system_identity_is_reserved_and_undefined_for_now() {
         assert_eq!(RemoteOperation::SystemIdentity.command(), None);
     }
+    #[test]
+    fn update_operations_are_fixed_read_only_commands() {
+        for operation in [
+            RemoteOperation::UpdateDetect,
+            RemoteOperation::UpdatePackages,
+            RemoteOperation::UpdateHolds,
+            RemoteOperation::UpdateMetadataAge,
+            RemoteOperation::UpdateRebootState,
+        ] {
+            let command = operation.command().unwrap();
+            assert!(!command.contains("apt update"));
+            assert!(!command.contains("apt-get update"));
+            assert!(!command.contains(" install "));
+            assert!(
+                !command.contains(" upgrade ")
+                    || command.contains("apt-get -s --no-download upgrade")
+            );
+        }
+    }
 
     #[test]
     fn docker_action_command_uses_the_right_verb_per_action() {

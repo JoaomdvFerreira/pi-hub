@@ -4,8 +4,8 @@ mod domain;
 mod error;
 mod infrastructure;
 mod monitoring;
-mod platform;
 mod performance_diagnostics;
+mod platform;
 mod state;
 mod storage;
 
@@ -86,6 +86,7 @@ pub fn run() {
         .manage(monitoring::concurrency::RefreshCoordinator::new(
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
         ))
+        .manage(monitoring::update_concurrency::UpdateCheckCoordinator::default())
         .manage(platform::pty::PtySessionManager::default())
         .manage(performance_diagnostics::PerformanceDiagnostics::default())
         .setup(|app| {

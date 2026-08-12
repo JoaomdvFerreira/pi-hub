@@ -3421,13 +3421,13 @@
           "cargo test",
           "npm test"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-071",
           "DEP-072"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T14:33:45.236Z"
+        "updatedAt": "2026-08-12T15:04:39.230Z"
       },
       {
         "id": "WU093",
@@ -3456,12 +3456,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-073"
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
-        "updatedAt": "2026-08-12T13:31:32.521Z"
+        "updatedAt": "2026-08-12T15:04:39.230Z"
       }
     ],
     "dependencies": [
@@ -8459,17 +8459,64 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T14:33:45.236Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T14:33:45.236Z"
+    },
+    {
+      "id": "C081",
+      "workUnitId": "WU092",
+      "packetId": "PKT-082",
+      "summary": "Validated real update orchestration deterministically through scripted RemoteExecutor and JSON persistence, including diagnostics and concurrency guards.",
+      "completed": [
+        "Added injectable production orchestration seam and matrix tests",
+        "Recorded deterministic request/diagnostics evidence and operator checklist",
+        "Prevented overlapping same-device update checks"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/updates.rs",
+        "src-tauri/src/monitoring/update_concurrency.rs",
+        "docs/reviews/m15-wu092-validation-evidence.md"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test -q real_orchestration",
+          "result": "passed",
+          "summary": "supported, unsupported, partial, bounds, persistence, malformed and timeout matrix passed"
+        },
+        {
+          "command": "cargo test -q diagnostics_capture_real_check_labels",
+          "result": "passed",
+          "summary": "five SSH operations and all update labels captured"
+        },
+        {
+          "command": "cargo test -q update_concurrency",
+          "result": "passed",
+          "summary": "same-device coalescing and independent devices passed"
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Evidence documents costs and remaining manual checks",
+          "result": "passed",
+          "evidence": "WU092 review records deterministic counts, bytes, scripted duration, and exact real-device checklist."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-12T15:04:39.230Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-081",
-    "workUnitId": "WU091",
+    "id": "PKT-082",
+    "workUnitId": "WU092",
     "milestoneId": "M019",
-    "createdAt": "2026-08-12T14:00:09.832Z",
+    "createdAt": "2026-08-12T14:45:30.706Z",
     "format": "markdown",
-    "contentHash": "sha256:777ec6630cadc04686cc6b4df7152cb978452a145fdaf4de383d59630c2d42b1",
+    "contentHash": "sha256:70efcdc930766836611b631246bcdf1276a4e7ec7c0ac36358f241c86bc1b9ef",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -8488,7 +8535,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T14:33:45.236Z",
+  "lastUpdatedAt": "2026-08-12T15:04:39.230Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -10887,6 +10934,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T14:33:45.236Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C081",
+      "current": {
+        "observationId": "sha256:5b31814f4d754a30e468449b35d91e1365877762f0f809dd42f62112312d8dce",
+        "checkpointId": "C081",
+        "workUnitId": "WU092",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-12T15:04:39.230Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-12T15:04:39.230Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:5b31814f4d754a30e468449b35d91e1365877762f0f809dd42f62112312d8dce",
+          "checkpointId": "C081",
+          "workUnitId": "WU092",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-12T15:04:39.230Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-12T15:04:39.230Z"
         }
       ]
     }
