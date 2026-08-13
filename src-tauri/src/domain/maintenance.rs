@@ -16,6 +16,10 @@ pub enum MaintenanceOperationState {
     Preflight,
     RefreshingMetadata,
     VerifyingPlan,
+    /// A typed, terminal failure before the `systemd-run` boundary. No
+    /// package process can have been started, so an operator may explicitly
+    /// prepare a new plan later.
+    PreDispatchFailed,
     PlanChanged,
     Dispatching,
     Installing,
@@ -37,6 +41,7 @@ impl MaintenanceOperationState {
                 | Self::Completed
                 | Self::CompletedRebootRequired
                 | Self::PackageManagerBusy
+                | Self::PreDispatchFailed
                 | Self::Failed
         )
     }
@@ -67,6 +72,17 @@ pub enum MaintenanceFailure {
     OutcomeUncertain,
 }
 
+/// Records the last operation stage that failed before dispatch. This is
+/// deliberately bounded metadata: it explains a safe-to-retry result after an
+/// app restart without retaining any remote output.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum PreDispatchFailureStage {
+    Capability,
+    DpkgAudit,
+    PlanVerification,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct PlanFingerprint {
@@ -91,6 +107,8 @@ pub struct MaintenanceOperation {
     pub completed_at: Option<String>,
     pub failure: Option<MaintenanceFailure>,
     pub reboot_required: Option<bool>,
+    #[serde(default)]
+    pub pre_dispatch_failure_stage: Option<PreDispatchFailureStage>,
 }
 
 #[allow(dead_code)]
@@ -115,6 +133,7 @@ impl MaintenanceOperation {
             completed_at: None,
             failure: None,
             reboot_required: None,
+            pre_dispatch_failure_stage: None,
         }
     }
 
@@ -141,7 +160,16 @@ impl MaintenanceOperation {
 
     pub fn transition(&mut self, state: MaintenanceOperationState) {
         self.state = state;
-        if self.started_at.is_none() && !matches!(state, MaintenanceOperationState::Requested) {
+        if self.started_at.is_none()
+            && matches!(
+                state,
+                MaintenanceOperationState::Dispatching
+                    | MaintenanceOperationState::Installing
+                    | MaintenanceOperationState::Verifying
+                    | MaintenanceOperationState::StillRunning
+                    | MaintenanceOperationState::OutcomeUncertain
+            )
+        {
             self.started_at = Some(Utc::now().to_rfc3339());
         }
         if state.is_terminal() {
@@ -208,7 +236,7 @@ mod tests {
     }
 
     #[test]
-    fn only_verified_terminal_outcomes_release_recovery_ownership() {
+    fn terminal_outcomes_release_recovery_ownership_only_when_no_dispatch_can_remain() {
         for state in [
             MaintenanceOperationState::Dispatching,
             MaintenanceOperationState::Installing,
@@ -222,6 +250,7 @@ mod tests {
             MaintenanceOperationState::Completed,
             MaintenanceOperationState::CompletedRebootRequired,
             MaintenanceOperationState::PackageManagerBusy,
+            MaintenanceOperationState::PreDispatchFailed,
             MaintenanceOperationState::Failed,
         ] {
             assert!(state.is_terminal());

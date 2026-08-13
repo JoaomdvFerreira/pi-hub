@@ -97,6 +97,30 @@ describe("SoftwareUpdates", () => {
     expect(applyPreparedDeviceUpdate).not.toHaveBeenCalled();
   });
 
+  it("closes confirmation to view packages and can return to the same prepared review without re-preparing", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    prepareDeviceUpdate.mockResolvedValue({ plan: safe, operation: { id: "op", deviceId: "d", transientUnitId: "hidden", state: "requested", dispatchState: "notAttempted", requestedAt: "x" } });
+    render(<SoftwareUpdates deviceId="d" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Update device" }));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "View packages" }));
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("table", { name: "Available system updates" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Review prepared update" }));
+    await screen.findByRole("alertdialog");
+    expect(prepareDeviceUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not reopen a persisted pre-dispatch operation after remount and instead requires a fresh prepare", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    getMaintenanceOperation.mockResolvedValue({ id: "old", deviceId: "d", transientUnitId: "hidden", state: "requested", dispatchState: "notAttempted", requestedAt: "x" });
+    render(<SoftwareUpdates deviceId="d" />);
+    await screen.findByRole("button", { name: "Update device" });
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+  });
+
   it("treats PlanChanged as a new review without dispatching again", async () => {
     const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
     getUpdateResult.mockResolvedValue(safe);
@@ -119,6 +143,28 @@ describe("SoftwareUpdates", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Update device" }));
     await screen.findByText(/passwordless sudo permission/i);
     expect(screen.queryByText("PrivilegeUnavailable")).not.toBeInTheDocument();
+  });
+
+  it("does not present a failed PREPARE transport check as an uncertain dispatched update", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    prepareDeviceUpdate.mockRejectedValue({ code: "TransportUnavailableDuringObservation" });
+    render(<SoftwareUpdates deviceId="d" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Update device" }));
+    await screen.findByText(/No packages were changed/i);
+    expect(screen.queryByText(/outcome is uncertain/i)).not.toBeInTheDocument();
+  });
+
+  it("renders a persisted pre-dispatch transport failure as safe to retry, not uncertain", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    getMaintenanceOperation.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "preDispatchFailed", dispatchState: "notAttempted", requestedAt: "x", completedAt: "x", failure: "transportUnavailableDuringObservation", preDispatchFailureStage: "planVerification" });
+    render(<SoftwareUpdates deviceId="d" />);
+    await screen.findByText(/Update did not start/i);
+    expect(screen.getByText(/No packages were changed. You can try again/i)).toBeInTheDocument();
+    expect(screen.queryByText(/outcome is uncertain/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Update device" })).toBeInTheDocument();
+    expect(reconcileDeviceUpdate).not.toHaveBeenCalled();
   });
 
   it("reconciles one at a time after five seconds and keeps a transient observation error nonterminal", async () => {

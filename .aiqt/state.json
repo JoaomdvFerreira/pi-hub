@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "projectStatus": "in_progress",
-  "currentMilestoneId": "M005",
-  "currentWorkUnitId": null,
+  "currentMilestoneId": "M020",
+  "currentWorkUnitId": "WU098",
   "workGraph": {
     "milestones": [
       {
@@ -254,7 +254,7 @@
         "id": "M020",
         "title": "M16 — Controlled Device Software Updates",
         "objective": "Add one explicit, controlled and recoverable APT standard-upgrade action for supported devices without broadening Pi-Hub into a generic remote-command or package-management surface.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU094",
           "WU095",
@@ -3641,13 +3641,13 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm test"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-077",
           "DEP-078"
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
-        "updatedAt": "2026-08-13T11:53:32.433Z"
+        "updatedAt": "2026-08-13T12:13:30.818Z"
       },
       {
         "id": "WU099",
@@ -9144,17 +9144,17 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-13T11:53:32.433Z",
-      "nextRecommendation": "aiqt next"
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T11:53:32.433Z"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-087",
-    "workUnitId": "WU097",
+    "id": "PKT-088",
+    "workUnitId": "WU098",
     "milestoneId": "M020",
-    "createdAt": "2026-08-13T11:42:42.990Z",
+    "createdAt": "2026-08-13T12:13:30.818Z",
     "format": "markdown",
-    "contentHash": "sha256:3461534102f53307c48fb0f1239ff8519fc398b5da09045e0476c8c735844d4e",
+    "contentHash": "sha256:43d7d44abf130a600cb80377b931b4d97e15fb2b2024711a6341173071f3c02d",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9172,8 +9172,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-13T11:53:32.433Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-08-13T12:13:30.818Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",

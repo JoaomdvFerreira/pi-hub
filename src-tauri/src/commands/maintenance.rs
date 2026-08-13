@@ -9,7 +9,8 @@ use crate::{
         device::Device,
         maintenance::{
             MaintenanceDispatchState, MaintenanceFailure, MaintenanceOperation,
-            MaintenanceOperationState, PlanFingerprint, PLAN_FINGERPRINT_VERSION,
+            MaintenanceOperationState, PlanFingerprint, PreDispatchFailureStage,
+            PLAN_FINGERPRINT_VERSION,
         },
         update_intelligence::{
             MetadataStatus, RebootState, SupportStatus, UpdateCheckResult, UpdateStatus,
@@ -446,9 +447,48 @@ pub(crate) fn apply_with(
         .get_update_result(&device.id)
         .ok_or(MaintenanceFailure::PlanChanged)?;
     let target = target(device);
-    capability(executor, &target)?;
-    audit(executor, &target)?;
-    let fresh = simulate(executor, &target, before.clone())?;
+    let persist_pre_dispatch_failure = |operation: &mut MaintenanceOperation,
+                                        stage: PreDispatchFailureStage,
+                                        failure: MaintenanceFailure|
+     -> Result<MaintenanceOperation, MaintenanceFailure> {
+        operation.failure = Some(failure);
+        operation.pre_dispatch_failure_stage = Some(stage);
+        operation.transition(MaintenanceOperationState::PreDispatchFailed);
+        repo.upsert_maintenance_operation(operation)
+            .map_err(|_| MaintenanceFailure::VerificationFailed)?;
+        Ok(operation.clone())
+    };
+    if let Err(failure) = capability(executor, &target) {
+        return persist_pre_dispatch_failure(
+            &mut operation,
+            PreDispatchFailureStage::Capability,
+            failure,
+        );
+    }
+    if let Err(failure) = audit(executor, &target) {
+        return persist_pre_dispatch_failure(
+            &mut operation,
+            PreDispatchFailureStage::DpkgAudit,
+            failure,
+        );
+    }
+    let fresh = match simulate(executor, &target, before.clone()) {
+        Ok(fresh) => fresh,
+        Err(MaintenanceFailure::PlanChanged) => {
+            operation.failure = Some(MaintenanceFailure::PlanChanged);
+            operation.transition(MaintenanceOperationState::PlanChanged);
+            let _ = repo.upsert_update_result(&before);
+            let _ = repo.upsert_maintenance_operation(&operation);
+            return Ok(operation);
+        }
+        Err(failure) => {
+            return persist_pre_dispatch_failure(
+                &mut operation,
+                PreDispatchFailureStage::PlanVerification,
+                failure,
+            );
+        }
+    };
     if operation.reviewed_plan.as_ref() != Some(&fingerprint(&fresh)) {
         operation.failure = Some(MaintenanceFailure::PlanChanged);
         operation.transition(MaintenanceOperationState::PlanChanged);
@@ -859,6 +899,73 @@ mod tests {
         .unwrap();
         assert_eq!(result.state, MaintenanceOperationState::PlanChanged);
         assert_eq!(result.failure, Some(MaintenanceFailure::PlanChanged));
+    }
+    #[test]
+    fn pre_dispatch_transport_failures_are_persisted_as_definitely_not_started() {
+        let cases = [
+            (
+                PreDispatchFailureStage::Capability,
+                vec![Err(SshError::ConnectionTimeout)],
+            ),
+            (
+                PreDispatchFailureStage::DpkgAudit,
+                vec![ok(capability()), Err(SshError::ConnectionTimeout)],
+            ),
+            (
+                PreDispatchFailureStage::PlanVerification,
+                vec![ok(capability()), ok(""), Err(SshError::ConnectionTimeout)],
+            ),
+        ];
+        for (stage, replies) in cases {
+            let dir = tempfile::tempdir().unwrap();
+            let repo = JsonSnapshotRepository::new(dir.path());
+            repo.upsert_update_result(&preview()).unwrap();
+            prepare_with(
+                &device(),
+                &Script(Mutex::new(VecDeque::from(vec![
+                    ok(capability()),
+                    ok(""),
+                    ok(""),
+                    ok(sim()),
+                ]))),
+                &repo,
+            )
+            .unwrap();
+            let disruptions = JsonAdministrationRepository::new(dir.path());
+            let activity = JsonActivityRepository::new(dir.path());
+            let operation = apply_with(
+                &device(),
+                &Script(Mutex::new(VecDeque::from(replies))),
+                &repo,
+                &disruptions,
+                &activity,
+            )
+            .unwrap();
+            assert_eq!(
+                operation.state,
+                MaintenanceOperationState::PreDispatchFailed
+            );
+            assert_eq!(
+                operation.dispatch_state,
+                MaintenanceDispatchState::NotAttempted
+            );
+            assert_eq!(
+                operation.failure,
+                Some(MaintenanceFailure::TransportUnavailableDuringObservation)
+            );
+            assert_eq!(operation.pre_dispatch_failure_stage, Some(stage));
+            assert!(operation.started_at.is_none());
+            assert!(operation.completed_at.is_some());
+            assert!(!operation.requires_recovery());
+            assert!(operation.requires_fresh_confirmation_after_restart());
+            assert!(disruptions.get_valid("d").is_none());
+            assert!(activity.load_for_device("d").is_empty());
+
+            let after_restart = JsonSnapshotRepository::new(dir.path())
+                .get_maintenance_operation("d")
+                .unwrap();
+            assert_eq!(after_restart, operation);
+        }
     }
     #[test]
     fn uncertain_dispatch_observes_known_unit_without_redispatch_and_failed_diagnostics_are_discarded(

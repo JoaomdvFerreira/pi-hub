@@ -304,6 +304,7 @@ mod tests {
             MaintenanceOperationState::Preflight,
             MaintenanceOperationState::RefreshingMetadata,
             MaintenanceOperationState::VerifyingPlan,
+            MaintenanceOperationState::PreDispatchFailed,
             MaintenanceOperationState::Dispatching,
             MaintenanceOperationState::Installing,
             MaintenanceOperationState::Verifying,
@@ -318,10 +319,12 @@ mod tests {
         for (index, state) in states.into_iter().enumerate() {
             let mut operation = MaintenanceOperation::requested(format!("pi{index}"));
             operation.state = state;
-            operation.dispatch_state = if state == MaintenanceOperationState::Dispatching {
-                MaintenanceDispatchState::Uncertain
-            } else {
-                MaintenanceDispatchState::Accepted
+            operation.dispatch_state = match state {
+                MaintenanceOperationState::Dispatching => MaintenanceDispatchState::Uncertain,
+                MaintenanceOperationState::PreDispatchFailed => {
+                    MaintenanceDispatchState::NotAttempted
+                }
+                _ => MaintenanceDispatchState::Accepted,
             };
             repo.upsert_maintenance_operation(&operation).unwrap();
         }
@@ -332,7 +335,7 @@ mod tests {
         );
         assert_eq!(
             after_restart
-                .get_maintenance_operation("pi4")
+                .get_maintenance_operation("pi5")
                 .unwrap()
                 .dispatch_state,
             MaintenanceDispatchState::Uncertain
@@ -341,6 +344,10 @@ mod tests {
             .get_maintenance_operation("pi7")
             .unwrap()
             .requires_recovery());
+        assert!(after_restart
+            .get_maintenance_operation("pi4")
+            .unwrap()
+            .requires_fresh_confirmation_after_restart());
         assert!(!after_restart
             .get_maintenance_operation("pi10")
             .unwrap()

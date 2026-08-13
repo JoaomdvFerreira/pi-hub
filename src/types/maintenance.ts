@@ -3,6 +3,7 @@ export type MaintenanceOperationState =
   | "preflight"
   | "refreshingMetadata"
   | "verifyingPlan"
+  | "preDispatchFailed"
   | "planChanged"
   | "dispatching"
   | "installing"
@@ -44,4 +45,5 @@ export interface MaintenanceOperation {
   completedAt?: string;
   failure?: MaintenanceFailure;
   rebootRequired?: boolean;
+  preDispatchFailureStage?: "capability" | "dpkgAudit" | "planVerification";
 }
