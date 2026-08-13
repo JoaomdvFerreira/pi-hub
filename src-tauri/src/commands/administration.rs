@@ -108,6 +108,7 @@ fn failure(error: &SshError) -> AdministrationFailure {
             AdministrationFailure::InsufficientPrivileges
         }
         SshError::RemoteCommandError { .. } => AdministrationFailure::CommandRejected,
+        SshError::OutputLimitExceeded => AdministrationFailure::CommandRejected,
         _ => AdministrationFailure::Transport,
     }
 }

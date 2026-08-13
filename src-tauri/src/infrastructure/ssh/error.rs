@@ -15,6 +15,8 @@ pub enum SshError {
         exit_code: Option<i32>,
         stderr: String,
     },
+    /// A caller-provided hard stdout/stderr capture bound was exceeded.
+    OutputLimitExceeded,
     RemoteCommandTimeout,
 }
 
@@ -30,6 +32,7 @@ impl SshError {
             SshError::AuthenticationError => "AuthenticationError",
             SshError::HostKeyError => "HostKeyError",
             SshError::RemoteCommandError { .. } => "RemoteCommandError",
+            SshError::OutputLimitExceeded => "OutputLimitExceeded",
             SshError::RemoteCommandTimeout => "RemoteCommandTimeout",
             SshError::Spawn(_) => "PlatformIntegrationError",
         }
@@ -46,6 +49,7 @@ impl SshError {
             SshError::AuthenticationError => DeviceConnectionStatus::AuthenticationError,
             SshError::HostKeyError => DeviceConnectionStatus::HostKeyError,
             SshError::RemoteCommandError { .. } => DeviceConnectionStatus::CommandError,
+            SshError::OutputLimitExceeded => DeviceConnectionStatus::CommandError,
             SshError::Spawn(_) => DeviceConnectionStatus::Unknown,
         }
     }
@@ -72,6 +76,9 @@ impl SshError {
             SshError::RemoteCommandError { .. } => {
                 "The device connected but the remote command failed. Check the SSH user's permissions."
             }
+            SshError::OutputLimitExceeded => {
+                "The remote command returned more data than Pi-Hub can safely process. Try again or inspect the device manually."
+            }
             SshError::RemoteCommandTimeout => {
                 "The remote command did not finish in time. The device may be overloaded or unreachable."
             }
@@ -97,6 +104,7 @@ impl std::fmt::Display for SshError {
                     "remote command failed (exit code {exit_code:?}): {stderr}"
                 )
             }
+            SshError::OutputLimitExceeded => write!(f, "remote command output exceeded capture limit"),
             SshError::RemoteCommandTimeout => write!(f, "remote command timed out"),
         }
     }

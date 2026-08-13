@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::snapshot::DeviceSnapshot;
+use crate::domain::update_intelligence::UpdateCheckResult;
 use crate::storage::atomic::write_atomic;
 use crate::storage::StorageError;
 
@@ -33,6 +34,8 @@ pub trait SnapshotRepository: Send + Sync {
     /// currentState`), persisted so dedup survives an app restart.
     fn has_notified(&self, dedup_key: &str) -> bool;
     fn mark_notified(&self, dedup_key: &str) -> Result<(), StorageError>;
+    fn get_update_result(&self, device_id: &str) -> Option<UpdateCheckResult>;
+    fn upsert_update_result(&self, result: &UpdateCheckResult) -> Result<(), StorageError>;
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -43,6 +46,7 @@ struct StateFile {
     snapshots: HashMap<String, DeviceSnapshot>,
     #[serde(default)]
     notified_transitions: HashSet<String>,
+    #[serde(default)] update_results: HashMap<String, UpdateCheckResult>,
 }
 
 pub struct JsonSnapshotRepository {
@@ -120,6 +124,8 @@ impl SnapshotRepository for JsonSnapshotRepository {
         state.notified_transitions.insert(dedup_key.to_string());
         self.save_state(&state)
     }
+    fn get_update_result(&self, device_id: &str) -> Option<UpdateCheckResult> { self.load_state().update_results.remove(device_id) }
+    fn upsert_update_result(&self, result: &UpdateCheckResult) -> Result<(), StorageError> { let mut state=self.load_state(); state.schema_version=STATE_SCHEMA_VERSION; state.update_results.insert(result.device_id.clone(), result.clone()); self.save_state(&state) }
 }
 
 #[cfg(test)]

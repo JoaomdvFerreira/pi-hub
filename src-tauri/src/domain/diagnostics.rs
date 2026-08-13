@@ -53,6 +53,9 @@ pub fn diagnostic_failure(error: &SshError) -> ConnectivityDiagnosticReport {
         SshError::RemoteCommandError { .. } => {
             ("remote_command", "Remote diagnostic command failed")
         }
+        SshError::OutputLimitExceeded => {
+            ("remote_command", "Remote diagnostic command output exceeded its safety limit")
+        }
         SshError::Spawn(_) => ("ssh_client", "SSH client could not be launched"),
     };
     let stages = [

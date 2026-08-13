@@ -5,6 +5,25 @@ use pihub_benchmark_core::{BenchmarkConfig, BenchmarkController, BenchmarkReport
 
 static CONTROLLER: OnceLock<Arc<BenchmarkController>> = OnceLock::new();
 #[cfg(test)] thread_local! { static TEST_MEASUREMENT_SCOPE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
+#[cfg(test)]
+pub(crate) static TEST_MEASUREMENT_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+#[cfg(test)]
+pub(crate) struct TestMeasurementScope;
+#[cfg(test)]
+impl Drop for TestMeasurementScope {
+    fn drop(&mut self) {
+        TEST_MEASUREMENT_SCOPE.with(|scope| scope.set(false));
+    }
+}
+#[cfg(test)]
+pub(crate) fn enable_test_measurement_scope() -> TestMeasurementScope {
+    TEST_MEASUREMENT_SCOPE.with(|scope| scope.set(true));
+    TestMeasurementScope
+}
+#[cfg(test)]
+pub(crate) fn test_measurement_lock() -> &'static std::sync::Mutex<()> {
+    &TEST_MEASUREMENT_LOCK
+}
 pub fn measure(label: &'static str) -> Option<OperationMeasurement<'static>> {
     #[cfg(test)] if !TEST_MEASUREMENT_SCOPE.with(|scope| scope.get()) { return None; }
     CONTROLLER.get().map(|controller| controller.measure(label))

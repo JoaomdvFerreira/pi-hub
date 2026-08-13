@@ -86,6 +86,11 @@ pub enum RemoteOperation {
     NetworkVisibility,
     StorageVisibility,
     SystemVisibility,
+    UpdateDetect,
+    UpdatePackages,
+    UpdateHolds,
+    UpdateMetadataAge,
+    UpdateRebootState,
     Diagnostics,
     RestartDevice,
     ShutdownDevice,
@@ -258,6 +263,11 @@ mem=$(awk '/^MemTotal:/ {print $2*1024}' /proc/meminfo 2>/dev/null); [ -n "$mem"
 boot=$(awk '/^btime / {print $2}' /proc/stat 2>/dev/null); [ -n "$boot" ] && printf 'PIHUB_SYS_BOOT_TIMESTAMP=%s\n' "$boot"
 read -r uptime _ < /proc/uptime; [ -n "$uptime" ] && printf 'PIHUB_SYS_UPTIME_SECONDS=%s\n' "${uptime%%.*}"
 "#;
+pub const UPDATE_DETECT_COMMAND: &str = r#"LC_ALL=C LANG=C; if [ -r /etc/os-release ]; then . /etc/os-release; printf 'PIHUB_UPDATE_OS_ID=%s\nPIHUB_UPDATE_OS_VERSION_ID=%s\nPIHUB_UPDATE_OS_LIKE=%s\n' "$ID" "$VERSION_ID" "$ID_LIKE"; else printf 'PIHUB_UPDATE_OS_ID=\n'; fi; for x in apt-get dpkg-query dpkg; do command -v "$x" >/dev/null 2>&1 && printf 'PIHUB_UPDATE_%s=1\n' "$(printf %s "$x" | tr a-z- A-Z_)" || printf 'PIHUB_UPDATE_%s=0\n' "$(printf %s "$x" | tr a-z- A-Z_)"; done"#;
+pub const UPDATE_PACKAGES_COMMAND: &str = r#"LC_ALL=C LANG=C; output=$(apt-get -s upgrade) || exit $?; printf '%s\n' "$output" | awk '/^Inst / { print "PIHUB_UPDATE_PACKAGE=" $0 } /^The following packages have been kept back:$/ { kept=1; next } kept && /^The following packages / { kept=0 } kept && /^[0-9]+ upgraded,/ { kept=0 } kept && NF { for (i=1;i<=NF;i++) print "PIHUB_UPDATE_KEPT_BACK=" $i } /^[0-9]+ upgraded, [0-9]+ newly installed, [0-9]+ to remove and [0-9]+ not upgraded\.$/ { count=$0; sub(/^.* and /, "", count); sub(/ not upgraded\.$/, "", count); print "PIHUB_UPDATE_KEPT_BACK_COUNT=" count }'; printf 'PIHUB_UPDATE_PACKAGES_DONE=1\n'"#;
+pub const UPDATE_HOLDS_COMMAND: &str = r#"LC_ALL=C LANG=C; dpkg --get-selections | while IFS=' ' read -r package selection; do [ "$selection" = hold ] && printf 'PIHUB_UPDATE_HOLD=%s\n' "$package"; done; printf 'PIHUB_UPDATE_HOLDS_DONE=1\n'"#;
+pub const UPDATE_METADATA_AGE_COMMAND: &str = r#"LC_ALL=C LANG=C; newest=$(find /var/lib/apt/lists -type f ! -name lock -printf '%T@\n' 2>/dev/null | sort -nr | head -n 1); [ -n "$newest" ] && printf 'PIHUB_UPDATE_METADATA_MTIME=%s\n' "$newest" || printf 'PIHUB_UPDATE_METADATA_MTIME=none\n'"#;
+pub const UPDATE_REBOOT_STATE_COMMAND: &str = r#"[ -r /var/run/reboot-required ] && printf 'PIHUB_UPDATE_REBOOT=required\n' || printf 'PIHUB_UPDATE_REBOOT=unknown\n'"#;
 
 impl RemoteOperation {
     /// The fixed remote shell command for this operation, if defined yet.
@@ -269,6 +279,11 @@ impl RemoteOperation {
             RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
             RemoteOperation::StorageVisibility => Some(STORAGE_VISIBILITY_COMMAND),
             RemoteOperation::SystemVisibility => Some(SYSTEM_VISIBILITY_COMMAND),
+            RemoteOperation::UpdateDetect => Some(UPDATE_DETECT_COMMAND),
+            RemoteOperation::UpdatePackages => Some(UPDATE_PACKAGES_COMMAND),
+            RemoteOperation::UpdateHolds => Some(UPDATE_HOLDS_COMMAND),
+            RemoteOperation::UpdateMetadataAge => Some(UPDATE_METADATA_AGE_COMMAND),
+            RemoteOperation::UpdateRebootState => Some(UPDATE_REBOOT_STATE_COMMAND),
             RemoteOperation::Diagnostics => Some(DIAGNOSTICS_COMMAND),
             RemoteOperation::RestartDevice => Some(RESTART_DEVICE_COMMAND),
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),
@@ -318,6 +333,26 @@ mod tests {
     #[test]
     fn system_identity_is_reserved_and_undefined_for_now() {
         assert_eq!(RemoteOperation::SystemIdentity.command(), None);
+    }
+    #[test]
+    fn update_operations_are_fixed_read_only_commands() {
+        for operation in [
+            RemoteOperation::UpdateDetect,
+            RemoteOperation::UpdatePackages,
+            RemoteOperation::UpdateHolds,
+            RemoteOperation::UpdateMetadataAge,
+            RemoteOperation::UpdateRebootState,
+        ] {
+            let command = operation.command().unwrap();
+            assert!(!command.contains("apt update"));
+            assert!(!command.contains("apt-get update"));
+            assert!(!command.contains(" install "));
+            assert!(!command.contains(" upgrade ") || command.contains("apt-get -s upgrade"));
+            assert!(!command.contains("--no-download"));
+        }
+        let packages = RemoteOperation::UpdatePackages.command().unwrap();
+        assert!(packages.contains("PIHUB_UPDATE_KEPT_BACK_COUNT="));
+        assert!(packages.contains("kept && /^The following packages /"));
     }
 
     #[test]

@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import type { DeviceSnapshot, HistoricalMetric, HistoricalRange, HistoricalSeries } from "../../types/snapshot";
+import type { DeviceSnapshot, HistoricalMetric, HistoricalRange, HistoricalSeries, UpdateCheckResult } from "../../types/snapshot";
 import type { ActivityEvent } from "../../types/activity";
 import type { Alert } from "../../types/alert";
 
@@ -24,3 +24,5 @@ export function getDeviceActivity(deviceId: string): Promise<ActivityEvent[]> {
 export function getHistoricalSeries(deviceId: string, entityId: string | undefined, metric: HistoricalMetric, range: HistoricalRange): Promise<HistoricalSeries> { return invoke<HistoricalSeries>("get_historical_series", { deviceId, entityId, metric, range }); }
 export function getAlerts(): Promise<Alert[]> { return invoke<Alert[]>("get_alerts"); }
 export function acknowledgeAlert(id: string): Promise<Alert> { return invoke<Alert>("acknowledge_alert", { id }); }
+export function getUpdateResult(deviceId:string):Promise<UpdateCheckResult|null>{return invoke("get_update_result",{deviceId});}
+export function checkForUpdates(deviceId:string):Promise<UpdateCheckResult>{return invoke("check_for_updates",{deviceId});}
