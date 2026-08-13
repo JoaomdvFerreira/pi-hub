@@ -2,8 +2,8 @@ use std::process::Command;
 use std::time::Duration;
 
 use super::error::SshError;
-use super::executor::{RemoteExecutionResult, RemoteExecutor, SshTarget};
-use super::process::{run_with_timeout, RawProcessOutcome};
+use super::executor::{RemoteExecutionResult, RemoteExecutor, RemoteOutputLimits, SshTarget};
+use super::process::{run_with_timeout, run_with_timeout_and_output_limits, OutputLimits, RawProcessOutcome};
 
 pub struct OpenSshExecutor {
     connect_timeout: Duration,
@@ -12,6 +12,47 @@ pub struct OpenSshExecutor {
 impl OpenSshExecutor {
     pub fn new(connect_timeout: Duration) -> Self {
         Self { connect_timeout }
+    }
+
+    fn execute_with_limits(
+        &self,
+        target: &SshTarget,
+        command: &str,
+        timeout: Duration,
+        limits: Option<RemoteOutputLimits>,
+    ) -> Result<RemoteExecutionResult, SshError> {
+        let mut measurement = crate::performance_diagnostics::measure("ssh.execute");
+        let connect_timeout_secs = self.connect_timeout.as_secs().max(1).to_string();
+        let destination = format!("{}@{}", target.username, target.host);
+        let port = target.port.to_string();
+        let mut cmd = Command::new("ssh");
+        cmd.args([
+            "-o", "BatchMode=yes", "-o", &format!("ConnectTimeout={connect_timeout_secs}"),
+            "-p", &port, &destination, command,
+        ]);
+        let outcome = match limits {
+            Some(limits) => run_with_timeout_and_output_limits(
+                &mut cmd,
+                timeout,
+                OutputLimits { stdout: limits.stdout, stderr: limits.stderr },
+            ),
+            None => run_with_timeout(&mut cmd, timeout),
+        }.map_err(|err| {
+            if let Some(item) = measurement.as_mut() { item.fail(); }
+            SshError::Spawn(err.to_string())
+        })?;
+        let result = classify_outcome(outcome);
+        if let Ok(execution) = &result {
+            if let Some(item) = measurement.as_mut() {
+                item.set_bytes((execution.stdout.len() + execution.stderr.len()) as u64);
+            }
+        } else if let Some(item) = measurement.as_mut() {
+            item.fail();
+        }
+        if matches!(result, Err(SshError::RemoteCommandTimeout | SshError::ConnectionTimeout)) {
+            let _timeout = crate::performance_diagnostics::measure("ssh.timeout");
+        }
+        result
     }
 }
 
@@ -28,41 +69,24 @@ impl RemoteExecutor for OpenSshExecutor {
         command: &str,
         timeout: Duration,
     ) -> Result<RemoteExecutionResult, SshError> {
-        let mut measurement = crate::performance_diagnostics::measure("ssh.execute");
-        let connect_timeout_secs = self.connect_timeout.as_secs().max(1).to_string();
-        let destination = format!("{}@{}", target.username, target.host);
-        let port = target.port.to_string();
+        self.execute_with_limits(target, command, timeout, None)
+    }
 
-        // Arguments are passed as separate process arguments, never
-        // interpolated into a single shell string, so device/service input
-        // can never break out into additional ssh flags or shell syntax.
-        let mut cmd = Command::new("ssh");
-        cmd.args([
-            "-o",
-            "BatchMode=yes",
-            "-o",
-            &format!("ConnectTimeout={connect_timeout_secs}"),
-            "-p",
-            &port,
-            &destination,
-            command,
-        ]);
-
-        let outcome = match run_with_timeout(&mut cmd, timeout) { Ok(outcome) => outcome, Err(err) => { if let Some(item)=measurement.as_mut() { item.fail(); } return Err(SshError::Spawn(err.to_string())) } };
-        let result = classify_outcome(outcome);
-        if let Ok(execution) = &result {
-            if let Some(item) = measurement.as_mut() {
-                item.set_bytes((execution.stdout.len() + execution.stderr.len()) as u64);
-            }
-        } else if let Some(item) = measurement.as_mut() {
-            item.fail();
-        }
-        if matches!(result, Err(SshError::RemoteCommandTimeout | SshError::ConnectionTimeout)) { let _timeout = crate::performance_diagnostics::measure("ssh.timeout"); }
-        result
+    fn execute_bounded(
+        &self,
+        target: &SshTarget,
+        command: &str,
+        timeout: Duration,
+        limits: RemoteOutputLimits,
+    ) -> Result<RemoteExecutionResult, SshError> {
+        self.execute_with_limits(target, command, timeout, Some(limits))
     }
 }
 
 fn classify_outcome(raw: RawProcessOutcome) -> Result<RemoteExecutionResult, SshError> {
+    if raw.output_limit_exceeded {
+        return Err(SshError::OutputLimitExceeded);
+    }
     if raw.timed_out {
         return Err(SshError::RemoteCommandTimeout);
     }
@@ -118,6 +142,7 @@ mod tests {
             stderr: stderr.into(),
             duration_ms: 10,
             timed_out: false,
+            output_limit_exceeded: false,
         }
     }
 
@@ -192,6 +217,13 @@ mod tests {
             classify_outcome(outcome),
             Err(SshError::RemoteCommandTimeout)
         );
+    }
+
+    #[test]
+    fn classifies_bounded_output_without_retaining_it() {
+        let mut outcome = raw(None, "");
+        outcome.output_limit_exceeded = true;
+        assert_eq!(classify_outcome(outcome), Err(SshError::OutputLimitExceeded));
     }
 
     #[test]

@@ -1,6 +1,6 @@
 # M15 WU15-01 — APT Read-only Evidence Contract
 
-Status: Frozen design artifact; implementation begins with WU15-02  
+Status: Frozen design artifact; implementation begins with WU15-02
 Milestone: M15
 
 ## Supported platform and capability decision

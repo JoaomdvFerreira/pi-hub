@@ -12,7 +12,7 @@ pub mod fake;
 #[allow(unused_imports)]
 pub use error::SshError;
 #[allow(unused_imports)]
-pub use executor::{RemoteExecutionResult, RemoteExecutor, SshTarget};
+pub use executor::{RemoteExecutionResult, RemoteExecutor, RemoteOutputLimits, SshTarget};
 pub use openssh::OpenSshExecutor;
 #[allow(unused_imports)]
 pub use operation::RemoteOperation;

@@ -1,7 +1,9 @@
 use crate::{
     domain::{device::Device, update_intelligence::*},
     error::ApplicationError,
-    infrastructure::ssh::{OpenSshExecutor, RemoteExecutor, RemoteOperation, SshError, SshTarget},
+    infrastructure::ssh::{
+        OpenSshExecutor, RemoteExecutor, RemoteOperation, RemoteOutputLimits, SshError, SshTarget,
+    },
     storage::{
         device_repository::{DeviceRepository, JsonDeviceRepository},
         snapshot_repository::{JsonSnapshotRepository, SnapshotRepository},
@@ -37,13 +39,6 @@ fn target(device: &Device) -> SshTarget {
         username: device.ssh_username.clone(),
     }
 }
-fn bounded(value: &str, limit: usize) -> Result<(), String> {
-    if value.len() > limit {
-        Err("boundedOutput".into())
-    } else {
-        Ok(())
-    }
-}
 fn execute(
     executor: &dyn RemoteExecutor,
     target: &SshTarget,
@@ -53,30 +48,19 @@ fn execute(
 ) -> Result<String, UpdateFailure> {
     let mut m = crate::performance_diagnostics::measure(label);
     let result = executor
-        .execute(
+        .execute_bounded(
             target,
             operation.command().expect("fixed update command"),
             timeout,
+            RemoteOutputLimits { stdout: MAX_STDOUT, stderr: MAX_STDERR },
         )
         .map_err(|e| failure(e));
     match result {
         Ok(value) => {
-            if let Err(message) =
-                bounded(&value.stdout, MAX_STDOUT).and_then(|_| bounded(&value.stderr, MAX_STDERR))
-            {
-                if let Some(x) = m.as_mut() {
-                    x.fail()
-                }
-                Err(UpdateFailure {
-                    kind: UpdateFailureKind::MalformedOutput,
-                    message,
-                })
-            } else {
-                if let Some(x) = m.as_mut() {
-                    x.set_bytes((value.stdout.len() + value.stderr.len()) as u64)
-                }
-                Ok(value.stdout)
+            if let Some(x) = m.as_mut() {
+                x.set_bytes((value.stdout.len() + value.stderr.len()) as u64)
             }
+            Ok(value.stdout)
         }
         Err(e) => {
             if let Some(x) = m.as_mut() {
@@ -89,6 +73,7 @@ fn execute(
 fn failure(error: SshError) -> UpdateFailure {
     let kind = match error {
         SshError::RemoteCommandTimeout | SshError::ConnectionTimeout => UpdateFailureKind::Timeout,
+        SshError::OutputLimitExceeded => UpdateFailureKind::MalformedOutput,
         SshError::RemoteCommandError { .. } => UpdateFailureKind::RequiredCommand,
         _ => UpdateFailureKind::Transport,
     };
@@ -631,6 +616,28 @@ mod tests {
         .unwrap();
         assert_eq!(exit_100.status, UpdateStatus::CheckFailed);
         assert_eq!(exit_100.failure.unwrap().kind, UpdateFailureKind::RequiredCommand);
+    }
+    #[test]
+    fn oversized_required_evidence_fails_without_persisting_raw_output() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        let marker = "OVERSIZED_UPDATE_EVIDENCE";
+        let oversized = marker.repeat((MAX_STDOUT / marker.len()) + 1);
+        let result = check_with(
+            &device(),
+            &Script::new(vec![ok(detect()), ok(&oversized)]),
+            &repo,
+            Utc::now(),
+        )
+        .unwrap();
+        assert_eq!(result.status, UpdateStatus::CheckFailed);
+        assert_eq!(result.failure.unwrap().kind, UpdateFailureKind::MalformedOutput);
+        assert_eq!(
+            repo.get_update_result("d").unwrap().status,
+            UpdateStatus::CheckFailed
+        );
+        let persisted = std::fs::read_to_string(dir.path().join("state.json")).unwrap();
+        assert!(!persisted.contains(marker));
     }
     #[test]
     fn diagnostics_capture_real_check_labels() {
