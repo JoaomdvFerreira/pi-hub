@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { checkForUpdates, getUpdateResult } from "@/lib/tauri/monitoring";
 import type { UpdateCheckResult } from "@/types/snapshot";
@@ -36,6 +37,7 @@ export function SoftwareUpdates({ deviceId }: { deviceId: string }) {
     if (checking) return;
     setChecking(true);
     try { setResult(await checkForUpdates(deviceId)); setShowUpdates(false); }
+    catch { setResult(null); }
     finally { setChecking(false); }
   };
 
@@ -50,8 +52,8 @@ export function SoftwareUpdates({ deviceId }: { deviceId: string }) {
         <p className="mt-1 text-xs text-muted-foreground">Last checked: {lastChecked(result?.checkedAt)}</p>
       </div>
       <div className="flex flex-wrap gap-2">
-        {updateCount > 0 ? <Button size="sm" variant="outline" onClick={() => setShowUpdates(value => !value)} aria-expanded={showUpdates} aria-controls="system-update-list">{showUpdates ? "Hide updates" : "View updates"}</Button> : null}
-        <Button size="sm" disabled={checking} onClick={() => void check()}>{checking ? "Checking…" : result ? "Check again" : "Check for Updates"}</Button>
+        {updateCount > 0 ? <Button size="sm" variant="outline" disabled={checking} onClick={() => setShowUpdates(value => !value)} aria-expanded={showUpdates} aria-controls="system-update-list">{showUpdates ? "Hide updates" : "View updates"}</Button> : null}
+        <Button size="sm" disabled={checking} onClick={() => void check()}>{checking ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}{checking ? "Checking…" : result ? "Check again" : "Check for Updates"}</Button>
       </div>
     </div>
     {result === undefined ? <p className="mt-3 text-xs text-muted-foreground">Loading system update status…</p> : null}

@@ -57,4 +57,28 @@ describe("SoftwareUpdates", () => {
     await waitFor(() => expect(checkForUpdates).toHaveBeenCalledWith("d"));
     expect(checkForUpdates).toHaveBeenCalledTimes(1);
   });
+
+  it("shows the app spinner and restores the action after success", async () => {
+    let resolveCheck!: (value: typeof result) => void;
+    checkForUpdates.mockReturnValue(new Promise(resolve => { resolveCheck = resolve; }));
+    render(<SoftwareUpdates deviceId="d" />);
+    const button = await screen.findByRole("button", { name: "Check again" });
+    fireEvent.click(button);
+    expect(button).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Checking…" })).toBeDisabled();
+    expect(button.querySelector("svg")).toHaveClass("animate-spin");
+    expect(screen.getByRole("button", { name: "View updates" })).toBeDisabled();
+    resolveCheck({ ...result, status: "upToDate", updates: { totalCount: 0, packages: [], truncated: false }, keptBackPackages: { totalCount: 0, packages: [], truncated: false } });
+    await waitFor(() => expect(screen.getByRole("button", { name: "Check again" })).not.toBeDisabled());
+  });
+
+  it("restores the action after a failed check", async () => {
+    checkForUpdates.mockRejectedValue(new Error("offline"));
+    render(<SoftwareUpdates deviceId="d" />);
+    const button = await screen.findByRole("button", { name: "Check again" });
+    fireEvent.click(button);
+    await waitFor(() => expect(screen.getByRole("button", { name: "Check for Updates" })).not.toBeDisabled());
+    expect(screen.getByRole("button", { name: "Check for Updates" })).toBeInTheDocument();
+    expect(checkForUpdates).toHaveBeenCalledTimes(1);
+  });
 });
