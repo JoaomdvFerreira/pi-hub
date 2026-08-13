@@ -14,6 +14,8 @@ The C-locale protocol now records both the kept-back package block and the autho
 - Production orchestration fixtures cover normal upgrades with kept-back names, zero normal upgrades with kept-back names, summary-only kept-back count, independent dpkg holds, package-detail bounds, persistence/reload, malformed required package evidence, timeout, and genuine exit-100 package failure.
 - Existing diagnostics, explicit-action, cache, scheduler, and concurrency evidence remains applicable because the operation count and typed execution path are unchanged.
 
-## Required operator retest before merge
+## Operator validation completion
 
-On a reachable Raspberry Pi OS device, use only the System Updates **Check for Updates** action. Confirm it completes using `apt-get -s upgrade`, presents a concise update state, keeps normal-update and deferred counts distinct, and does not claim up to date when the summary reports packages not upgraded. Confirm **View updates** exposes only the bounded normal package/version table, then confirm cached reload and Performance Diagnostics export. Repeat one read-only check on Debian when available. Do not run `apt update`, alter package state or holds, install, upgrade, remove, or reboot.
+Operator validation completed on both available real Pi-Hub devices using only the System Updates **Check for Updates** action. Both devices passed the concise UX, read-only `apt-get -s upgrade` simulation, normal/deferred count presentation, bounded **View updates** versions, cache persistence after restart, no-background-polling behavior, and Performance Diagnostics checks. No `apt update`, package-state mutation, install, upgrade, remove, or reboot was performed.
+
+No separate plain-Debian operator device was available in this validation set; the deterministic Debian-family fixtures remain the cross-platform evidence for that path.

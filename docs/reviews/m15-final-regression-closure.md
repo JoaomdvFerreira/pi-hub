@@ -24,13 +24,17 @@
 | Restart-persistent latest result | PASS |
 | No automatic update polling; System placement/gating | PASS |
 | Diagnostics and deterministic fixture coverage | PASS |
-| Real Raspberry Pi OS/Debian validation | PASS with correction retest residual |
+| Real-device validation | PASS with distro residual |
 | Canonical validation | PASS - closure canonical validation passed; the operator-evidence correction additionally passed focused Rust, frontend, type, and diff checks. |
 
 ## Risk assessment
 
-**38/100 - Yellow.** The remote surface remains fixed and read-only, with deterministic bounds, partial isolation, explicit concurrency protection, and corrected regression evidence. Raspberry Pi OS operator evidence invalidated the original `--no-download` simulation; the replacement command and kept-back state require one read-only operator retest before merge.
+**30/100 - Yellow.** The remote surface remains fixed and read-only, with deterministic bounds, partial isolation, explicit concurrency protection, corrected regression evidence, and successful validation on both available real Pi-Hub devices. The remaining risk is limited to distro coverage: no separate plain-Debian operator device was validated.
 
 ## Operator residual before merge
 
-On one reachable Raspberry Pi OS device and one Debian device, run only `Check for Updates`; verify `apt-get -s upgrade` completes without `--no-download`, normal and kept-back counts (including any `N not upgraded`) do not yield a false up-to-date status, explicit dpkg holds remain separate, cache after restart, duplicate-action response, and Diagnostics export. Do not run `apt update`, mutate packages/holds, or reboot.
+## Completed real-device evidence
+
+Operator validation completed on both available real Pi-Hub devices. On each device, the operator verified the concise System Updates UX, explicit Check for Updates only, loading/Checking feedback, successful read-only APT simulation, update counts and deferred packages, View updates installed-to-candidate versions, persistence after restart, absence of automatic/background polling, and Performance Diagnostics. No package mutation, `apt update`, reboot, install, upgrade, or remove was performed.
+
+The evidence confirms the supported Raspberry Pi device path on both available devices. It does not constitute separate plain-Debian validation; a plain-Debian device remains optional follow-up coverage if one becomes available.
