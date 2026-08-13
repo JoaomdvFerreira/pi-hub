@@ -336,6 +336,12 @@ Pi-Hub does not weaken host or sudo security settings automatically.
 
 This section resolves the implementation choices left open by the reviewed policy. It is the binding input to WU16-02 through WU16-05.
 
+### 17.0 WU16-03 two-phase consent boundary
+
+WU16-03 separates non-mutating preparation from package mutation. **PREPARE** is: explicit Update device intent → preflight → metadata refresh → privileged simulation → fresh plan/fingerprint → return for final confirmation. It releases the shared maintenance claim before waiting for the operator. **APPLY** is: final confirmation → reacquire the claim → immediate privileged re-simulation → fingerprint comparison → dispatch only when unchanged. A mismatch is `PlanChanged`, persists refreshed M15 evidence, and never has a continue-anyway path.
+
+The fingerprint is an immediate pre-dispatch consent gate, not a claim of atomic package-state locking. The frontend supplies only the final confirmation decision and device identity; it does not generate or validate the fingerprint. A prepared, pre-dispatch record requires a fresh confirmation after restart and is never dispatched automatically.
+
 ### 17.1 One per-device maintenance owner
 
 M10 currently owns a process-global `ACTIVE_OPERATIONS` set in `commands/administration.rs`; M15 owns a separate `UpdateCheckCoordinator` in `monitoring/update_concurrency.rs`. WU16-02 replaces both with one App-managed `DeviceMaintenanceCoordinator` in `monitoring`, keyed by device ID and holding an operation kind. It is the only same-device claim owner for M10 administration, M15 checks, and M16 apply/recovery. It returns a typed conflict before dispatch; it never nests the two existing locks. Claims use RAII for in-process work, while a recovered persisted M16 nonterminal operation reclaims its device before observation. Different device IDs remain independent.
@@ -360,7 +366,7 @@ The backend generates `pihub-update-` plus a lower-case, hyphenless UUID (32 hex
 sudo -n systemd-run --unit=<generated-name> --service-type=exec \
   --property=RemainAfterExit=yes \
   --setenv=DEBIAN_FRONTEND=noninteractive \
-  --setenv=APT_LISTCHANGES_FRONTEND=text \
+  --setenv=APT_LISTCHANGES_FRONTEND=none \
   --setenv=NEEDRESTART_MODE=l -- \
   apt-get -y --no-remove \
   -o Dpkg::Options::=--force-confdef \

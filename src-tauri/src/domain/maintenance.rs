@@ -132,7 +132,7 @@ impl MaintenanceOperation {
     }
 
     pub fn requires_recovery(&self) -> bool {
-        !self.state.is_terminal()
+        self.dispatch_state != MaintenanceDispatchState::NotAttempted && !self.state.is_terminal()
     }
 
     pub fn requires_fresh_confirmation_after_restart(&self) -> bool {
@@ -204,7 +204,7 @@ mod tests {
             &operation.transient_unit_id
         ));
         assert!(operation.requires_fresh_confirmation_after_restart());
-        assert!(operation.requires_recovery());
+        assert!(!operation.requires_recovery());
     }
 
     #[test]

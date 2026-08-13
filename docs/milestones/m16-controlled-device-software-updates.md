@@ -1,6 +1,6 @@
 # Pi-Hub — M16 Controlled Device Software Updates
 
-Status: In progress — WU16-02 coordination/state/persistence complete; no mutation implementation
+Status: In progress — WU16-03 detached execution/verification complete; no live-device mutation validation
 Target release: v0.4.0 (paired with merged M15, subject to release review)
 Predecessor: M15 — Device Update Intelligence & Maintenance Readiness
 Risk class: High
@@ -517,6 +517,8 @@ Implement:
 - reboot-required result;
 - bounded failure diagnostics;
 - deterministic process/transport/restart tests.
+
+Completed with the canonical two-phase prepare/apply consent boundary, fixed typed APT/systemd commands, bounded one-shot recovery observation, post-terminal verification, and deterministic fake-executor coverage. No real device command was executed during this work unit; operator validation remains WU16-05.
 
 ### WU16-04 — System Updates Mutation UX
 

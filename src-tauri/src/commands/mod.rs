@@ -3,6 +3,7 @@ pub mod alerts;
 pub mod containers;
 pub mod devices;
 pub mod launch;
+pub mod maintenance;
 pub mod monitoring;
 pub mod settings;
 pub mod terminal;

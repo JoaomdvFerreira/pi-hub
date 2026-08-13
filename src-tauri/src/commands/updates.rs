@@ -89,7 +89,7 @@ fn field(raw: &str, key: &str) -> Option<String> {
     raw.lines()
         .find_map(|line| line.strip_prefix(key).map(str::to_string))
 }
-fn package(raw: &str) -> Result<UpdatePackages, String> {
+pub(crate) fn package(raw: &str) -> Result<UpdatePackages, String> {
     let mut packages = vec![];
     let mut total = 0_u32;
     for line in raw
@@ -129,7 +129,7 @@ fn package(raw: &str) -> Result<UpdatePackages, String> {
         packages,
     })
 }
-fn kept_back(raw: &str) -> Result<KeptBackPackages, String> {
+pub(crate) fn kept_back(raw: &str) -> Result<KeptBackPackages, String> {
     let mut packages = vec![];
     let mut total = 0_u32;
     for name in raw
@@ -244,7 +244,7 @@ fn check(app: &AppHandle, device_id: &str) -> Result<UpdateCheckResult, Applicat
     let repo = JsonSnapshotRepository::new(dir(app)?);
     check_with(&device, &OpenSshExecutor::default(), &repo, Utc::now())
 }
-fn check_with(
+pub(crate) fn check_with(
     device: &Device,
     executor: &dyn RemoteExecutor,
     repo: &dyn SnapshotRepository,

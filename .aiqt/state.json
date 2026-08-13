@@ -3573,12 +3573,12 @@
         "validationCommands": [
           "cargo test --manifest-path src-tauri/Cargo.toml"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-075"
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
-        "updatedAt": "2026-08-13T11:04:31.422Z"
+        "updatedAt": "2026-08-13T11:38:56.506Z"
       },
       {
         "id": "WU097",
@@ -8993,17 +8993,95 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-13T11:04:31.422Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T11:04:31.422Z"
+    },
+    {
+      "id": "C085",
+      "workUnitId": "WU096",
+      "packetId": "PKT-086",
+      "summary": "Implemented the M16 two-phase controlled-update execution path with fixed APT/systemd commands, durable pre-dispatch identity, bounded reconciliation, verification, and deterministic fake-executor coverage; no configured device was changed.",
+      "completed": [
+        "Amended the canonical contract with the explicit PREPARE then consent-gated APPLY boundary; a plan fingerprint is an immediate pre-dispatch consent gate, not an atomic lock.",
+        "Added typed capability, dpkg audit, metadata-refresh, simulation, detached systemd-run, one-shot systemctl, journal-tail, and cleanup operations with fixed arguments, environment, output limits, and diagnostics labels.",
+        "Implemented fresh plan persistence and SHA-256 plan comparison; changed plans persist the refreshed M15 result and terminate as PlanChanged before dispatch.",
+        "Persisted Dispatching before dispatch, never retries uncertain dispatch, reconciles only the recorded transient unit, and leaves an unexpired active unit running without a kill/timeout path.",
+        "Added terminal dpkg and internal M15 verification, conservative reboot state, bounded/discarded journal diagnostics, terminal Activity, and operation-scoped expected-disruption cleanup.",
+        "Added deterministic fake-executor cases for phases, unsafe preflight, busy refresh, changed plan, systemctl classification, uncertain dispatch, recovery expiry, no redispatch, and no raw output persistence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/design/m16-apt-execution-safety-contract.md",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "src-tauri/src/commands/maintenance.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/commands/updates.rs",
+        "src-tauri/src/domain/maintenance.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/lib.rs",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "rustfmt --edition 2021 --check <touched Rust files>",
+          "result": "passed",
+          "summary": "All WU16-03 Rust files are formatted; repository-wide format check reports pre-existing unrelated formatting differences."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "254 passed, 1 ignored; includes M10/M15 regression and M16 deterministic execution tests."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 35 tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and Vite production build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "No changed plan is installed",
+          "result": "passed",
+          "evidence": "APPLY resimulates under the shared claim; a SHA-256 mismatch persists PlanChanged and returns before systemd-run."
+        },
+        {
+          "criterion": "No transport loss kills an active transaction",
+          "result": "passed",
+          "evidence": "Dispatch uncertainty persists the generated unit identity, performs only one bounded status observation, and has no remote kill/RuntimeMax path."
+        },
+        {
+          "criterion": "Success requires systemd, dpkg and M15 verification evidence",
+          "result": "passed",
+          "evidence": "Only active/exited with successful systemd result and main exit status enters verification; dpkg audit and internal M15 refresh must then confirm reviewed packages are gone."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-13T11:38:56.506Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-085",
-    "workUnitId": "WU095",
+    "id": "PKT-086",
+    "workUnitId": "WU096",
     "milestoneId": "M020",
-    "createdAt": "2026-08-13T10:51:55.672Z",
+    "createdAt": "2026-08-13T11:21:13.975Z",
     "format": "markdown",
-    "contentHash": "sha256:79ef802276094eb19d99e3ea12a0e1a7309b8f2b9331ba599e8fb89cef176178",
+    "contentHash": "sha256:ed152a3ec2062201e5869ffe2807f596bd34cd9da4567eab6ddefbbfaca841ce",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9022,7 +9100,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-13T11:04:31.422Z",
+  "lastUpdatedAt": "2026-08-13T11:38:56.506Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -11541,6 +11619,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-13T11:04:31.422Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C085",
+      "current": {
+        "observationId": "sha256:14151c9b53d5163e553d038c640d4476d99a2d2372942e04828977fce36530e9",
+        "checkpointId": "C085",
+        "workUnitId": "WU096",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-13T11:38:56.506Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-13T11:38:56.506Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:14151c9b53d5163e553d038c640d4476d99a2d2372942e04828977fce36530e9",
+          "checkpointId": "C085",
+          "workUnitId": "WU096",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-13T11:38:56.506Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-13T11:38:56.506Z"
         }
       ]
     }
