@@ -196,14 +196,35 @@ pub fn get_update_result(
 ) -> Result<Option<UpdateCheckResult>, ApplicationError> {
     Ok(JsonSnapshotRepository::new(dir(&app)?).get_update_result(&device_id))
 }
-/// Reads only the latest persisted M16 operation state. It cannot begin a
-/// maintenance operation or trigger remote observation.
+/// Reads the latest persisted M16 operation state. It cannot begin a
+/// maintenance operation or trigger remote observation; it only normalizes a
+/// legacy stale failure field on an otherwise verified successful terminal
+/// record.
 #[tauri::command]
 pub fn get_maintenance_operation(
     app: AppHandle,
     device_id: String,
 ) -> Result<Option<MaintenanceOperation>, ApplicationError> {
-    Ok(JsonSnapshotRepository::new(dir(&app)?).get_maintenance_operation(&device_id))
+    let repo = JsonSnapshotRepository::new(dir(&app)?);
+    let Some(mut operation) = repo.get_maintenance_operation(&device_id) else {
+        return Ok(None);
+    };
+    if matches!(
+        operation.state,
+        crate::domain::maintenance::MaintenanceOperationState::Completed
+            | crate::domain::maintenance::MaintenanceOperationState::CompletedRebootRequired
+    ) && operation.failure.is_some()
+    {
+        operation.failure = None;
+        repo.upsert_maintenance_operation(&operation).map_err(|_| {
+            app_error(
+                "PersistenceError",
+                "could not normalize completed update state",
+                true,
+            )
+        })?;
+    }
+    Ok(Some(operation))
 }
 #[tauri::command]
 pub async fn check_for_updates(

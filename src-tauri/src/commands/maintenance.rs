@@ -326,7 +326,7 @@ fn unit_state(raw: &str) -> Option<UnitState> {
     if active == "active"
         && sub == "exited"
         && fields.get("Result") == Some(&"success")
-        && fields.get("ExecMainCode") == Some(&"exited")
+        && matches!(fields.get("ExecMainCode"), Some(&"exited") | Some(&"1"))
         && fields.get("ExecMainStatus") == Some(&"0")
     {
         return Some(UnitState::Success);
@@ -369,10 +369,62 @@ fn approved_entries_are_gone(before: &UpdateCheckResult, after: &UpdateCheckResu
         })
     })
 }
+fn verify_completed_unit_with(
+    device: &Device,
+    executor: &dyn RemoteExecutor,
+    repo: &dyn SnapshotRepository,
+    disruption: &JsonAdministrationRepository,
+    activity: &JsonActivityRepository,
+    mut operation: MaintenanceOperation,
+) -> Result<MaintenanceOperation, MaintenanceFailure> {
+    let before = repo
+        .get_update_result(&device.id)
+        .ok_or(MaintenanceFailure::VerificationFailed)?;
+    let target = target(device);
+    let verification = (|| -> Result<RebootState, MaintenanceFailure> {
+        audit(executor, &target)?;
+        let after = check_with(device, executor, repo, Utc::now())
+            .map_err(|_| MaintenanceFailure::VerificationFailed)?;
+        approved_entries_are_gone(&before, &after)
+            .then_some(after.reboot)
+            .ok_or(MaintenanceFailure::VerificationFailed)
+    })();
+    match verification {
+        Ok(reboot) => {
+            operation.reboot_required = Some(reboot == RebootState::Required);
+            operation.transition(if reboot == RebootState::Required {
+                MaintenanceOperationState::CompletedRebootRequired
+            } else {
+                MaintenanceOperationState::Completed
+            });
+        }
+        Err(failure) => {
+            operation.failure = Some(failure);
+            operation.transition(MaintenanceOperationState::Failed);
+        }
+    }
+    repo.upsert_maintenance_operation(&operation)
+        .map_err(|_| MaintenanceFailure::VerificationFailed)?;
+    let _ = disruption.clear_if_operation(&device.id, &operation.id);
+    if let Some(event) = operation.activity_event() {
+        let _ = activity.append(event);
+    }
+    let _ = run(
+        executor,
+        &target,
+        &maintenance_cleanup_command(&operation.transient_unit_id).unwrap(),
+        SHORT,
+        "device_updates.apply.verify",
+        STATUS_OUTPUT,
+    );
+    Ok(operation)
+}
 pub(crate) fn reconcile_persisted_with(
     device: &Device,
     executor: &dyn RemoteExecutor,
     repo: &dyn SnapshotRepository,
+    disruption: &JsonAdministrationRepository,
+    activity: &JsonActivityRepository,
 ) -> Result<MaintenanceOperation, MaintenanceFailure> {
     let mut operation = repo
         .get_maintenance_operation(&device.id)
@@ -382,21 +434,20 @@ pub(crate) fn reconcile_persisted_with(
     {
         return Ok(operation);
     }
-    if operation
-        .observation_deadline
-        .as_deref()
-        .and_then(|value| chrono::DateTime::parse_from_rfc3339(value).ok())
-        .is_some_and(|deadline| deadline.with_timezone(&Utc) <= Utc::now())
-    {
-        operation.failure = Some(MaintenanceFailure::StillRunning);
-        operation.transition(MaintenanceOperationState::StillRunning);
-        repo.upsert_maintenance_operation(&operation)
-            .map_err(|_| MaintenanceFailure::VerificationFailed)?;
-        return Ok(operation);
-    }
-    if reconcile_with(&mut operation, executor, &target(device)).is_err() {
-        operation.failure = Some(MaintenanceFailure::OutcomeUncertain);
-        operation.transition(MaintenanceOperationState::OutcomeUncertain);
+    // The UI owns the bounded automatic-polling window. A user-initiated
+    // status check must still observe the known unit after that window; it is
+    // an observation only and never re-enters the dispatch path.
+    match reconcile_with(&mut operation, executor, &target(device)) {
+        Ok(UnitState::Success) => {
+            return verify_completed_unit_with(
+                device, executor, repo, disruption, activity, operation,
+            )
+        }
+        Err(_) => {
+            operation.failure = Some(MaintenanceFailure::OutcomeUncertain);
+            operation.transition(MaintenanceOperationState::OutcomeUncertain);
+        }
+        Ok(_) => {}
     }
     repo.upsert_maintenance_operation(&operation)
         .map_err(|_| MaintenanceFailure::VerificationFailed)?;
@@ -422,6 +473,8 @@ pub async fn reconcile_device_update(
         &device,
         &OpenSshExecutor::default(),
         &JsonSnapshotRepository::new(&directory),
+        &JsonAdministrationRepository::new(&directory),
+        &JsonActivityRepository::new(&directory),
     )
     .map_err(|failure| {
         app_error(
@@ -566,35 +619,7 @@ pub(crate) fn apply_with(
         }
         Ok(UnitState::Success) => {}
     }
-    audit(executor, &target)?;
-    let after = check_with(device, executor, repo, Utc::now())
-        .map_err(|_| MaintenanceFailure::VerificationFailed)?;
-    if !approved_entries_are_gone(&before, &after) {
-        operation.failure = Some(MaintenanceFailure::VerificationFailed);
-        operation.transition(MaintenanceOperationState::Failed);
-    } else {
-        operation.reboot_required = Some(after.reboot == RebootState::Required);
-        operation.transition(if after.reboot == RebootState::Required {
-            MaintenanceOperationState::CompletedRebootRequired
-        } else {
-            MaintenanceOperationState::Completed
-        });
-    }
-    repo.upsert_maintenance_operation(&operation)
-        .map_err(|_| MaintenanceFailure::VerificationFailed)?;
-    let _ = disruption.clear_if_operation(&device.id, &operation.id);
-    if let Some(event) = operation.activity_event() {
-        let _ = activity.append(event);
-    }
-    let _ = run(
-        executor,
-        &target,
-        &maintenance_cleanup_command(&operation.transient_unit_id).unwrap(),
-        SHORT,
-        "device_updates.apply.verify",
-        STATUS_OUTPUT,
-    );
-    Ok(operation)
+    verify_completed_unit_with(device, executor, repo, disruption, activity, operation)
 }
 
 #[tauri::command]
@@ -809,6 +834,7 @@ mod tests {
             Some(UnitState::Running)
         );
         assert_eq!(unit_state("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=exited\nExecMainStatus=0\n"),Some(UnitState::Success));
+        assert_eq!(unit_state("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=1\nExecMainStatus=0\n"),Some(UnitState::Success));
         assert_eq!(
             unit_state("LoadState=not-found\n"),
             Some(UnitState::Missing)
@@ -840,7 +866,7 @@ mod tests {
         for replies in [vec![ok(capability()),ok("broken")],vec![ok(capability()),ok(""),Err(SshError::RemoteCommandError{exit_code:Some(100),stderr:"Could not get lock".into()})],vec![ok(capability()),ok(""),ok(""),ok("PIHUB_UPDATE_NEW=1\nPIHUB_UPDATE_REMOVE=0\nPIHUB_UPDATE_KEPT_BACK_COUNT=0\nPIHUB_UPDATE_PACKAGES_DONE=1\n")]]{assert!(prepare_with(&device(),&Script(Mutex::new(replies.into())),&repo).is_err());}
     }
     #[test]
-    fn recovery_is_one_shot_never_redispatches_and_expiry_is_still_running() {
+    fn recovery_is_one_shot_never_redispatches_and_manual_status_can_observe_after_expiry() {
         let dir = tempfile::tempdir().unwrap();
         let repo = JsonSnapshotRepository::new(dir.path());
         let mut operation = MaintenanceOperation::requested("d".into());
@@ -848,10 +874,17 @@ mod tests {
         operation.state = MaintenanceOperationState::Installing;
         operation.observation_deadline = Some("2000-01-01T00:00:00Z".into());
         repo.upsert_maintenance_operation(&operation).unwrap();
-        let recovered =
-            reconcile_persisted_with(&device(), &Script(Mutex::new(VecDeque::new())), &repo)
-                .unwrap();
-        assert_eq!(recovered.state, MaintenanceOperationState::StillRunning);
+        let recovered = reconcile_persisted_with(
+            &device(),
+            &Script(Mutex::new(VecDeque::from(vec![ok(
+                "LoadState=loaded\nActiveState=active\nSubState=running\n",
+            )]))),
+            &repo,
+            &JsonAdministrationRepository::new(dir.path()),
+            &JsonActivityRepository::new(dir.path()),
+        )
+        .unwrap();
+        assert_eq!(recovered.state, MaintenanceOperationState::Installing);
         let mut operation = MaintenanceOperation::requested("d".into());
         operation.dispatch_state = MaintenanceDispatchState::Uncertain;
         operation.state = MaintenanceOperationState::Dispatching;
@@ -864,9 +897,81 @@ mod tests {
                 "LoadState=not-found\n",
             )]))),
             &repo,
+            &JsonAdministrationRepository::new(dir.path()),
+            &JsonActivityRepository::new(dir.path()),
         )
         .unwrap();
         assert_eq!(missing.state, MaintenanceOperationState::OutcomeUncertain);
+    }
+    #[test]
+    fn recovery_of_a_known_successful_unit_runs_the_frozen_terminal_verifier_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        repo.upsert_update_result(&preview()).unwrap();
+        let mut operation = MaintenanceOperation::requested("d".into());
+        operation.dispatch_state = MaintenanceDispatchState::Accepted;
+        operation.observation_deadline =
+            Some((Utc::now() + ChronoDuration::minutes(60)).to_rfc3339());
+        operation.transition(MaintenanceOperationState::Installing);
+        repo.upsert_maintenance_operation(&operation).unwrap();
+        let disruptions = JsonAdministrationRepository::new(dir.path());
+        let activity = JsonActivityRepository::new(dir.path());
+        let recovered = reconcile_persisted_with(
+            &device(),
+            &Script(Mutex::new(VecDeque::from(vec![
+                ok("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=exited\nExecMainStatus=0\n"),
+                ok(""),
+                ok("PIHUB_UPDATE_OS_ID=debian\nPIHUB_UPDATE_OS_LIKE=debian\nPIHUB_UPDATE_APT_GET=1\nPIHUB_UPDATE_DPKG_QUERY=1\nPIHUB_UPDATE_DPKG=1\n"),
+                ok("PIHUB_UPDATE_KEPT_BACK_COUNT=0\nPIHUB_UPDATE_PACKAGES_DONE=1\n"),
+                ok("PIHUB_UPDATE_HOLDS_DONE=1\n"),
+                ok("PIHUB_UPDATE_METADATA_MTIME=1\n"),
+                ok("PIHUB_UPDATE_REBOOT=unknown\n"),
+                ok(""),
+            ]))),
+            &repo,
+            &disruptions,
+            &activity,
+        )
+        .unwrap();
+        assert_eq!(recovered.state, MaintenanceOperationState::Completed);
+        assert!(recovered.state.is_terminal());
+        assert!(disruptions.get_valid("d").is_none());
+        assert_eq!(activity.load_for_device("d")[0].code, "updates.completed");
+    }
+    #[test]
+    fn recovered_terminal_verification_failure_is_persisted_and_never_left_verifying() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        repo.upsert_update_result(&preview()).unwrap();
+        let mut operation = MaintenanceOperation::requested("d".into());
+        operation.dispatch_state = MaintenanceDispatchState::Accepted;
+        operation.observation_deadline =
+            Some((Utc::now() + ChronoDuration::minutes(60)).to_rfc3339());
+        operation.transition(MaintenanceOperationState::Installing);
+        repo.upsert_maintenance_operation(&operation).unwrap();
+        let recovered = reconcile_persisted_with(
+            &device(),
+            &Script(Mutex::new(VecDeque::from(vec![
+                ok("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=exited\nExecMainStatus=0\n"),
+                Err(SshError::ConnectionTimeout),
+                ok(""),
+            ]))),
+            &repo,
+            &JsonAdministrationRepository::new(dir.path()),
+            &JsonActivityRepository::new(dir.path()),
+        )
+        .unwrap();
+        assert_eq!(recovered.state, MaintenanceOperationState::Failed);
+        assert_eq!(
+            recovered.failure,
+            Some(MaintenanceFailure::TransportUnavailableDuringObservation)
+        );
+        assert_eq!(
+            JsonSnapshotRepository::new(dir.path())
+                .get_maintenance_operation("d")
+                .unwrap(),
+            recovered
+        );
     }
     #[test]
     fn apply_rechecks_consent_and_never_dispatches_a_changed_plan() {

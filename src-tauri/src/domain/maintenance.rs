@@ -175,6 +175,13 @@ impl MaintenanceOperation {
         if state.is_terminal() {
             self.completed_at = Some(Utc::now().to_rfc3339());
         }
+        if matches!(
+            state,
+            MaintenanceOperationState::Completed
+                | MaintenanceOperationState::CompletedRebootRequired
+        ) {
+            self.failure = None;
+        }
     }
 
     /// This creates the bounded Activity shape WU16-03 will append after a
@@ -271,5 +278,13 @@ mod tests {
             operation.activity_event().unwrap().code,
             "updates.completed"
         );
+    }
+
+    #[test]
+    fn verified_success_clears_an_obsolete_nonterminal_failure() {
+        let mut operation = MaintenanceOperation::requested("pi2".into());
+        operation.failure = Some(MaintenanceFailure::StillRunning);
+        operation.transition(MaintenanceOperationState::Completed);
+        assert!(operation.failure.is_none());
     }
 }
