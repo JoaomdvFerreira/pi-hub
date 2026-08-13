@@ -1,9 +1,9 @@
 pub mod alerts;
 pub mod concurrency;
 pub mod container_diff;
+pub mod maintenance_coordinator;
 pub mod notifications;
 pub mod refresh;
 pub mod scheduler;
 pub mod scheduling;
 pub mod synthetic;
-pub mod update_concurrency;

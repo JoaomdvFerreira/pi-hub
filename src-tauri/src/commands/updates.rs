@@ -1,5 +1,5 @@
 use crate::{
-    domain::{device::Device, update_intelligence::*},
+    domain::{device::Device, maintenance::MaintenanceOperation, update_intelligence::*},
     error::ApplicationError,
     infrastructure::ssh::{
         OpenSshExecutor, RemoteExecutor, RemoteOperation, RemoteOutputLimits, SshError, SshTarget,
@@ -52,7 +52,10 @@ fn execute(
             target,
             operation.command().expect("fixed update command"),
             timeout,
-            RemoteOutputLimits { stdout: MAX_STDOUT, stderr: MAX_STDERR },
+            RemoteOutputLimits {
+                stdout: MAX_STDOUT,
+                stderr: MAX_STDERR,
+            },
         )
         .map_err(|e| failure(e));
     match result {
@@ -127,16 +130,38 @@ fn package(raw: &str) -> Result<UpdatePackages, String> {
     })
 }
 fn kept_back(raw: &str) -> Result<KeptBackPackages, String> {
-    let mut packages = vec![]; let mut total = 0_u32;
-    for name in raw.lines().filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK=")) {
-        if name.is_empty() || name.len() > MAX_FIELD_BYTES { return Err("invalidKeptBack".into()); }
-        total = total.saturating_add(1); if packages.len() < MAX_UPDATE_DETAILS { packages.push(name.to_string()); }
+    let mut packages = vec![];
+    let mut total = 0_u32;
+    for name in raw
+        .lines()
+        .filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK="))
+    {
+        if name.is_empty() || name.len() > MAX_FIELD_BYTES {
+            return Err("invalidKeptBack".into());
+        }
+        total = total.saturating_add(1);
+        if packages.len() < MAX_UPDATE_DETAILS {
+            packages.push(name.to_string());
+        }
     }
-    let reported_total = raw.lines().filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK_COUNT=")).collect::<Vec<_>>();
-    if reported_total.len() != 1 { return Err("invalidKeptBackCount".into()); }
-    let reported_total = reported_total[0].parse::<u32>().map_err(|_| "invalidKeptBackCount")?;
-    if total > reported_total { return Err("invalidKeptBackCount".into()); }
-    Ok(KeptBackPackages { total_count: Some(reported_total), packages, truncated: total as usize > MAX_UPDATE_DETAILS })
+    let reported_total = raw
+        .lines()
+        .filter_map(|x| x.strip_prefix("PIHUB_UPDATE_KEPT_BACK_COUNT="))
+        .collect::<Vec<_>>();
+    if reported_total.len() != 1 {
+        return Err("invalidKeptBackCount".into());
+    }
+    let reported_total = reported_total[0]
+        .parse::<u32>()
+        .map_err(|_| "invalidKeptBackCount")?;
+    if total > reported_total {
+        return Err("invalidKeptBackCount".into());
+    }
+    Ok(KeptBackPackages {
+        total_count: Some(reported_total),
+        packages,
+        truncated: total as usize > MAX_UPDATE_DETAILS,
+    })
 }
 fn holds(raw: &str) -> Result<HeldPackages, String> {
     let mut packages = vec![];
@@ -171,19 +196,34 @@ pub fn get_update_result(
 ) -> Result<Option<UpdateCheckResult>, ApplicationError> {
     Ok(JsonSnapshotRepository::new(dir(&app)?).get_update_result(&device_id))
 }
+/// Reads only the latest persisted M16 operation state. It cannot begin a
+/// maintenance operation or trigger remote observation.
+#[tauri::command]
+pub fn get_maintenance_operation(
+    app: AppHandle,
+    device_id: String,
+) -> Result<Option<MaintenanceOperation>, ApplicationError> {
+    Ok(JsonSnapshotRepository::new(dir(&app)?).get_maintenance_operation(&device_id))
+}
 #[tauri::command]
 pub async fn check_for_updates(
     app: AppHandle,
     device_id: String,
 ) -> Result<UpdateCheckResult, ApplicationError> {
-    let coordinator = app.state::<crate::monitoring::update_concurrency::UpdateCheckCoordinator>();
-    let claim = coordinator.try_claim(&device_id).ok_or_else(|| {
-        app_error(
-            "AlreadyChecking",
-            "an update check is already running for this device",
-            true,
+    let coordinator =
+        app.state::<crate::monitoring::maintenance_coordinator::DeviceMaintenanceCoordinator>();
+    let claim = coordinator
+        .try_claim(
+            &device_id,
+            crate::monitoring::maintenance_coordinator::MaintenanceOperationKind::UpdateCheck,
         )
-    })?;
+        .ok_or_else(|| {
+            app_error(
+                "AlreadyChecking",
+                "an update check is already running for this device",
+                true,
+            )
+        })?;
     let app2 = app.clone();
     let result = tauri::async_runtime::spawn_blocking(move || check(&app2, &device_id))
         .await
@@ -266,8 +306,20 @@ fn check_with(
         Ok(v) => v,
         Err(f) => return save_or_return(repo, result, Some(f), check_measure),
     };
-    result.updates = match package(&packages_raw).map_err(|message| UpdateFailure { kind: UpdateFailureKind::MalformedOutput, message }) { Ok(v) => v, Err(f) => return save_or_return(repo, result, Some(f), check_measure) };
-    result.kept_back_packages = match kept_back(&packages_raw).map_err(|message| UpdateFailure { kind: UpdateFailureKind::MalformedOutput, message }) { Ok(v) => v, Err(f) => return save_or_return(repo, result, Some(f), check_measure) };
+    result.updates = match package(&packages_raw).map_err(|message| UpdateFailure {
+        kind: UpdateFailureKind::MalformedOutput,
+        message,
+    }) {
+        Ok(v) => v,
+        Err(f) => return save_or_return(repo, result, Some(f), check_measure),
+    };
+    result.kept_back_packages = match kept_back(&packages_raw).map_err(|message| UpdateFailure {
+        kind: UpdateFailureKind::MalformedOutput,
+        message,
+    }) {
+        Ok(v) => v,
+        Err(f) => return save_or_return(repo, result, Some(f), check_measure),
+    };
     match execute(
         executor,
         &target,
@@ -340,7 +392,9 @@ fn check_with(
     };
     result.status = if result.package_metadata.status == MetadataStatus::Stale {
         UpdateStatus::Stale
-    } else if result.updates.total_count == Some(0) && result.kept_back_packages.total_count == Some(0) {
+    } else if result.updates.total_count == Some(0)
+        && result.kept_back_packages.total_count == Some(0)
+    {
         UpdateStatus::UpToDate
     } else {
         UpdateStatus::UpdatesAvailable
@@ -471,10 +525,16 @@ mod tests {
         holds: &str,
         mtime: &str,
     ) -> Vec<Result<RemoteExecutionResult, SshError>> {
-        let kept_back_count = if packages.contains("PIHUB_UPDATE_KEPT_BACK_COUNT=") { "" } else { "PIHUB_UPDATE_KEPT_BACK_COUNT=0\n" };
+        let kept_back_count = if packages.contains("PIHUB_UPDATE_KEPT_BACK_COUNT=") {
+            ""
+        } else {
+            "PIHUB_UPDATE_KEPT_BACK_COUNT=0\n"
+        };
         vec![
             ok(detect()),
-            ok(&format!("{packages}{kept_back_count}PIHUB_UPDATE_PACKAGES_DONE=1\n")),
+            ok(&format!(
+                "{packages}{kept_back_count}PIHUB_UPDATE_PACKAGES_DONE=1\n"
+            )),
             ok(&format!("{holds}PIHUB_UPDATE_HOLDS_DONE=1\n")),
             ok(&format!("PIHUB_UPDATE_METADATA_MTIME={mtime}\n")),
             ok("PIHUB_UPDATE_REBOOT=unknown\n"),
@@ -496,7 +556,10 @@ mod tests {
     fn parses_real_style_upgrade_and_kept_back_records() {
         let raw = "PIHUB_UPDATE_PACKAGE=Inst bash [5.2] (5.3 Debian:stable [amd64])\nPIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK=firmware\nPIHUB_UPDATE_KEPT_BACK_COUNT=2\nPIHUB_UPDATE_PACKAGES_DONE=1\n";
         assert_eq!(package(raw).unwrap().total_count, Some(1));
-        assert_eq!(kept_back(raw).unwrap().packages, ["linux-image", "firmware"]);
+        assert_eq!(
+            kept_back(raw).unwrap().packages,
+            ["linux-image", "firmware"]
+        );
     }
     #[test]
     fn kept_back_details_are_bounded() {
@@ -507,7 +570,10 @@ mod tests {
         assert_eq!(got.total_count, Some(201));
         assert_eq!(got.packages.len(), 200);
         assert!(got.truncated);
-        assert!(kept_back("PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=0\n").is_err());
+        assert!(
+            kept_back("PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=0\n")
+                .is_err()
+        );
     }
     #[test]
     fn legacy_persisted_result_defaults_kept_back_evidence() {
@@ -573,12 +639,28 @@ mod tests {
         assert_eq!(normal_and_kept.status, UpdateStatus::UpdatesAvailable);
         assert_eq!(normal_and_kept.updates.total_count, Some(1));
         assert_eq!(normal_and_kept.kept_back_packages.packages, ["linux-image"]);
-        let kept_only = check_with(&device(), &Script::new(full("PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=1\n", "PIHUB_UPDATE_HOLD=unrelated\n", "999999")), &repo, now).unwrap();
+        let kept_only = check_with(
+            &device(),
+            &Script::new(full(
+                "PIHUB_UPDATE_KEPT_BACK=linux-image\nPIHUB_UPDATE_KEPT_BACK_COUNT=1\n",
+                "PIHUB_UPDATE_HOLD=unrelated\n",
+                "999999",
+            )),
+            &repo,
+            now,
+        )
+        .unwrap();
         assert_eq!(kept_only.status, UpdateStatus::UpdatesAvailable);
         assert_eq!(kept_only.updates.total_count, Some(0));
         assert_eq!(kept_only.kept_back_packages.packages, ["linux-image"]);
         assert_eq!(kept_only.held_packages.packages, ["unrelated"]);
-        let summary_only = check_with(&device(), &Script::new(full("PIHUB_UPDATE_KEPT_BACK_COUNT=5\n", "", "999999")), &repo, now).unwrap();
+        let summary_only = check_with(
+            &device(),
+            &Script::new(full("PIHUB_UPDATE_KEPT_BACK_COUNT=5\n", "", "999999")),
+            &repo,
+            now,
+        )
+        .unwrap();
         assert_eq!(summary_only.status, UpdateStatus::UpdatesAvailable);
         assert_eq!(summary_only.kept_back_packages.total_count, Some(5));
         assert!(summary_only.kept_back_packages.packages.is_empty());
@@ -609,13 +691,22 @@ mod tests {
         assert_eq!(timeout.failure.unwrap().kind, UpdateFailureKind::Timeout);
         let exit_100 = check_with(
             &device(),
-            &Script::new(vec![ok(detect()), Err(SshError::RemoteCommandError { exit_code: Some(100), stderr: "Unable to fetch some archives".into() })]),
+            &Script::new(vec![
+                ok(detect()),
+                Err(SshError::RemoteCommandError {
+                    exit_code: Some(100),
+                    stderr: "Unable to fetch some archives".into(),
+                }),
+            ]),
             &repo,
             Utc::now(),
         )
         .unwrap();
         assert_eq!(exit_100.status, UpdateStatus::CheckFailed);
-        assert_eq!(exit_100.failure.unwrap().kind, UpdateFailureKind::RequiredCommand);
+        assert_eq!(
+            exit_100.failure.unwrap().kind,
+            UpdateFailureKind::RequiredCommand
+        );
     }
     #[test]
     fn oversized_required_evidence_fails_without_persisting_raw_output() {
@@ -631,7 +722,10 @@ mod tests {
         )
         .unwrap();
         assert_eq!(result.status, UpdateStatus::CheckFailed);
-        assert_eq!(result.failure.unwrap().kind, UpdateFailureKind::MalformedOutput);
+        assert_eq!(
+            result.failure.unwrap().kind,
+            UpdateFailureKind::MalformedOutput
+        );
         assert_eq!(
             repo.get_update_result("d").unwrap().status,
             UpdateStatus::CheckFailed

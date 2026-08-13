@@ -17,6 +17,8 @@ pub trait AdministrationRepository: Send + Sync {
     fn get_valid(&self, device_id: &str) -> Option<ExpectedDisruption>;
     fn save(&self, disruption: ExpectedDisruption) -> Result<(), StorageError>;
     fn clear(&self, device_id: &str) -> Result<(), StorageError>;
+    #[allow(dead_code)]
+    fn clear_if_operation(&self, device_id: &str, operation_id: &str) -> Result<(), StorageError>;
 }
 pub struct JsonAdministrationRepository {
     path: PathBuf,
@@ -71,6 +73,18 @@ impl AdministrationRepository for JsonAdministrationRepository {
         file.expected_disruptions.remove(device_id);
         self.save_file(file)
     }
+    fn clear_if_operation(&self, device_id: &str, operation_id: &str) -> Result<(), StorageError> {
+        let mut file = self.load();
+        let matches_operation = file
+            .expected_disruptions
+            .get(device_id)
+            .is_some_and(|marker| marker.operation_id == operation_id);
+        if matches_operation {
+            file.expected_disruptions.remove(device_id);
+            self.save_file(file)?;
+        }
+        Ok(())
+    }
 }
 #[cfg(test)]
 mod tests {
@@ -93,6 +107,41 @@ mod tests {
         repo.save(stale).unwrap();
         assert!(JsonAdministrationRepository::new(dir.path())
             .get_valid("stale")
+            .is_none());
+    }
+
+    #[test]
+    fn operation_scoped_cleanup_cannot_remove_another_operations_marker() {
+        let dir = tempdir().unwrap();
+        let repo = JsonAdministrationRepository::new(dir.path());
+        let op = AdministrationOperation::requested(
+            "d".into(),
+            AdministrationOperationType::RestartDevice,
+        );
+        let marker = ExpectedDisruption::new(&op);
+        repo.save(marker).unwrap();
+        repo.clear_if_operation("d", "not-the-owner").unwrap();
+        assert!(repo.get_valid("d").is_some());
+        repo.clear_if_operation("d", &op.id).unwrap();
+        assert!(repo.get_valid("d").is_none());
+    }
+
+    #[test]
+    fn expired_m16_expected_disruption_is_pruned_on_persistence_and_reload() {
+        use crate::domain::{
+            administration::ExpectedDisruption,
+            maintenance::{MaintenanceDispatchState, MaintenanceOperation, MaintenanceOperationState},
+        };
+        let dir = tempdir().unwrap();
+        let repo = JsonAdministrationRepository::new(dir.path());
+        let mut operation = MaintenanceOperation::requested("pi5".into());
+        operation.dispatch_state = MaintenanceDispatchState::Accepted;
+        operation.state = MaintenanceOperationState::Installing;
+        operation.observation_deadline = Some("2000-01-01T00:00:00Z".into());
+        let marker = ExpectedDisruption::for_update(&operation).unwrap();
+        repo.save(marker).unwrap();
+        assert!(JsonAdministrationRepository::new(dir.path())
+            .get_valid("pi5")
             .is_none());
     }
 }

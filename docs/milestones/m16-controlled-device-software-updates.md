@@ -1,6 +1,6 @@
 # Pi-Hub — M16 Controlled Device Software Updates
 
-Status: In progress — WU16-01 execution contract frozen; no mutation implementation
+Status: In progress — WU16-02 coordination/state/persistence complete; no mutation implementation
 Target release: v0.4.0 (paired with merged M15, subject to release review)
 Predecessor: M15 — Device Update Intelligence & Maintenance Readiness
 Risk class: High
