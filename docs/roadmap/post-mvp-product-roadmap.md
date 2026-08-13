@@ -1,7 +1,7 @@
 # Pi-Hub post-MVP product roadmap
 
 Version: 0.4 planning
-Status: M1-M15 implemented; M16 WU16-03 complete
+Status: M1-M15 implemented; M16 WU16-04 complete
 Date: 2026-08-13
 
 ## Authority
@@ -23,7 +23,7 @@ This document is the roadmap-level source for milestone history and sequencing. 
 | M13 | Implemented | Documentation-governance reconciliation; final planned milestone. |
 | M14 | Implemented | Performance benchmarking, runtime hardening, and Device Detail tab UX. |
 | M15 | Implemented — operator validation recorded | Device Update Intelligence & Maintenance Readiness; read-only, manual-check-first. |
-| M16 | In progress — WU16-03 complete | Controlled Device Software Updates; explicit, safety-governed APT standard upgrades. |
+| M16 | In progress — WU16-04 complete | Controlled Device Software Updates; explicit, safety-governed APT standard upgrades. |
 
 The approved scope for M6-M14 is recorded in [milestone documents](../milestones/). M10's shutdown-specific requirement remains [the controlled shutdown requirement](../requirements/controlled-device-shutdown-requirement.md).
 
@@ -37,4 +37,4 @@ It will not become a general SSH client, file manager, Docker Compose editor, ar
 
 Human-readable product, requirement, and milestone documentation belongs under `docs/`. AIQT is the canonical structured execution/workflow state in `.aiqt/`. They must agree on materially represented milestone identity, scope, and status without duplicating complete Markdown documents into the workflow state.
 
-M13 was the final milestone in the prior roadmap. M14 and M15 are implemented. M15 operator validation completed successfully on both available Pi-Hub devices; separate plain-Debian coverage remains optional and is documented in its final closure review. M16 has completed WU16-01 architecture, WU16-02 coordination/state/persistence, and WU16-03 deterministic detached-execution/verification implementation. No live APT metadata refresh, package mutation, or systemd dispatch has been authorized or executed; operator validation remains WU16-05. M17 has not started.
+M13 was the final milestone in the prior roadmap. M14 and M15 are implemented. M15 operator validation completed successfully on both available Pi-Hub devices; separate plain-Debian coverage remains optional and is documented in its final closure review. M16 has completed WU16-01 architecture, WU16-02 coordination/state/persistence, WU16-03 deterministic detached-execution/verification implementation, and WU16-04 constrained mutation UX. No live APT metadata refresh, package mutation, or systemd dispatch has been authorized or executed; operator validation remains WU16-05. M17 has not started.

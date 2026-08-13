@@ -1,14 +1,14 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { getUpdateResult, checkForUpdates } = vi.hoisted(() => ({ getUpdateResult: vi.fn(), checkForUpdates: vi.fn() }));
-vi.mock("@/lib/tauri/monitoring", () => ({ getUpdateResult, checkForUpdates }));
+const { getUpdateResult, getMaintenanceOperation, checkForUpdates, prepareDeviceUpdate, applyPreparedDeviceUpdate, reconcileDeviceUpdate } = vi.hoisted(() => ({ getUpdateResult: vi.fn(), getMaintenanceOperation: vi.fn(), checkForUpdates: vi.fn(), prepareDeviceUpdate: vi.fn(), applyPreparedDeviceUpdate: vi.fn(), reconcileDeviceUpdate: vi.fn() }));
+vi.mock("@/lib/tauri/monitoring", () => ({ getUpdateResult, getMaintenanceOperation, checkForUpdates, prepareDeviceUpdate, applyPreparedDeviceUpdate, reconcileDeviceUpdate }));
 import { SoftwareUpdates } from "./SoftwareUpdates";
 
 const result = { schemaVersion: 1, deviceId: "d", status: "updatesAvailable", checkedAt: "2026-08-12T13:30:00Z", support: { status: "supported" }, packageMetadata: { status: "stale", ageSeconds: 700000, staleAfterSeconds: 604800 }, updates: { totalCount: 2, truncated: true, packages: [{ name: "bash", installedVersion: "5.2", candidateVersion: "5.3" }, { name: "docker-ce", installedVersion: "1", candidateVersion: "2" }] }, keptBackPackages: { totalCount: 2, packages: ["linux-image", "firmware"], truncated: false }, heldPackages: { status: "known", totalCount: 1, packages: ["bash"], truncated: false }, reboot: "unknown", securityUpdates: { status: "unavailable" }, warnings: ["heldPackagesUnknown"], failure: { kind: "requiredCommand", message: "commandFailed" } };
 
 describe("SoftwareUpdates", () => {
-  beforeEach(() => { getUpdateResult.mockReset(); checkForUpdates.mockReset(); getUpdateResult.mockResolvedValue(result); });
+  beforeEach(() => { vi.useRealTimers(); getUpdateResult.mockReset(); getMaintenanceOperation.mockReset(); checkForUpdates.mockReset(); prepareDeviceUpdate.mockReset(); applyPreparedDeviceUpdate.mockReset(); reconcileDeviceUpdate.mockReset(); getUpdateResult.mockResolvedValue(result); getMaintenanceOperation.mockResolvedValue(null); });
   afterEach(cleanup);
 
   it("renders a concise System Updates summary without diagnostic details", async () => {
@@ -80,5 +80,92 @@ describe("SoftwareUpdates", () => {
     await waitFor(() => expect(screen.getByRole("button", { name: "Check for Updates" })).not.toBeDisabled());
     expect(screen.getByRole("button", { name: "Check for Updates" })).toBeInTheDocument();
     expect(checkForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("only exposes Update device for complete safe evidence and does not mutate before final confirmation", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    prepareDeviceUpdate.mockResolvedValue({ plan: safe, operation: { id: "op", deviceId: "d", transientUnitId: "hidden", state: "requested", dispatchState: "notAttempted", requestedAt: "2026-08-12T00:00:00Z" } });
+    render(<SoftwareUpdates deviceId="d" />);
+    const update = await screen.findByRole("button", { name: "Update device" });
+    fireEvent.click(update);
+    expect(screen.getByRole("status")).toHaveTextContent("Preparing update…");
+    await screen.findByRole("alertdialog");
+    expect(screen.getByText(/Keep it powered on/i)).toBeInTheDocument();
+    expect(applyPreparedDeviceUpdate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(applyPreparedDeviceUpdate).not.toHaveBeenCalled();
+  });
+
+  it("treats PlanChanged as a new review without dispatching again", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    prepareDeviceUpdate.mockResolvedValue({ plan: safe, operation: { id: "op", deviceId: "d", transientUnitId: "hidden", state: "requested", dispatchState: "notAttempted", requestedAt: "x" } });
+    applyPreparedDeviceUpdate.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "planChanged", dispatchState: "notAttempted", requestedAt: "x", failure: "planChanged" });
+    render(<SoftwareUpdates deviceId="d" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Update device" }));
+    await screen.findByRole("alertdialog");
+    fireEvent.click(screen.getByRole("button", { name: "Install 2 updates" }));
+    await screen.findByText(/Available updates changed/i);
+    expect(applyPreparedDeviceUpdate).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Prepare updated plan" })).toBeInTheDocument();
+  });
+
+  it("maps typed privilege failures to an actionable message instead of a backend code", async () => {
+    const safe = { ...result, updates: { ...result.updates, truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(safe);
+    prepareDeviceUpdate.mockRejectedValue({ code: "PrivilegeUnavailable" });
+    render(<SoftwareUpdates deviceId="d" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Update device" }));
+    await screen.findByText(/passwordless sudo permission/i);
+    expect(screen.queryByText("PrivilegeUnavailable")).not.toBeInTheDocument();
+  });
+
+  it("reconciles one at a time after five seconds and keeps a transient observation error nonterminal", async () => {
+    vi.useFakeTimers();
+    const active = { id: "op", deviceId: "d", transientUnitId: "hidden", state: "installing", dispatchState: "accepted", requestedAt: "x", observationDeadline: "2099-01-01T00:00:00Z" };
+    getMaintenanceOperation.mockResolvedValue(active);
+    reconcileDeviceUpdate.mockRejectedValue(new Error("ssh lost"));
+    render(<SoftwareUpdates deviceId="d" />);
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(reconcileDeviceUpdate).toHaveBeenCalledTimes(1);
+    expect(screen.getByText(/may still be continuing/i)).toBeInTheDocument();
+    expect(screen.queryByText(/could not be completed safely/i)).not.toBeInTheDocument();
+  });
+
+  it("stops automatic reconciliation after the persisted deadline but permits Check status", async () => {
+    vi.useFakeTimers();
+    getMaintenanceOperation.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "stillRunning", dispatchState: "accepted", requestedAt: "x", observationDeadline: "2000-01-01T00:00:00Z" });
+    reconcileDeviceUpdate.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "stillRunning", dispatchState: "accepted", requestedAt: "x", observationDeadline: "2000-01-01T00:00:00Z" });
+    render(<SoftwareUpdates deviceId="d" />);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(screen.getByRole("button", { name: "Check status" })).toBeInTheDocument();
+    await vi.advanceTimersByTimeAsync(10000);
+    expect(reconcileDeviceUpdate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Check status" }));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(reconcileDeviceUpdate).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders uncertain and verified terminal outcomes without internal identifiers", async () => {
+    getMaintenanceOperation.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "pihub-update-secret.service", state: "outcomeUncertain", dispatchState: "uncertain", requestedAt: "x", observationDeadline: "2000-01-01T00:00:00Z" });
+    const { rerender } = render(<SoftwareUpdates deviceId="d" />);
+    await screen.findByText(/may have started/i);
+    expect(screen.queryByText(/pihub-update-secret/i)).not.toBeInTheDocument();
+    getMaintenanceOperation.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "completedRebootRequired", dispatchState: "accepted", requestedAt: "x", packageCount: 2 });
+    rerender(<SoftwareUpdates deviceId="next" />);
+    await screen.findByText(/restart required/i);
+  });
+
+  it("uses persisted terminal verification results without starting another M15 check", async () => {
+    getMaintenanceOperation.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "verifying", dispatchState: "accepted", requestedAt: "x", observationDeadline: "2099-01-01T00:00:00Z" });
+    reconcileDeviceUpdate.mockResolvedValue({ id: "op", deviceId: "d", transientUnitId: "hidden", state: "completed", dispatchState: "accepted", requestedAt: "x", packageCount: 2 });
+    vi.useFakeTimers();
+    render(<SoftwareUpdates deviceId="d" />);
+    await vi.advanceTimersByTimeAsync(0);
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(screen.getByText(/Update complete/i)).toBeInTheDocument();
+    expect(checkForUpdates).not.toHaveBeenCalled();
   });
 });

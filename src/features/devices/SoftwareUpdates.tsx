@@ -1,68 +1,63 @@
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { checkForUpdates, getUpdateResult } from "@/lib/tauri/monitoring";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { applyPreparedDeviceUpdate, checkForUpdates, getMaintenanceOperation, getUpdateResult, prepareDeviceUpdate, reconcileDeviceUpdate } from "@/lib/tauri/monitoring";
+import type { MaintenanceFailure, MaintenanceOperation, MaintenanceOperationState } from "@/types/maintenance";
 import type { UpdateCheckResult } from "@/types/snapshot";
 
-function stateLabel(result: UpdateCheckResult) {
-  switch (result.status) {
-    case "upToDate": return "System is up to date";
-    case "updatesAvailable": return result.updates.totalCount ? `${result.updates.totalCount} updates available` : "System updates are available";
-    case "stale": return result.updates.totalCount ? `${result.updates.totalCount} updates available` : "Update information may be out of date";
-    case "unsupported": return "System updates are unavailable on this device";
-    case "checkFailed": return "Could not check for system updates";
-    case "unknown": return "System update status is unknown";
-    default: return "System updates have not been checked";
-  }
-}
+const TERMINAL = new Set<MaintenanceOperationState>(["planChanged", "completed", "completedRebootRequired", "packageManagerBusy", "failed"]);
+function nonterminal(operation: MaintenanceOperation | null | undefined) { return Boolean(operation && !TERMINAL.has(operation.state)); }
+function dispatched(operation: MaintenanceOperation | null | undefined) { return nonterminal(operation) && operation?.dispatchState !== "notAttempted"; }
+function expired(operation: MaintenanceOperation | null | undefined) { return Boolean(operation?.observationDeadline && new Date(operation.observationDeadline).getTime() <= Date.now()); }
+function stateLabel(result: UpdateCheckResult) { switch (result.status) { case "upToDate": return "System is up to date"; case "updatesAvailable": return result.updates.totalCount ? `${result.updates.totalCount} updates available` : "System updates are available"; case "stale": return result.updates.totalCount ? `${result.updates.totalCount} updates available` : "Update information may be out of date"; case "unsupported": return "System updates are unavailable on this device"; case "checkFailed": return "Could not check for system updates"; case "unknown": return "System update status is unknown"; default: return "System updates have not been checked"; } }
+function lastChecked(value?: string) { const date = value && new Date(value); return date && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "Not checked yet"; }
+function phase(operation: MaintenanceOperation | null, preparing: boolean, applying: boolean) { if (preparing) return "Preparing update…"; if (applying || operation?.state === "dispatching") return "Starting update…"; if (["installing", "stillRunning", "outcomeUncertain"].includes(operation?.state ?? "")) return "Updating system…"; if (operation?.state === "verifying") return "Verifying update…"; return null; }
+function failureMessage(failure?: MaintenanceFailure) { switch (failure) { case "packageManagerBusy": return "Package management is busy. Wait for the other package task to finish, then prepare the update again."; case "packageStateInconsistent": return "The package database needs manual attention before updates can be installed."; case "metadataRefreshFailed": return "Pi-Hub could not refresh update information. Check connectivity and try preparing again."; case "privilegeUnavailable": return "Pi-Hub needs configured passwordless sudo permission to install updates."; case "packageOperationFailed": return "The package update did not complete. Review Activity or Diagnostics before trying again."; case "verificationFailed": return "The update finished but Pi-Hub could not verify the resulting package state."; case "outcomeUncertain": case "transportUnavailableDuringObservation": return "The update outcome is uncertain. Check its status; do not retry."; default: return "The update could not be completed safely. Review Activity or Diagnostics."; } }
+function backendFailure(error: unknown): MaintenanceFailure | undefined { const code = (error as { code?: string } | null)?.code; return code ? `${code.slice(0, 1).toLowerCase()}${code.slice(1)}` as MaintenanceFailure : undefined; }
+function isEligible(result: UpdateCheckResult | null, operation: MaintenanceOperation | null, busy: boolean) { return Boolean(result && result.support.status === "supported" && result.status === "updatesAvailable" && (result.updates.totalCount ?? 0) > 0 && !result.updates.truncated && !result.keptBackPackages.truncated && !result.failure && result.heldPackages.status === "known" && !dispatched(operation) && !busy); }
 
-function lastChecked(value?: string) {
-  if (!value) return "Not checked yet";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Not checked yet" : date.toLocaleString();
-}
-
-export function SoftwareUpdates({ deviceId }: { deviceId: string }) {
+export function SoftwareUpdates({ deviceId, onMaintenanceChange }: { deviceId: string; onMaintenanceChange?: (operation: MaintenanceOperation | null) => void }) {
   const [result, setResult] = useState<UpdateCheckResult | null | undefined>();
-  const [checking, setChecking] = useState(false);
-  const [showUpdates, setShowUpdates] = useState(false);
+  const [operation, setOperation] = useState<MaintenanceOperation | null>();
+  const [checking, setChecking] = useState(false); const [preparing, setPreparing] = useState(false); const [applying, setApplying] = useState(false);
+  const [showUpdates, setShowUpdates] = useState(false); const [confirming, setConfirming] = useState(false); const [dismissedPrepared, setDismissedPrepared] = useState(false); const [notice, setNotice] = useState<string | null>(null); const [observationError, setObservationError] = useState<string | null>(null);
+  const operationRef = useRef<MaintenanceOperation | null | undefined>(undefined);
+  const setCurrentOperation = useCallback((next: MaintenanceOperation | null) => { operationRef.current = next; setOperation(next); onMaintenanceChange?.(next); }, [onMaintenanceChange]);
+  const load = useCallback(async () => { try { const [cached, persisted] = await Promise.all([getUpdateResult(deviceId), getMaintenanceOperation(deviceId)]); setResult(cached); setCurrentOperation(persisted); } catch { setResult(null); setCurrentOperation(null); } }, [deviceId, setCurrentOperation]);
+  useEffect(() => { void load(); }, [load]);
 
+  const reconcile = useCallback(async () => { try { const next = await reconcileDeviceUpdate(deviceId); setCurrentOperation(next); setObservationError(null); if (TERMINAL.has(next.state)) { const refreshed = await getUpdateResult(deviceId); setResult(refreshed); } return next; } catch { setObservationError("Pi-Hub could not check the update status. The update may still be continuing on the device."); return operationRef.current ?? null; } }, [deviceId, setCurrentOperation]);
   useEffect(() => {
-    let active = true;
-    getUpdateResult(deviceId).then(x => active && setResult(x)).catch(() => active && setResult(null));
-    return () => { active = false; };
-  }, [deviceId]);
+    if (!dispatched(operation) || expired(operation)) return;
+    let cancelled = false; let timer: ReturnType<typeof setTimeout> | undefined;
+    const schedule = () => { timer = setTimeout(async () => { await reconcile(); if (!cancelled && dispatched(operationRef.current) && !expired(operationRef.current)) schedule(); }, 5000); };
+    schedule(); return () => { cancelled = true; if (timer) clearTimeout(timer); };
+  }, [operation, reconcile]);
 
-  const check = async () => {
-    if (checking) return;
-    setChecking(true);
-    try { setResult(await checkForUpdates(deviceId)); setShowUpdates(false); }
-    catch { setResult(null); }
-    finally { setChecking(false); }
-  };
+  const check = async () => { if (checking || dispatched(operation)) return; setChecking(true); setNotice(null); try { setResult(await checkForUpdates(deviceId)); setShowUpdates(false); } catch { setResult(null); } finally { setChecking(false); } };
+  const prepare = async () => { if (preparing || applying) return; setPreparing(true); setNotice(null); try { const prepared = await prepareDeviceUpdate(deviceId); setResult(prepared.plan); setCurrentOperation(prepared.operation); setDismissedPrepared(false); setConfirming(true); setShowUpdates(false); } catch (error) { setNotice(failureMessage(backendFailure(error))); } finally { setPreparing(false); } };
+  const apply = async () => { if (applying) return; setApplying(true); setConfirming(false); setNotice(null); try { const next = await applyPreparedDeviceUpdate(deviceId); setCurrentOperation(next); if (TERMINAL.has(next.state)) setResult(await getUpdateResult(deviceId)); if (next.state === "planChanged") setNotice("Available updates changed while Pi-Hub was preparing the install. No packages were changed; review the updated plan and prepare it again."); } catch (error) { setNotice(failureMessage(backendFailure(error))); } finally { setApplying(false); } };
 
-  const updateCount = result?.updates.totalCount ?? 0;
-  const deferredCount = result?.keptBackPackages.totalCount ?? 0;
-  return <section className="rounded-lg border border-border bg-card p-3.5">
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h2 className="text-xs font-bold text-muted-foreground">SYSTEM UPDATES</h2>
-        <p className="mt-1 text-sm font-medium" aria-live="polite">{result ? stateLabel(result) : "System updates have not been checked"}</p>
-        {deferredCount > 0 ? <p className="mt-1 text-xs text-muted-foreground">{deferredCount} {deferredCount === 1 ? "package" : "packages"} deferred</p> : null}
-        <p className="mt-1 text-xs text-muted-foreground">Last checked: {lastChecked(result?.checkedAt)}</p>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {updateCount > 0 ? <Button size="sm" variant="outline" disabled={checking} onClick={() => setShowUpdates(value => !value)} aria-expanded={showUpdates} aria-controls="system-update-list">{showUpdates ? "Hide updates" : "View updates"}</Button> : null}
-        <Button size="sm" disabled={checking} onClick={() => void check()}>{checking ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}{checking ? "Checking…" : result ? "Check again" : "Check for Updates"}</Button>
-      </div>
-    </div>
-    {result === undefined ? <p className="mt-3 text-xs text-muted-foreground">Loading system update status…</p> : null}
-    {showUpdates && result ? <div id="system-update-list" className="mt-3 overflow-x-auto">
-      <table className="w-full min-w-[480px] text-left text-sm">
-        <caption className="sr-only">Available system updates</caption>
-        <thead className="text-xs text-muted-foreground"><tr><th className="pb-2 pr-3">Package</th><th className="pb-2 pr-3">Installed version</th><th className="pb-2">Candidate version</th></tr></thead>
-        <tbody>{result.updates.packages.map(item => <tr key={`${item.name}-${item.candidateVersion}`} className="border-t border-border"><td className="py-2 pr-3 font-medium">{item.name}</td><td className="py-2 pr-3">{item.installedVersion}</td><td className="py-2">{item.candidateVersion}</td></tr>)}</tbody>
-      </table>
-    </div> : null}
+  const updateCount = result?.updates.totalCount ?? 0; const deferredCount = result?.keptBackPackages.totalCount ?? 0;
+  const active = dispatched(operation); const pendingConfirmation = !dismissedPrepared && operation?.state === "requested" && operation.dispatchState === "notAttempted" && Boolean(result && updateCount > 0);
+  const currentPhase = phase(operation ?? null, preparing, applying);
+  const canUpdate = isEligible(result ?? null, operation ?? null, checking || preparing || applying);
+  const terminalFailure = operation?.state === "packageManagerBusy" || operation?.state === "failed";
+  const terminalSuccess = operation?.state === "completed" || operation?.state === "completedRebootRequired";
+  return <section className="rounded-lg border border-border bg-card p-3.5" aria-label="System updates">
+    <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xs font-bold text-muted-foreground">SYSTEM UPDATES</h2><p className="mt-1 text-sm font-medium" aria-live="polite">{result ? stateLabel(result) : "System updates have not been checked"}</p>{deferredCount > 0 ? <p className="mt-1 text-xs text-muted-foreground">{deferredCount} {deferredCount === 1 ? "package" : "packages"} deferred</p> : null}<p className="mt-1 text-xs text-muted-foreground">Last checked: {lastChecked(result?.checkedAt)}</p></div>
+      <div className="flex flex-wrap gap-2">{updateCount > 0 ? <Button size="sm" variant="outline" disabled={checking || preparing || applying || active} onClick={() => setShowUpdates(value => !value)} aria-expanded={showUpdates} aria-controls="system-update-list">{showUpdates ? "Hide updates" : "View updates"}</Button> : null}<Button size="sm" disabled={checking || preparing || applying || active} onClick={() => void check()}>{checking ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}{checking ? "Checking…" : result ? "Check again" : "Check for Updates"}</Button>{canUpdate ? <Button size="sm" disabled={preparing} onClick={() => void prepare()}>{preparing ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : null}{operation?.state === "planChanged" ? "Prepare updated plan" : "Update device"}</Button> : null}</div></div>
+    {result === undefined ? <p className="mt-3 text-xs text-muted-foreground" role="status">Loading system update status…</p> : null}
+    {currentPhase ? <p className="mt-3 rounded-md border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-foreground" role="status">{currentPhase}{active ? " The update continues on the device; it may temporarily become unreachable." : ""}</p> : null}
+    {operation?.dispatchState === "uncertain" && nonterminal(operation) ? <p className="mt-3 rounded-md border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-foreground" role="status">The update may have started. Pi-Hub is checking its status. Do not retry.</p> : null}
+    {active && expired(operation) ? <div className="mt-3 rounded-md border border-status-warning/40 bg-status-warning/10 p-2 text-xs text-foreground" role="status">Automatic status checks have ended. The update may still be running on the device. <Button size="sm" variant="outline" className="ml-2" onClick={() => void reconcile()}>Check status</Button></div> : null}
+    {observationError ? <p className="mt-3 text-xs text-muted-foreground" role="status">{observationError}</p> : null}
+    {terminalSuccess ? <p className="mt-3 text-xs text-status-healthy" role="status">{operation.state === "completedRebootRequired" ? "Update complete — restart required to finish applying system updates." : `Update complete${operation.packageCount ? ` — ${operation.packageCount} packages updated.` : "."}`}</p> : null}
+    {terminalFailure ? <p className="mt-3 text-xs text-destructive" role="alert">{failureMessage(operation.failure ?? (operation.state === "packageManagerBusy" ? "packageManagerBusy" : undefined))}</p> : null}
+    {notice ? <p className="mt-3 text-xs text-status-warning" role="status"><AlertTriangle className="mr-1 inline size-3.5" />{notice}</p> : null}
+    {showUpdates && result ? <PackageTable result={result} /> : null}
+    <AlertDialog open={confirming || pendingConfirmation} onOpenChange={open => { if (!open) { setConfirming(false); setDismissedPrepared(true); } }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Install {updateCount} {updateCount === 1 ? "update" : "updates"}?</AlertDialogTitle><AlertDialogDescription>{updateCount} {updateCount === 1 ? "package will" : "packages will"} be installed or updated.{deferredCount > 0 ? ` ${deferredCount} ${deferredCount === 1 ? "package is" : "packages are"} deferred.` : ""} The device may temporarily become unreachable. Keep it powered on while the update finishes.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel>{updateCount > 0 ? <Button variant="outline" onClick={() => setShowUpdates(true)}>View packages</Button> : null}<AlertDialogAction variant="destructive" disabled={applying} onClick={() => void apply()}>Install {updateCount} {updateCount === 1 ? "update" : "updates"}</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog>
   </section>;
 }
+function PackageTable({ result }: { result: UpdateCheckResult }) { return <div id="system-update-list" className="mt-3 overflow-x-auto"><table className="w-full min-w-[480px] text-left text-sm"><caption className="sr-only">Available system updates</caption><thead className="text-xs text-muted-foreground"><tr><th className="pb-2 pr-3">Package</th><th className="pb-2 pr-3">Installed version</th><th className="pb-2">Candidate version</th></tr></thead><tbody>{result.updates.packages.map(item => <tr key={`${item.name}-${item.candidateVersion}`} className="border-t border-border"><td className="py-2 pr-3 font-medium">{item.name}</td><td className="py-2 pr-3">{item.installedVersion}</td><td className="py-2">{item.candidateVersion}</td></tr>)}</tbody></table></div>; }

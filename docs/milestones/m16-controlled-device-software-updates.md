@@ -1,6 +1,6 @@
 # Pi-Hub — M16 Controlled Device Software Updates
 
-Status: In progress — WU16-03 detached execution/verification complete; no live-device mutation validation
+Status: In progress — WU16-04 System Updates mutation UX complete; no live-device mutation validation
 Target release: v0.4.0 (paired with merged M15, subject to release review)
 Predecessor: M15 — Device Update Intelligence & Maintenance Readiness
 Risk class: High
@@ -523,6 +523,8 @@ Completed with the canonical two-phase prepare/apply consent boundary, fixed typ
 ### WU16-04 — System Updates Mutation UX
 
 Add Update device, confirmation, PlanChanged review, progress/stage UX, conflict states, restart-required handoff to M10, concise failure states, accessibility, and focused frontend coverage.
+
+Completed with the constrained PREPARE/confirmation/APPLY/reconciliation presentation, persisted-operation recovery, bounded five-second foreground polling, and M10 conflict disabling. No package transaction was run in validation.
 
 ### WU16-05 — Failure, Recovery, Performance & Operator Validation
 

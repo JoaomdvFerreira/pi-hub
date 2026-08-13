@@ -1,0 +1,45 @@
+{
+  "summary": "Exposed the existing M16 PREPARE, final confirmation, APPLY, and persisted reconciliation flow through System Updates without broadening backend execution authority or executing a live device action.",
+  "completed": [
+    "Added typed frontend bindings for the closed M16 prepare, apply, and one-shot reconciliation commands.",
+    "Added safe mutation eligibility, truthful preparation/starting/installing/verifying phases, bounded package review, and an explicit final destructive confirmation.",
+    "Treats PlanChanged as a refreshed review with no continue-anyway path and no dispatch before a renewed preparation/confirmation.",
+    "Resumes the same persisted nonterminal operation, polls only while the System Updates card is mounted, schedules each five-second observation after the previous request completes, and stops at the persisted deadline.",
+    "Added concise terminal, uncertain, and typed failure guidance without exposing fingerprints, transient unit IDs, raw diagnostics, or backend lifecycle labels.",
+    "Wired actual M16 dispatched-operation state into M10 action disabling while retaining backend coordinator authority."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src/lib/tauri/monitoring.ts",
+    "src/features/devices/SoftwareUpdates.tsx",
+    "src/features/devices/SoftwareUpdates.test.tsx",
+    "src/features/devices/DeviceAdministration.tsx",
+    "src/features/devices/DeviceAdministration.test.tsx",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/features/devices/DeviceDetailScreen.test.tsx",
+    "docs/milestones/m16-controlled-device-software-updates.md",
+    "docs/roadmap/post-mvp-product-roadmap.md",
+    ".aiqt/state.json",
+    ".aiqt/runlog.jsonl"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {"command":"npm test -- --run src/features/devices/SoftwareUpdates.test.tsx src/features/devices/DeviceAdministration.test.tsx src/features/devices/DeviceDetailScreen.test.tsx","result":"passed","summary":"3 files, 17 focused System Updates/M10 conflict tests passed."},
+    {"command":"npm test","result":"passed","summary":"12 files, 43 tests passed."},
+    {"command":"npm run build","result":"passed","summary":"TypeScript and Vite production build passed."},
+    {"command":"git diff --check","result":"passed","summary":"No whitespace errors."}
+  ],
+  "acceptanceCriteria": [
+    {"criterion":"UI never exposes arbitrary command input","result":"passed","evidence":"The card invokes only typed prepare_device_update, apply_prepared_device_update, reconcile_device_update, and existing M15 read commands."},
+    {"criterion":"Changed plans require a new confirmation","result":"passed","evidence":"PlanChanged replaces the review with persisted refreshed evidence and only offers Prepare updated plan; APPLY is not retried automatically."},
+    {"criterion":"Conflicting actions are disabled and backend remains authoritative","result":"passed","evidence":"A persisted dispatched nonterminal M16 operation disables System Updates actions and all M10 actions; no frontend lock is held during confirmation and backend coordinator enforcement remains unchanged."}
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 38/100 — medium. The work exposes mutation UI, but it calls only the WU096 fixed typed backend contract and received no live-device authorization.",
+    "No apt-get update, package upgrade, or systemd-run dispatch was executed against a configured device.",
+    "WU098 and M17 were not started."
+  ]
+}

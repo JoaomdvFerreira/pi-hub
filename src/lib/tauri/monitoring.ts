@@ -27,4 +27,8 @@ export function getAlerts(): Promise<Alert[]> { return invoke<Alert[]>("get_aler
 export function acknowledgeAlert(id: string): Promise<Alert> { return invoke<Alert>("acknowledge_alert", { id }); }
 export function getUpdateResult(deviceId:string):Promise<UpdateCheckResult|null>{return invoke("get_update_result",{deviceId});}
 export function getMaintenanceOperation(deviceId:string):Promise<MaintenanceOperation|null>{return invoke("get_maintenance_operation",{deviceId});}
+export interface PreparedDeviceUpdate { operation: MaintenanceOperation; plan: UpdateCheckResult; }
+export function prepareDeviceUpdate(deviceId:string):Promise<PreparedDeviceUpdate>{return invoke("prepare_device_update",{deviceId});}
+export function applyPreparedDeviceUpdate(deviceId:string):Promise<MaintenanceOperation>{return invoke("apply_prepared_device_update",{deviceId});}
+export function reconcileDeviceUpdate(deviceId:string):Promise<MaintenanceOperation>{return invoke("reconcile_device_update",{deviceId});}
 export function checkForUpdates(deviceId:string):Promise<UpdateCheckResult>{return invoke("check_for_updates",{deviceId});}

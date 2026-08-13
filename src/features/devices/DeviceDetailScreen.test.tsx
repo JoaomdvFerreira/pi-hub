@@ -8,7 +8,7 @@ const { activityMounts } = vi.hoisted(() => ({ activityMounts: vi.fn() }));
 
 vi.mock("@/app/router", () => ({ useRouter: () => ({ goDashboard: vi.fn(), goDeviceSettings: vi.fn() }) }));
 vi.mock("@/lib/tauri/devices", () => ({ diagnoseDeviceConnection: vi.fn(), getDevice, openDeviceService: vi.fn(), openDeviceTerminal: vi.fn() }));
-vi.mock("@/lib/tauri/monitoring", () => ({ refreshDevice: vi.fn() }));
+vi.mock("@/lib/tauri/monitoring", () => ({ refreshDevice: vi.fn(), getMaintenanceOperation: vi.fn().mockResolvedValue(null) }));
 vi.mock("@/stores/useDeviceSnapshots", () => ({ useDeviceSnapshots: () => ({}) }));
 vi.mock("@/stores/useDeviceActivity", () => ({ useDeviceActivity: (deviceId: string) => { activityMounts(deviceId); return []; } }));
 vi.mock("@/stores/useTerminalSessions", () => ({ useTerminalSessions: () => ({ openTerminal: vi.fn() }) }));
