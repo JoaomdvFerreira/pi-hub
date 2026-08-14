@@ -14,7 +14,8 @@ describe("SoftwareUpdates", () => {
   it("renders a concise System Updates summary without diagnostic details", async () => {
     render(<SoftwareUpdates deviceId="d" />);
     await screen.findByText("2 updates available");
-    expect(screen.getByText("2 packages deferred")).toBeInTheDocument();
+    expect(screen.getByText("2 updates require manual review in addition to the standard updates.")).toBeInTheDocument();
+    expect(screen.getByText("Deferred packages are not installed by Pi-Hub’s standard safe update flow.")).toBeInTheDocument();
     expect(screen.getByText(/Last checked:/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Check again" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "View updates" })).toBeInTheDocument();
@@ -40,12 +41,20 @@ describe("SoftwareUpdates", () => {
     expect(screen.getByRole("button", { name: "Hide updates" })).toHaveAttribute("aria-expanded", "true");
   });
 
-  it("does not present deferred-only results as zero updates", async () => {
-    getUpdateResult.mockResolvedValue({ ...result, updates: { totalCount: 0, packages: [], truncated: false } });
+  it("presents deferred-only results as manual-review-only and refreshes their checked time", async () => {
+    const deferred = { ...result, updates: { totalCount: 0, packages: [], truncated: false }, keptBackPackages: { totalCount: 5, packages: ["linux-image"], truncated: false } };
+    const refreshed = { ...deferred, checkedAt: "2026-08-14T08:15:00Z" };
+    getUpdateResult.mockResolvedValue(deferred);
+    checkForUpdates.mockResolvedValue(refreshed);
     render(<SoftwareUpdates deviceId="d" />);
-    await screen.findByText("System updates are available");
-    expect(screen.getByText("2 packages deferred")).toBeInTheDocument();
+    await screen.findByText("No standard updates available");
+    expect(screen.getByText("5 updates require manual review.")).toBeInTheDocument();
+    expect(screen.getByText("Deferred packages are not installed by Pi-Hub’s standard safe update flow.")).toBeInTheDocument();
+    expect(screen.queryByText("System updates are available")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "View updates" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Update device" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Check again" }));
+    await screen.findByText(`Last checked: ${new Date(refreshed.checkedAt).toLocaleString()}`);
   });
 
   it("loads the cached result once and checks only after explicit action", async () => {
@@ -56,6 +65,7 @@ describe("SoftwareUpdates", () => {
     fireEvent.click(screen.getByRole("button", { name: "Check again" }));
     await waitFor(() => expect(checkForUpdates).toHaveBeenCalledWith("d"));
     expect(checkForUpdates).toHaveBeenCalledTimes(1);
+    await screen.findByText("System is up to date");
   });
 
   it("shows the app spinner and restores the action after success", async () => {
@@ -93,7 +103,7 @@ describe("SoftwareUpdates", () => {
     fireEvent.click(action);
     await screen.findByText(/already in progress/i);
     expect(checkForUpdates).toHaveBeenCalledWith("d");
-    expect(screen.getByText("5 packages deferred")).toBeInTheDocument();
+    expect(screen.getByText("5 updates require manual review.")).toBeInTheDocument();
     expect(screen.queryByText(/System updates have not been checked/i)).not.toBeInTheDocument();
   });
 
