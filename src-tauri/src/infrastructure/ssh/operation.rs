@@ -83,6 +83,9 @@ pub enum RemoteOperation {
     // calls yet -- the scheduler is a later M3 work unit.
     #[allow(dead_code)]
     DockerContainers,
+    /// M17 fixed read-only Compose-label collection. It accepts no
+    /// project, service, filter, format, or other caller-provided input.
+    WorkloadRuntime,
     NetworkVisibility,
     StorageVisibility,
     SystemVisibility,
@@ -251,6 +254,17 @@ ids=$(docker ps -aq)
 [ -z "$ids" ] || docker inspect --format 'PIHUB_DOCKER_INSPECT={{printf "{\\"id\\":%s,\\"imageId\\":%s,\\"createdAt\\":%s,\\"startedAt\\":%s,\\"restartCount\\":%d,\\"restartPolicy\\":%s,\\"restartMaximumRetryCount\\":%d,\\"mounts\\":%s,\\"networks\\":%s,\\"labels\\":%s}" (json .Id) (json .Image) (json .Created) (json .State.StartedAt) .RestartCount (json .HostConfig.RestartPolicy.Name) .HostConfig.RestartPolicy.MaximumRetryCount (json .Mounts) (json .NetworkSettings.Networks) (json .Config.Labels)}}' $ids
 docker stats --no-stream --format 'PIHUB_DOCKER_STATS={{json .}}' 2>/dev/null || true
 "#;
+/// M17's intentionally narrow runtime-verification evidence. Unlike the
+/// monitoring collector it does not inspect mounts, networks, environment,
+/// labels beyond `docker ps`, or stats.
+pub const WORKLOAD_RUNTIME_COMMAND: &str = r#"
+if ! command -v docker >/dev/null 2>&1; then
+  printf 'PIHUB_DOCKER_AVAILABLE=0\n'
+  exit 0
+fi
+printf 'PIHUB_DOCKER_AVAILABLE=1\n'
+docker ps -a --no-trunc --format '{{json .}}'
+"#;
 
 /// Fixed, read-only network collection. It emits a compact protocol rather
 /// than exposing raw shell output to the frontend; unavailable sources simply
@@ -309,6 +323,7 @@ impl RemoteOperation {
             RemoteOperation::Probe => Some(PROBE_COMMAND),
             RemoteOperation::SystemMetrics => Some(SYSTEM_METRICS_COMMAND),
             RemoteOperation::DockerContainers => Some(DOCKER_CONTAINERS_COMMAND),
+            RemoteOperation::WorkloadRuntime => Some(WORKLOAD_RUNTIME_COMMAND),
             RemoteOperation::NetworkVisibility => Some(NETWORK_VISIBILITY_COMMAND),
             RemoteOperation::StorageVisibility => Some(STORAGE_VISIBILITY_COMMAND),
             RemoteOperation::SystemVisibility => Some(SYSTEM_VISIBILITY_COMMAND),

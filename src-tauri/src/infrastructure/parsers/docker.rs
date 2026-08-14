@@ -6,7 +6,7 @@ use super::key_value::ParseWarning;
 use crate::domain::docker_container::{
     DockerContainerState, DockerContainerSummary, DockerHealthStatus, DockerLabel, DockerPortBinding,
 };
-use crate::infrastructure::ssh::{RemoteExecutor, RemoteOperation, SshError, SshTarget};
+use crate::infrastructure::ssh::{RemoteExecutor, RemoteOperation, RemoteOutputLimits, SshError, SshTarget};
 
 /// The outcome of a Docker collection attempt. `Unavailable` and
 /// `PermissionDenied` are both normal outcomes -- a device with no Docker,
@@ -46,6 +46,10 @@ pub fn collect_docker_containers(
         Err(other) => Err(other),
     }
 }
+
+/// M17 runtime verification uses this separate, fixed, bounded read-only
+/// operation. It does not accept Compose identity or Docker arguments.
+pub fn collect_workload_runtime_containers(executor:&dyn RemoteExecutor,target:&SshTarget,timeout:Duration,limits:RemoteOutputLimits)->Result<DockerCollectionResult,SshError>{let command=RemoteOperation::WorkloadRuntime.command().expect("RemoteOperation::WorkloadRuntime must have a command");match executor.execute_bounded(target,command,timeout,limits){Ok(result)if result.timed_out=>Err(SshError::RemoteCommandTimeout),Ok(result)=>Ok(parse_docker_collection_output(&result.stdout)),Err(SshError::RemoteCommandError{stderr,..})if stderr.to_lowercase().contains("permission denied")=>Ok(DockerCollectionResult::PermissionDenied),Err(other)=>Err(other)}}
 
 fn parse_docker_collection_output(raw: &str) -> DockerCollectionResult {
     let mut available = true;
