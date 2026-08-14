@@ -4,6 +4,7 @@ pub mod alert;
 pub mod connection_status;
 pub mod device;
 pub mod device_visibility;
+pub mod detached_operation;
 pub mod diagnostics;
 pub mod docker_container;
 pub mod health;
