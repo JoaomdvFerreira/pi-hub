@@ -1,6 +1,6 @@
 # Pi-Hub — M16 Controlled Device Software Updates
 
-Status: In progress — WU16-04 System Updates mutation UX complete; no live-device mutation validation
+Status: In progress — WU16-05 operator validation complete; WU16-06 remains unstarted
 Target release: v0.4.0 (paired with merged M15, subject to release review)
 Predecessor: M15 — Device Update Intelligence & Maintenance Readiness
 Risk class: High
@@ -549,6 +549,8 @@ Exercise deterministic scenarios including:
 - Performance Diagnostics evidence.
 
 Real package mutation requires explicit current-task operator authorization on a chosen non-critical device. Never manufacture destructive states merely to satisfy a test.
+
+Completed with deterministic failure/recovery coverage and two explicitly authorized real-device updates. PI 2 completed PREPARE/Cancel and one 34-package APPLY with clean audit, zero pending/deferred packages, no reboot requirement, healthy SSH/Tailscale/NTFY/Home Assistant/Docker/System checks, and terminal Activity/expected-disruption cleanup. PI 5 completed one 162-package APPLY and remained healthy; five packages were deliberately deferred by `apt-get upgrade` and are presented as manual-review-only, not directly installable updates. The complete evidence, correction history, and explicit residuals are recorded in the [WU16-05 operator validation review](../reviews/m16-wu098-operator-validation.md). No live restart-during-active-APPLY or pre-started Performance Diagnostics capture was performed; deterministic coverage remains and neither residual is a reason to manufacture another update.
 
 ### WU16-06 — Regression Gates & Milestone Closure
 

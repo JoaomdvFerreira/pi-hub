@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "projectStatus": "in_progress",
-  "currentMilestoneId": "M020",
-  "currentWorkUnitId": "WU098",
+  "currentMilestoneId": "M005",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -254,7 +254,7 @@
         "id": "M020",
         "title": "M16 — Controlled Device Software Updates",
         "objective": "Add one explicit, controlled and recoverable APT standard-upgrade action for supported devices without broadening Pi-Hub into a generic remote-command or package-management surface.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU094",
           "WU095",
@@ -3641,13 +3641,13 @@
           "cargo test --manifest-path src-tauri/Cargo.toml",
           "npm test"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-077",
           "DEP-078"
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
-        "updatedAt": "2026-08-13T12:13:30.818Z"
+        "updatedAt": "2026-08-14T08:18:28.826Z"
       },
       {
         "id": "WU099",
@@ -3680,12 +3680,12 @@
           "git diff --check",
           "aiqt status"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-079"
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
-        "updatedAt": "2026-08-13T10:46:18.778Z"
+        "updatedAt": "2026-08-14T08:18:28.826Z"
       }
     ],
     "dependencies": [
@@ -9146,6 +9146,67 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-13T11:53:32.433Z"
+    },
+    {
+      "id": "C087",
+      "workUnitId": "WU098",
+      "packetId": "PKT-088",
+      "summary": "Completed deterministic recovery/performance validation and explicitly authorized real-device standard-upgrade validation on PI 2 and PI 5, recording correction history and non-destructive residuals.",
+      "completed": [
+        "Recorded PI 2 PREPARE/Cancel and one successful 34-package APPLY with exactly one dispatch, clean audit, zero pending/deferred packages, no reboot, healthy services/system, terminal state, Activity, and expected-disruption cleanup.",
+        "Recorded PI 5 successful 162-package APPLY, healthy persisted terminal state, and five conservative apt-get upgrade deferred packages presented as manual-review-only.",
+        "Corrected and regression-covered pre-dispatch transport classification, completed-unit recovery verification, stale verification/reconciliation behavior, systemd exit compatibility, check-request feedback, deferred-only presentation, and confirmation package-review usability.",
+        "Ran deterministic Rust/frontend suites and canonical repository validation."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/reviews/m16-wu098-operator-validation.md",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "src/features/devices/SoftwareUpdates.tsx",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "258 passed, 1 ignored; includes deterministic M16 execution, recovery, persistence, coordination, expected-disruption, and diagnostics coverage."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 48 tests passed; includes System Updates confirmation, expiry/manual status, check-error, and deferred-only presentation coverage."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/test/build, frontend test/build/lint, AIQT status, and diff check passed. Lint reports four existing Fast Refresh warnings and no errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Failure/recovery matrix is covered deterministically",
+          "result": "passed",
+          "evidence": "Fake-executor and frontend suites cover pre-dispatch/non-dispatch distinction, uncertain known-unit recovery without redispatch, terminal verification, expiry/manual status, systemd exit forms, persistence, coordination, bounded cleanup, and the operator-discovered UI defects."
+        },
+        {
+          "criterion": "Zero idle M16 polling is proven",
+          "result": "passed",
+          "evidence": "System Updates reconciliation schedules only for a mounted dispatched nonterminal operation and stops at its persisted deadline; frontend regression covers expiry while preserving manual Check status."
+        },
+        {
+          "criterion": "Live mutation is performed only with explicit authorization or documented as residual",
+          "result": "passed",
+          "evidence": "The record contains explicitly authorized one-time APPLY results for PI 2 and PI 5. App-restart-during-active-APPLY and pre-started diagnostics are disclosed residuals; no further mutation was used to manufacture evidence."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T08:18:28.826Z",
+      "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
@@ -9172,8 +9233,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-13T12:13:30.818Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-08-14T08:18:28.826Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -11752,6 +11813,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-13T11:53:32.433Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C087",
+      "current": {
+        "observationId": "sha256:41f86354c067e469ae0df577739175629039805e3f0c55f336542b96002c8f63",
+        "checkpointId": "C087",
+        "workUnitId": "WU098",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T08:18:28.826Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T08:18:28.826Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:41f86354c067e469ae0df577739175629039805e3f0c55f336542b96002c8f63",
+          "checkpointId": "C087",
+          "workUnitId": "WU098",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T08:18:28.826Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T08:18:28.826Z"
         }
       ]
     }

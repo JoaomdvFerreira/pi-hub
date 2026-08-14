@@ -28,7 +28,7 @@ export function SoftwareUpdates({ deviceId, onMaintenanceChange }: { deviceId: s
   const viewingPackages = useRef(false);
   const setCurrentOperation = useCallback((next: MaintenanceOperation | null) => { operationRef.current = next; setOperation(next); onMaintenanceChange?.(next); }, [onMaintenanceChange]);
   const load = useCallback(async () => { try { const [cached, persisted] = await Promise.all([getUpdateResult(deviceId), getMaintenanceOperation(deviceId)]); setResult(cached); setCurrentOperation(persisted); } catch { setResult(null); setCurrentOperation(null); } }, [deviceId, setCurrentOperation]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => { void Promise.resolve().then(load); }, [load]);
 
   const reconcile = useCallback(async () => { try { const next = await reconcileDeviceUpdate(deviceId); setCurrentOperation(next); setObservationError(null); if (TERMINAL.has(next.state)) { const refreshed = await getUpdateResult(deviceId); setResult(refreshed); } return next; } catch { setObservationError("Pi-Hub could not check the update status. The update may still be continuing on the device."); return operationRef.current ?? null; } }, [deviceId, setCurrentOperation]);
   useEffect(() => {
