@@ -3747,12 +3747,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-080"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:36:03.140Z"
+        "updatedAt": "2026-08-14T10:48:04.438Z"
       },
       {
         "id": "WU102",
@@ -3773,12 +3773,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-081"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:30:48.454Z"
+        "updatedAt": "2026-08-14T10:48:04.438Z"
       },
       {
         "id": "WU103",
@@ -9544,17 +9544,67 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-14T10:36:03.140Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T10:36:03.140Z"
+    },
+    {
+      "id": "C090",
+      "workUnitId": "WU101",
+      "packetId": "PKT-091",
+      "summary": "Implemented the bounded managed-workload registry and fixed-root action-trust enforcement without creating any workload execution path.",
+      "completed": [
+        "Versioned bounded managed-workload configuration and JSON persistence",
+        "Strict backend action-ID grammar with no path/command/ref fields",
+        "Fixed-root typed trust probe and conservative trust result parser",
+        "M17 coordinator operation kind reserved for later typed lifecycle",
+        "Deterministic registry and trust regression coverage"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/managed_workload.rs",
+        "src-tauri/src/infrastructure/managed_workload_trust.rs",
+        "src-tauri/src/storage/managed_workload_repository.rs",
+        "src-tauri/src/monitoring/maintenance_coordinator.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml managed_workload --lib",
+          "result": "passed",
+          "summary": "Five registry/action-ID/trust/digest/persistence tests passed."
+        },
+        {
+          "command": "cargo check --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Focused Rust type check passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Typed registry",
+          "result": "passed",
+          "evidence": "Only typed bounded workload metadata persists; action resolution derives solely from validated action IDs and fixed root."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T10:48:04.438Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-090",
-    "workUnitId": "WU100",
+    "id": "PKT-091",
+    "workUnitId": "WU101",
     "milestoneId": "M021",
-    "createdAt": "2026-08-14T10:32:13.689Z",
+    "createdAt": "2026-08-14T10:42:21.546Z",
     "format": "markdown",
-    "contentHash": "sha256:5596e006c189f3538dc3ebab28ed1e4108915b4a92cfa8a2224c97f496b62f6f",
+    "contentHash": "sha256:29bd1da33ff937654ac51e7885c447a08d6acf7993828fb392cfde4727934fc6",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9573,7 +9623,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-14T10:36:03.140Z",
+  "lastUpdatedAt": "2026-08-14T10:48:04.438Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -12242,6 +12292,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T10:36:03.140Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C090",
+      "current": {
+        "observationId": "sha256:f6920d91c0b1e62c3f1b77bef8b0e066fdfce8dd7bd71d65a8e766598bbc2b9a",
+        "checkpointId": "C090",
+        "workUnitId": "WU101",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T10:48:04.438Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T10:48:04.438Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f6920d91c0b1e62c3f1b77bef8b0e066fdfce8dd7bd71d65a8e766598bbc2b9a",
+          "checkpointId": "C090",
+          "workUnitId": "WU101",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T10:48:04.438Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T10:48:04.438Z"
         }
       ]
     }
