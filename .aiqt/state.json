@@ -3773,12 +3773,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-081"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:48:04.438Z"
+        "updatedAt": "2026-08-14T13:48:19.940Z"
       },
       {
         "id": "WU103",
@@ -3799,12 +3799,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-082"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:30:48.454Z"
+        "updatedAt": "2026-08-14T13:48:19.940Z"
       },
       {
         "id": "WU104",
@@ -9594,17 +9594,88 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-14T10:48:04.438Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T10:48:04.438Z"
+    },
+    {
+      "id": "C091",
+      "workUnitId": "WU102",
+      "packetId": "PKT-092",
+      "summary": "Completed the bounded M17 managed-workload PREPARE, consent, exactly-once detached dispatch, reconciliation, and Activity lifecycle without verification or live-device execution.",
+      "completed": [
+        "Typed non-mutating PREPARE with bounded protocol parsing, trusted action validation, and a human-confirmable consent fingerprint.",
+        "Fresh consent revalidation rejects configuration, action digest, target revision, and verification-identity drift as PlanChanged before dispatch.",
+        "Persisted-before-dispatch backend-generated transient-unit identity, fixed non-root systemd-run command, and persisted attempt boundary.",
+        "Exactly-once dispatch with Accepted or recoverable DispatchUncertain outcomes, followed only by same-unit bounded reconciliation.",
+        "Conservative lifecycle translation to Deploying, DeploymentFailed, StillRunning, or AwaitingVerification, with deduplicated sanitized Activity and no workload alert suppression."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "src-tauri/src/domain/managed_workload_operation.rs",
+        "src-tauri/src/domain/detached_operation.rs",
+        "src-tauri/src/storage/managed_workload_operation_repository.rs",
+        "src-tauri/src/application/managed_workload_*_tests.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload",
+          "result": "passed",
+          "summary": "31 deterministic registry, trust, persistence, PREPARE, consent, dispatch, reconciliation, and Activity tests passed."
+        },
+        {
+          "command": "cargo test detached_operation; cargo test maintenance; cargo test coordinator",
+          "result": "passed",
+          "summary": "2 detached-unit substrate, 18 M16 maintenance, and 4 coordinator regression tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build; frontend test/build/lint; AIQT status; and diff check passed. Frontend lint reports four existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "PREPARE is non-mutating and derives action execution only from fixed-root trusted action resolution.",
+          "result": "passed",
+          "evidence": "Fixed scripted tests cover no APPLY/systemd-run during PREPARE and strict action-ID/trust validation."
+        },
+        {
+          "criterion": "Consent drift returns PlanChanged with zero dispatch and no caller-controlled target, command, unit, argv, flags, environment, or path surface.",
+          "result": "passed",
+          "evidence": "Deterministic consent and dispatch-construction tests cover config, digest, target, and verification drift plus exact fixed command construction."
+        },
+        {
+          "criterion": "A dispatch is persisted and attempted at most once, while uncertainty, restart, expiry, and reconciliation only observe the persisted unit and never kill or redispatch.",
+          "result": "passed",
+          "evidence": "One-shot dispatch and reconciliation tests cover persisted attempt boundaries, uncertain outcomes, recovery identity/deadline, expiry, and no redispatch."
+        },
+        {
+          "criterion": "Systemd success stops at AwaitingVerification; failure and initiation Activity are deduplicated and sanitized; device-wide alert suppression is absent.",
+          "result": "passed",
+          "evidence": "Activity and reconciliation tests assert AwaitingVerification only, one static Activity event per outcome, no sensitive data, and no administration disruption record."
+        },
+        {
+          "criterion": "The M16 detached-operation extraction preserves maintenance persistence and typed fixed-command semantics.",
+          "result": "passed",
+          "evidence": "M16 maintenance, coordinator, and shared-substrate regression suites passed; shared code has no command construction or persistence model."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T13:48:19.940Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-091",
-    "workUnitId": "WU101",
+    "id": "PKT-092",
+    "workUnitId": "WU102",
     "milestoneId": "M021",
-    "createdAt": "2026-08-14T10:42:21.546Z",
+    "createdAt": "2026-08-14T10:57:36.474Z",
     "format": "markdown",
-    "contentHash": "sha256:29bd1da33ff937654ac51e7885c447a08d6acf7993828fb392cfde4727934fc6",
+    "contentHash": "sha256:6e8eecccdd32e0209d56117da876c98b52f2dae3cd2edffd5a999bae1024cd00",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9623,7 +9694,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-14T10:48:04.438Z",
+  "lastUpdatedAt": "2026-08-14T13:48:19.940Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -12322,6 +12393,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T10:48:04.438Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C091",
+      "current": {
+        "observationId": "sha256:e11f2d12673132dc111132d4bb4dbcd4b58de51a409ebbfde014adb080cdd158",
+        "checkpointId": "C091",
+        "workUnitId": "WU102",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T13:48:19.940Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T13:48:19.940Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:e11f2d12673132dc111132d4bb4dbcd4b58de51a409ebbfde014adb080cdd158",
+          "checkpointId": "C091",
+          "workUnitId": "WU102",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T13:48:19.940Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T13:48:19.940Z"
         }
       ]
     }
