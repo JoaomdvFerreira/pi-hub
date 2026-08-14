@@ -263,6 +263,21 @@
           "WU098",
           "WU099"
         ]
+      },
+      {
+        "id": "M021",
+        "title": "M17 — Managed Workload Deployment Actions",
+        "objective": "Safely deploy explicitly registered workloads without generic remote execution.",
+        "status": "ready",
+        "workUnitIds": [
+          "WU100",
+          "WU101",
+          "WU102",
+          "WU103",
+          "WU104",
+          "WU105",
+          "WU106"
+        ]
       }
     ],
     "workUnits": [
@@ -3686,6 +3701,188 @@
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
         "updatedAt": "2026-08-14T09:39:47.465Z"
+      },
+      {
+        "id": "WU100",
+        "milestoneId": "M021",
+        "title": "Managed Action Contract & Personal-Finance Adapter Design",
+        "objective": "Freeze the M17 contract and adapter requirements.",
+        "scope": [
+          "Canonical contracts",
+          "Repository mapping"
+        ],
+        "outOfScope": [
+          "Deployment execution",
+          "M18"
+        ],
+        "acceptanceCriteria": [
+          "Contract is canonical"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:36:03.140Z"
+      },
+      {
+        "id": "WU101",
+        "milestoneId": "M021",
+        "title": "Managed Workload Registry, Persistence & Trust Validation",
+        "objective": "Implement trusted registry.",
+        "scope": [
+          "Registry"
+        ],
+        "outOfScope": [
+          "Dispatch"
+        ],
+        "acceptanceCriteria": [
+          "Typed registry"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "ready",
+        "dependencies": [
+          "DEP-080"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:36:03.140Z"
+      },
+      {
+        "id": "WU102",
+        "milestoneId": "M021",
+        "title": "PREPARE, Fingerprint & Detached Deployment Execution",
+        "objective": "Implement typed dispatch.",
+        "scope": [
+          "Dispatch"
+        ],
+        "outOfScope": [
+          "Rollback"
+        ],
+        "acceptanceCriteria": [
+          "One dispatch"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-081"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:30:48.454Z"
+      },
+      {
+        "id": "WU103",
+        "milestoneId": "M021",
+        "title": "Verification, Recovery, Activity & Scoped Disruption",
+        "objective": "Implement verification.",
+        "scope": [
+          "Verification"
+        ],
+        "outOfScope": [
+          "Broad suppression"
+        ],
+        "acceptanceCriteria": [
+          "Health gates"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-082"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:30:48.454Z"
+      },
+      {
+        "id": "WU104",
+        "milestoneId": "M021",
+        "title": "Managed Workload UX",
+        "objective": "Implement UI.",
+        "scope": [
+          "UI"
+        ],
+        "outOfScope": [
+          "Console"
+        ],
+        "acceptanceCriteria": [
+          "Review UI"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-083"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:30:48.454Z"
+      },
+      {
+        "id": "WU105",
+        "milestoneId": "M021",
+        "title": "Deterministic & Real-Workload Operator Validation",
+        "objective": "Validate staged deployment.",
+        "scope": [
+          "Validation"
+        ],
+        "outOfScope": [
+          "Fault injection"
+        ],
+        "acceptanceCriteria": [
+          "Evidence"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-084"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:30:48.454Z"
+      },
+      {
+        "id": "WU106",
+        "milestoneId": "M021",
+        "title": "Regression Gates & Milestone Closure",
+        "objective": "Close M17.",
+        "scope": [
+          "Closure"
+        ],
+        "outOfScope": [
+          "M18"
+        ],
+        "acceptanceCriteria": [
+          "Validation"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "planned",
+        "dependencies": [
+          "DEP-085"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:30:48.454Z"
       }
     ],
     "dependencies": [
@@ -4241,6 +4438,48 @@
         "toId": "WU099",
         "type": "blocks",
         "reason": "Closure follows deterministic and operator-validation evidence."
+      },
+      {
+        "id": "DEP-080",
+        "fromId": "WU100",
+        "toId": "WU101",
+        "type": "blocks",
+        "reason": "Contract first"
+      },
+      {
+        "id": "DEP-081",
+        "fromId": "WU101",
+        "toId": "WU102",
+        "type": "blocks",
+        "reason": "Registry first"
+      },
+      {
+        "id": "DEP-082",
+        "fromId": "WU102",
+        "toId": "WU103",
+        "type": "blocks",
+        "reason": "Execution first"
+      },
+      {
+        "id": "DEP-083",
+        "fromId": "WU103",
+        "toId": "WU104",
+        "type": "blocks",
+        "reason": "State first"
+      },
+      {
+        "id": "DEP-084",
+        "fromId": "WU104",
+        "toId": "WU105",
+        "type": "blocks",
+        "reason": "UI first"
+      },
+      {
+        "id": "DEP-085",
+        "fromId": "WU105",
+        "toId": "WU106",
+        "type": "blocks",
+        "reason": "Evidence first"
       }
     ]
   },
@@ -9261,17 +9500,61 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-14T09:39:47.465Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T09:39:47.465Z"
+    },
+    {
+      "id": "C089",
+      "workUnitId": "WU100",
+      "packetId": "PKT-090",
+      "summary": "Integrated the reviewed M17 deployment and action-safety contracts, froze the repository-specific M16 reuse and Personal Finance adapter boundary, and made no workload mutation.",
+      "completed": [
+        "Canonical M17 milestone and safety-contract documents added",
+        "Roadmap and M17 AIQT mapping reconciled",
+        "M16 coordinator/transient persistence/reconciliation, protocol, trust, sudo, verification, telemetry, recovery, and staged validation decisions frozen",
+        "Personal Finance updater unavailable; adapter requirements documented without inference"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m17-managed-workload-deployment-actions.md",
+        "docs/design/m17-managed-workload-action-safety-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/inputs/m17-plan.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status and diff check passed; lint retains four existing warnings."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Contract is canonical",
+          "result": "passed",
+          "evidence": "Reviewed deployment/action-safety requirements are integrated with exact repository mapping and roadmap/AIQT state."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T10:36:03.140Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-089",
-    "workUnitId": "WU099",
-    "milestoneId": "M020",
-    "createdAt": "2026-08-14T09:33:00.447Z",
+    "id": "PKT-090",
+    "workUnitId": "WU100",
+    "milestoneId": "M021",
+    "createdAt": "2026-08-14T10:32:13.689Z",
     "format": "markdown",
-    "contentHash": "sha256:84eb310fbde953f886615edd6652fa09a3caf45f7bcd58e932ec21aaaf969f4e",
+    "contentHash": "sha256:5596e006c189f3538dc3ebab28ed1e4108915b4a92cfa8a2224c97f496b62f6f",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9290,7 +9573,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-14T09:39:47.465Z",
+  "lastUpdatedAt": "2026-08-14T10:36:03.140Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -11929,6 +12212,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T09:39:47.465Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C089",
+      "current": {
+        "observationId": "sha256:cf839d83a05b18935b32917967da6fb6b755eabb87773f421eb85e71fdda50ef",
+        "checkpointId": "C089",
+        "workUnitId": "WU100",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T10:36:03.140Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T10:36:03.140Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:cf839d83a05b18935b32917967da6fb6b755eabb87773f421eb85e71fdda50ef",
+          "checkpointId": "C089",
+          "workUnitId": "WU100",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T10:36:03.140Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T10:36:03.140Z"
         }
       ]
     }
