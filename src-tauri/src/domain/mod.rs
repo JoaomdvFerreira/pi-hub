@@ -14,6 +14,7 @@ pub mod maintenance;
 pub mod managed_workload;
 pub mod managed_workload_operation;
 pub mod managed_workload_prepare;
+pub mod managed_workload_verify;
 pub mod notification_rule;
 pub mod service_health;
 pub mod settings;
