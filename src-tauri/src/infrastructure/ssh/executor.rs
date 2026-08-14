@@ -3,7 +3,7 @@ use std::time::Duration;
 use super::error::SshError;
 use super::operation::RemoteOperation;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SshTarget {
     pub host: String,
     pub port: u16,
