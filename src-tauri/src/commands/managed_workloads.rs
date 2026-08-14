@@ -40,6 +40,20 @@ pub struct ManagedWorkloadStatusRequest {
     pub workload_id: String,
 }
 
+/// Bounded display data for the device-detail deployment section. This is a
+/// read-only view of registered workloads, not a configuration or execution
+/// surface.
+#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct ManagedWorkloadCardDto {
+    pub workload_id: String,
+    pub name: String,
+    pub enabled: bool,
+    pub eligible_to_prepare: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub deployment: Option<ManagedWorkloadDeploymentDto>,
+}
+
 #[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub enum ManagedWorkloadDeploymentStateDto {
@@ -200,6 +214,31 @@ fn deployment_dto(operation: &ManagedWorkloadOperation) -> ManagedWorkloadDeploy
     }
 }
 
+fn blocks_fresh_prepare(state: ManagedWorkloadOperationState) -> bool {
+    matches!(state,
+        ManagedWorkloadOperationState::DispatchPrepared
+            | ManagedWorkloadOperationState::Dispatching
+            | ManagedWorkloadOperationState::DispatchUncertain
+            | ManagedWorkloadOperationState::Deploying
+            | ManagedWorkloadOperationState::StillRunning
+            | ManagedWorkloadOperationState::AwaitingVerification
+            | ManagedWorkloadOperationState::RevisionVerified
+            | ManagedWorkloadOperationState::WorkloadRuntimeVerified
+    )
+}
+
+pub(crate) fn list_managed_workloads_with(dir: &std::path::Path, device_id: &str) -> Vec<ManagedWorkloadCardDto> {
+    let operations = JsonManagedWorkloadOperationRepository::new(dir);
+    JsonManagedWorkloadRepository::new(dir).load().workloads.into_iter()
+        .filter(|workload| workload.device_id == device_id)
+        .map(|workload| {
+            let operation = operations.get(&workload.device_id, &workload.id);
+            let eligible_to_prepare = workload.enabled && operation.as_ref().is_none_or(|entry| !blocks_fresh_prepare(entry.state));
+            ManagedWorkloadCardDto { workload_id: workload.id, name: workload.name, enabled: workload.enabled, eligible_to_prepare, deployment: operation.as_ref().map(deployment_dto) }
+        })
+        .collect()
+}
+
 fn config_dir(app: &AppHandle) -> Result<std::path::PathBuf, ApplicationError> {
     app.path().app_config_dir().map_err(|_| api_error("ConfigurationError", "Pi-Hub could not access its application storage.", "Check local application storage and try again.", true))
 }
@@ -267,6 +306,12 @@ pub async fn continue_managed_workload_deployment(app: AppHandle, operation: Man
 pub async fn reconcile_managed_workload_deployment(app: AppHandle, request: ManagedWorkloadStatusRequest) -> Result<ManagedWorkloadDeploymentDto, ApplicationError> {
     let dir = config_dir(&app)?;
     reconcile_managed_workload_with(&dir, request, &OpenSshExecutor::default())
+}
+
+#[tauri::command]
+pub async fn list_managed_workload_deployments(app: AppHandle, device_id: String) -> Result<Vec<ManagedWorkloadCardDto>, ApplicationError> {
+    let dir = config_dir(&app)?;
+    Ok(list_managed_workloads_with(&dir, &device_id))
 }
 
 #[cfg(test)]

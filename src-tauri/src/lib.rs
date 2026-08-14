@@ -74,6 +74,7 @@ pub fn run() {
             commands::managed_workloads::prepare_managed_workload_deployment,
             commands::managed_workloads::continue_managed_workload_deployment,
             commands::managed_workloads::reconcile_managed_workload_deployment,
+            commands::managed_workloads::list_managed_workload_deployments,
             commands::updates::check_for_updates,
             commands::monitoring::start_performance_benchmark,
             commands::monitoring::stop_performance_benchmark,

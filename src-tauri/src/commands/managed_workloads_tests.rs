@@ -104,3 +104,24 @@ fn request_dtos_and_error_boundary_have_no_generic_execution_fields() {
     assert_eq!(map_prepare_error(PrepareError::ActionUnavailable).code, "ActionUnavailable");
     assert_eq!(map_prepare_error(PrepareError::ActionTrustFailed).code, "ActionUntrusted");
 }
+
+#[test]
+fn workload_cards_are_read_only_and_keep_active_deployments_ineligible() {
+    let dir = setup();
+    let cards = list_managed_workloads_with(dir.path(), "pi5");
+    assert_eq!(cards.len(), 1);
+    assert_eq!(cards[0].name, "Finance");
+    assert!(cards[0].eligible_to_prepare);
+    let prepared = prepared(dir.path());
+    let repo = JsonManagedWorkloadOperationRepository::new(dir.path());
+    let mut operation = repo.get("pi5", "finance").unwrap();
+    operation.state = ManagedWorkloadOperationState::Deploying;
+    operation.started_at = Some("x".into());
+    operation.dispatch_state = ManagedWorkloadDispatchState::Accepted;
+    repo.save(&operation).unwrap();
+    let card = list_managed_workloads_with(dir.path(), "pi5").pop().unwrap();
+    assert!(!card.eligible_to_prepare);
+    let raw = serde_json::to_string(&card).unwrap();
+    for forbidden in ["targetRevision", "transientUnitId", "trustedActionDigest", "deploymentFingerprint", "command", "path", "secret.example"] { assert!(!raw.contains(forbidden), "serialized {forbidden}"); }
+    assert_eq!(card.deployment.unwrap().operation.operation_id, prepared.operation.operation.operation_id);
+}

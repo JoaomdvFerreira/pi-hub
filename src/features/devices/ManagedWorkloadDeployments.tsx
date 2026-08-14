@@ -1,0 +1,40 @@
+import { useCallback, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { continueManagedWorkloadDeployment, listManagedWorkloadDeployments, prepareManagedWorkloadDeployment } from "@/lib/tauri/managedWorkloads";
+import type { ManagedWorkloadCard, ManagedWorkloadDeployment, PreparedManagedWorkload } from "@/types/managedWorkloads";
+
+const ACTIVE = new Set(["dispatchPrepared", "dispatching", "deploying", "stillRunning", "awaitingVerification", "revisionVerified", "workloadRuntimeVerified"]);
+function apiMessage(error: unknown, fallback: string) { const item = error as { message?: string; remediation?: string } | null; return item?.remediation ? `${item.message ?? fallback} ${item.remediation}` : item?.message ?? fallback; }
+function compactRevision(revision: string) { return revision.length > 16 ? `${revision.slice(0, 12)}…${revision.slice(-4)}` : revision; }
+function lifecycleText(deployment?: ManagedWorkloadDeployment) {
+  switch (deployment?.state) {
+    case "dispatchUncertain": return "Deployment start uncertain. Do not retry; status must be checked before any further action.";
+    case "dispatchPrepared": case "dispatching": case "deploying": case "stillRunning": return "Deployment in progress.";
+    case "awaitingVerification": case "revisionVerified": case "workloadRuntimeVerified": return "Verification pending.";
+    case "preDispatchFailed": return "Deployment did not start. You can prepare a fresh plan.";
+    case "deploymentFailed": case "verificationFailed": return "The deployment needs attention before a fresh plan is prepared.";
+    case "completed": return "Deployment completed.";
+    default: return null;
+  }
+}
+
+export function ManagedWorkloadDeployments({ deviceId, maintenanceInProgress = false }: { deviceId: string; maintenanceInProgress?: boolean }) {
+  const [workloads, setWorkloads] = useState<ManagedWorkloadCard[] | null>(null);
+  const load = useCallback(async () => { try { setWorkloads(await listManagedWorkloadDeployments(deviceId)); } catch { setWorkloads([]); } }, [deviceId]);
+  useEffect(() => { void load(); }, [load]);
+  if (!workloads?.length) return null;
+  return <section className="rounded-lg border border-border bg-card p-3.5"><h2 className="text-xs font-bold text-muted-foreground">MANAGED WORKLOADS</h2><div className="mt-3 grid gap-3">{workloads.map(workload => <ManagedWorkloadCardView key={workload.workloadId} workload={workload} maintenanceInProgress={maintenanceInProgress} onChange={load}/>)}</div></section>;
+}
+
+function ManagedWorkloadCardView({ workload, maintenanceInProgress, onChange }: { workload: ManagedWorkloadCard; maintenanceInProgress: boolean; onChange: () => Promise<void> }) {
+  const [prepared, setPrepared] = useState<PreparedManagedWorkload | null>(null); const [preparing, setPreparing] = useState(false); const [continuing, setContinuing] = useState(false); const [notice, setNotice] = useState<string | null>(null);
+  const active = ACTIVE.has(workload.deployment?.state ?? "");
+  const prepare = async () => { if (preparing || continuing) return; setPreparing(true); setNotice(null); try { setPrepared(await prepareManagedWorkloadDeployment(workload.workloadId)); } catch (error) { setNotice(`${apiMessage(error, "Pi-Hub could not prepare this deployment safely.")} No deployment was started.`); } finally { setPreparing(false); } };
+  const confirm = async () => { if (!prepared || continuing) return; setContinuing(true); setNotice(null); try { const response = await continueManagedWorkloadDeployment({ workloadId: prepared.operation.operation.workloadId, operationId: prepared.operation.operation.operationId }); setPrepared(null); if (response.outcome === "planChanged") setNotice("The deployment plan changed before starting. No deployment was started. Prepare and review the new plan."); else if (response.operation.state === "dispatchUncertain") setNotice("Deployment start could not be confirmed. Do not retry; status must be checked/reconciled."); else setNotice("Deployment in progress."); await onChange(); } catch (error) { setNotice(`${apiMessage(error, "The deployment did not start.")} The deployment did not start.`); } finally { setContinuing(false); } };
+  const eligible = workload.enabled && workload.eligibleToPrepare && !maintenanceInProgress && !active && !preparing && !continuing;
+  return <div className="rounded-md border border-border p-3"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{workload.name}</h3><div className="flex-1"/><Button size="sm" disabled={!eligible} onClick={prepare}>{preparing ? <><Loader2 className="animate-spin"/>Preparing…</> : "Prepare update"}</Button></div>{!workload.enabled ? <p className="mt-2 text-xs text-muted-foreground">This managed workload is disabled.</p> : null}{lifecycleText(workload.deployment) ? <p className="mt-2 text-xs text-muted-foreground" role="status">{lifecycleText(workload.deployment)}</p> : null}{notice ? <p className="mt-2 text-xs text-muted-foreground" role="status">{notice}</p> : null}
+    <AlertDialog open={Boolean(prepared)} onOpenChange={open => { if (!open && !continuing) setPrepared(null); }}><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>Review update for {workload.name}</AlertDialogTitle><AlertDialogDescription>This will update the workload to revision <span className="font-mono">{prepared ? compactRevision(prepared.reviewTargetRevision) : ""}</span>{prepared?.changeCount ? ` (${prepared.changeCount} planned changes)` : ""}. Pi-Hub will revalidate this plan before starting. If it changed, you will need to review a fresh plan.</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel disabled={continuing}>Cancel</AlertDialogCancel><Button disabled={continuing} onClick={confirm}>{continuing ? <><Loader2 className="animate-spin"/>Starting deployment…</> : "Confirm and start update"}</Button></AlertDialogFooter></AlertDialogContent></AlertDialog>
+  </div>;
+}
