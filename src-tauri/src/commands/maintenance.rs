@@ -649,7 +649,7 @@ pub async fn apply_prepared_device_update(
 }
 
 // Small self-contained SHA-256 implementation keeps the consent digest deterministic without introducing a new remote or frontend dependency.
-fn sha256_hex(input: &[u8]) -> String {
+pub(crate) fn sha256_hex(input: &[u8]) -> String {
     let mut h: [u32; 8] = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
