@@ -1,3 +1,4 @@
+use crate::domain::maintenance::MaintenanceOperation;
 use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 
@@ -43,6 +44,37 @@ pub enum AdministrationOperationState {
     Failed,
     TimedOut,
     OutcomeUncertain,
+}
+
+/// Expected disruption has a broader owner vocabulary than the M10 command
+/// catalogue: M16 reuses its bounded alert semantics without becoming an M10
+/// administration command.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ExpectedDisruptionOperationType {
+    RestartDevice,
+    ShutdownDevice,
+    RestartDocker,
+    RestartTailscale,
+    UpdateDevice,
+}
+
+impl From<AdministrationOperationType> for ExpectedDisruptionOperationType {
+    fn from(value: AdministrationOperationType) -> Self {
+        match value {
+            AdministrationOperationType::RestartDevice => Self::RestartDevice,
+            AdministrationOperationType::ShutdownDevice => Self::ShutdownDevice,
+            AdministrationOperationType::RestartDocker => Self::RestartDocker,
+            AdministrationOperationType::RestartTailscale => Self::RestartTailscale,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ExpectedDisruptionPhase {
+    CommandAccepted,
+    UpdateActive,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -113,10 +145,10 @@ impl AdministrationOperation {
 pub struct ExpectedDisruption {
     pub device_id: String,
     pub operation_id: String,
-    pub operation_type: AdministrationOperationType,
+    pub operation_type: ExpectedDisruptionOperationType,
     pub started_at: String,
     pub expected_until: String,
-    pub phase: AdministrationOperationState,
+    pub phase: ExpectedDisruptionPhase,
 }
 
 impl ExpectedDisruption {
@@ -125,11 +157,33 @@ impl ExpectedDisruption {
         Self {
             device_id: operation.device_id.clone(),
             operation_id: operation.id.clone(),
-            operation_type: operation.operation_type,
+            operation_type: operation.operation_type.into(),
             started_at: started.to_rfc3339(),
             expected_until: (started + operation.operation_type.expected_window()).to_rfc3339(),
-            phase: AdministrationOperationState::CommandAccepted,
+            phase: ExpectedDisruptionPhase::CommandAccepted,
         }
+    }
+
+    /// The future M16 execution owner calls this only after its known unit
+    /// might be active. Requested/pre-dispatch state deliberately has no
+    /// suppression marker, so a crash cannot mask alerts before mutation.
+    #[allow(dead_code)]
+    pub fn for_update(operation: &MaintenanceOperation) -> Option<Self> {
+        if operation.requires_fresh_confirmation_after_restart() || operation.state.is_terminal() {
+            return None;
+        }
+        let expected_until = operation.observation_deadline.clone()?;
+        Some(Self {
+            device_id: operation.device_id.clone(),
+            operation_id: operation.id.clone(),
+            operation_type: ExpectedDisruptionOperationType::UpdateDevice,
+            started_at: operation
+                .started_at
+                .clone()
+                .unwrap_or_else(|| operation.requested_at.clone()),
+            expected_until,
+            phase: ExpectedDisruptionPhase::UpdateActive,
+        })
     }
     pub fn is_valid_at(&self, now: DateTime<Utc>) -> bool {
         DateTime::parse_from_rfc3339(&self.expected_until)
@@ -161,5 +215,25 @@ mod tests {
         let mut marker = ExpectedDisruption::new(&op);
         marker.expected_until = "not a date".into();
         assert!(!marker.is_valid_at(Utc::now()));
+    }
+
+    #[test]
+    fn m16_marker_is_only_created_for_a_recovery_relevant_dispatched_operation() {
+        use crate::domain::maintenance::{
+            MaintenanceDispatchState, MaintenanceOperation, MaintenanceOperationState,
+        };
+        let mut operation = MaintenanceOperation::requested("d".into());
+        operation.observation_deadline = Some((Utc::now() + Duration::minutes(60)).to_rfc3339());
+        assert!(ExpectedDisruption::for_update(&operation).is_none());
+        operation.dispatch_state = MaintenanceDispatchState::Uncertain;
+        operation.state = MaintenanceOperationState::Dispatching;
+        let marker = ExpectedDisruption::for_update(&operation).unwrap();
+        assert_eq!(
+            marker.operation_type,
+            ExpectedDisruptionOperationType::UpdateDevice
+        );
+        assert!(marker.is_valid_at(Utc::now()));
+        operation.state = MaintenanceOperationState::Failed;
+        assert!(ExpectedDisruption::for_update(&operation).is_none());
     }
 }

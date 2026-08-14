@@ -1,0 +1,36 @@
+{
+  "summary": "Closed M16 after adversarial safety/lifecycle/UX review, canonical validation, reconciled documentation, and a deterministic correction for recovered known failed-unit cleanup.",
+  "completed": [
+    "Reviewed the full M16 command, coordinator, dispatch, persistence, recovery, polling, UI, Activity, disruption, diagnostics, and output-bound paths against the canonical contracts.",
+    "Corrected recovered known failed-unit reconciliation so it reaches persisted terminal failure, clears expected disruption, and appends failure Activity instead of remaining verifying.",
+    "Recorded PI 2 and PI 5 authorized update evidence, correction history, final exit criteria, risk, and explicit non-destructive residuals in the M16 final closure review.",
+    "Ran canonical repository validation successfully."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/commands/maintenance.rs",
+    "docs/reviews/m16-final-regression-closure.md",
+    "docs/milestones/m16-controlled-device-software-updates.md",
+    "docs/roadmap/post-mvp-product-roadmap.md",
+    ".aiqt/state.json",
+    ".aiqt/runlog.jsonl"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {"command":"cargo test --manifest-path src-tauri/Cargo.toml recovered_known_failed_unit_is_terminal_and_cleans_up_once","result":"passed","summary":"Focused new recovery regression passed."},
+    {"command":"node scripts/validate-agent.mjs","result":"passed","summary":"Rust check/test/build, frontend test/build/lint, AIQT status, and diff check passed; lint has four existing Fast Refresh warnings and no errors."}
+  ],
+  "acceptanceCriteria": [
+    {"criterion":"All M16 exit criteria have evidence or explicit residuals","result":"passed","evidence":"The final closure review classifies every M16 exit criterion and retains live restart-during-APPLY and pre-started diagnostics capture as explicit residuals."},
+    {"criterion":"Canonical validation passes","result":"passed","evidence":"node scripts/validate-agent.mjs passed after the final recovery correction and documentation reconciliation."},
+    {"criterion":"M17 remains unstarted","result":"passed","evidence":"No M17 work unit was selected or changed; roadmap and final review retain M17 as unstarted."}
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Risk score: 28/100 — Yellow; AIQT severity: medium. Fixed control boundaries, deterministic coverage, and successful PI 2/PI 5 authorized updates keep risk below 50.",
+    "Residuals for PR/release review only: live app restart during active APPLY was not exercised, and Performance Diagnostics was not started before the real APPLY paths. No additional mutation is authorized or needed.",
+    "M17 remains unstarted; PR preparation is authorized, merge and release are not."
+  ]
+}

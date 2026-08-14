@@ -96,6 +96,10 @@ pub enum RemoteOperation {
     ShutdownDevice,
     RestartDocker,
     RestartTailscale,
+    MaintenanceCapability,
+    MaintenanceDpkgAudit,
+    MaintenanceMetadataRefresh,
+    MaintenanceSimulation,
 }
 
 pub const PROBE_COMMAND: &str = "printf 'PIHUB_OK'";
@@ -107,6 +111,35 @@ pub const RESTART_DEVICE_COMMAND: &str = "sudo -n systemctl reboot";
 pub const SHUTDOWN_DEVICE_COMMAND: &str = "sudo -n systemctl poweroff";
 pub const RESTART_DOCKER_COMMAND: &str = "sudo -n systemctl restart docker";
 pub const RESTART_TAILSCALE_COMMAND: &str = "sudo -n systemctl restart tailscaled";
+pub const MAINTENANCE_CAPABILITY_COMMAND: &str = "LC_ALL=C LANG=C; for x in apt-get dpkg systemd-run systemctl; do command -v \"$x\" >/dev/null 2>&1 && printf 'PIHUB_M16_%s=1\\n' \"$(printf %s \"$x\" | tr a-z- A-Z_)\" || printf 'PIHUB_M16_%s=0\\n' \"$(printf %s \"$x\" | tr a-z- A-Z_)\"; done";
+pub const MAINTENANCE_DPKG_AUDIT_COMMAND: &str = "LC_ALL=C LANG=C; sudo -n dpkg --audit";
+pub const MAINTENANCE_METADATA_REFRESH_COMMAND: &str =
+    "LC_ALL=C LANG=C; sudo -n apt-get --error-on=any update";
+pub const MAINTENANCE_SIMULATION_COMMAND: &str = r#"LC_ALL=C LANG=C; output=$(sudo -n apt-get -s upgrade) || exit $?; printf '%s\n' "$output" | awk '/^Inst / { print "PIHUB_UPDATE_PACKAGE=" $0 } /^The following packages have been kept back:$/ { kept=1; next } kept && /^The following packages / { kept=0 } kept && /^[0-9]+ upgraded,/ { kept=0 } kept && NF { for (i=1;i<=NF;i++) print "PIHUB_UPDATE_KEPT_BACK=" $i } /^[0-9]+ upgraded, [0-9]+ newly installed, [0-9]+ to remove and [0-9]+ not upgraded\.$/ { count=$0; split($0, a, " "); print "PIHUB_UPDATE_NEW=" a[3]; print "PIHUB_UPDATE_REMOVE=" a[6]; sub(/^.* and /, "", count); sub(/ not upgraded\.$/, "", count); print "PIHUB_UPDATE_KEPT_BACK_COUNT=" count }'; printf 'PIHUB_UPDATE_PACKAGES_DONE=1\n'"#;
+
+fn valid_m16_unit(unit: &str) -> bool {
+    unit.strip_prefix("pihub-update-")
+        .and_then(|rest| rest.strip_suffix(".service"))
+        .is_some_and(|id| {
+            id.len() == 32
+                && id
+                    .bytes()
+                    .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase())
+        })
+}
+
+pub fn maintenance_dispatch_command(unit: &str) -> Option<String> {
+    valid_m16_unit(unit).then(|| format!("sudo -n systemd-run --unit={} --service-type=exec --property=RemainAfterExit=yes --setenv=DEBIAN_FRONTEND=noninteractive --setenv=APT_LISTCHANGES_FRONTEND=none --setenv=NEEDRESTART_MODE=l --setenv=LC_ALL=C --setenv=LANG=C -- apt-get -y --no-remove -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold upgrade", unit.trim_end_matches(".service")))
+}
+pub fn maintenance_status_command(unit: &str) -> Option<String> {
+    valid_m16_unit(unit).then(|| format!("sudo -n systemctl show --property=LoadState --property=ActiveState --property=SubState --property=Result --property=ExecMainCode --property=ExecMainStatus --property=ExecMainStartTimestampMonotonic --property=ExecMainExitTimestampMonotonic -- {}", unit))
+}
+pub fn maintenance_journal_command(unit: &str) -> Option<String> {
+    valid_m16_unit(unit).then(|| format!("sudo -n journalctl -u {} -n 80 --no-pager", unit))
+}
+pub fn maintenance_cleanup_command(unit: &str) -> Option<String> {
+    valid_m16_unit(unit).then(|| format!("sudo -n systemctl reset-failed -- {}", unit))
+}
 
 /// Collects CPU usage (via a two-sample `/proc/stat` delta over a bounded
 /// interval, per spec section 12.2), memory (`/proc/meminfo`), disk usage
@@ -289,6 +322,12 @@ impl RemoteOperation {
             RemoteOperation::ShutdownDevice => Some(SHUTDOWN_DEVICE_COMMAND),
             RemoteOperation::RestartDocker => Some(RESTART_DOCKER_COMMAND),
             RemoteOperation::RestartTailscale => Some(RESTART_TAILSCALE_COMMAND),
+            RemoteOperation::MaintenanceCapability => Some(MAINTENANCE_CAPABILITY_COMMAND),
+            RemoteOperation::MaintenanceDpkgAudit => Some(MAINTENANCE_DPKG_AUDIT_COMMAND),
+            RemoteOperation::MaintenanceMetadataRefresh => {
+                Some(MAINTENANCE_METADATA_REFRESH_COMMAND)
+            }
+            RemoteOperation::MaintenanceSimulation => Some(MAINTENANCE_SIMULATION_COMMAND),
             RemoteOperation::SystemIdentity => None,
         }
     }
@@ -452,5 +491,42 @@ mod tests {
         ] {
             assert!(command.starts_with("sudo -n systemctl "));
         }
+    }
+
+    #[test]
+    fn m16_operations_are_fixed_bounded_and_do_not_add_a_package_kill_timeout() {
+        let unit = "pihub-update-0123456789abcdef0123456789abcdef.service";
+        let dispatch = maintenance_dispatch_command(unit).unwrap();
+        for required in [
+            "--service-type=exec",
+            "--property=RemainAfterExit=yes",
+            "DEBIAN_FRONTEND=noninteractive",
+            "APT_LISTCHANGES_FRONTEND=none",
+            "NEEDRESTART_MODE=l",
+            "LC_ALL=C",
+            "LANG=C",
+            "apt-get -y --no-remove",
+            "--force-confdef",
+            "--force-confold",
+        ] {
+            assert!(dispatch.contains(required));
+        }
+        for forbidden in ["RuntimeMaxSec", "--wait", "--pipe", "--scope", "--user"] {
+            assert!(!dispatch.contains(forbidden));
+        }
+        let status = maintenance_status_command(unit).unwrap();
+        for required in [
+            "LoadState",
+            "ActiveState",
+            "SubState",
+            "Result",
+            "ExecMainCode",
+            "ExecMainStatus",
+            "ExecMainStartTimestampMonotonic",
+            "ExecMainExitTimestampMonotonic",
+        ] {
+            assert!(status.contains(required));
+        }
+        assert!(maintenance_dispatch_command("bad.service").is_none());
     }
 }

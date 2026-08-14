@@ -23,7 +23,11 @@ export default defineConfig(async () => ({
   server: {
     port: 1420,
     strictPort: true,
-    host: host || false,
+    // WebView2 resolved localhost to IPv4 while Vite's default listener was
+    // IPv6-only on Windows, which made the development desktop shell fall
+    // back despite a healthy frontend. Bind the local Tauri dev server to
+    // the same loopback family as tauri.conf.json's localhost URL.
+    host: host || "127.0.0.1",
     hmr: host
       ? {
           protocol: "ws",

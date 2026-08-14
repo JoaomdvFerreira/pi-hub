@@ -67,6 +67,10 @@ pub fn run() {
             commands::monitoring::get_device_activity,
             commands::monitoring::get_historical_series,
             commands::updates::get_update_result,
+            commands::updates::get_maintenance_operation,
+            commands::maintenance::prepare_device_update,
+            commands::maintenance::apply_prepared_device_update,
+            commands::maintenance::reconcile_device_update,
             commands::updates::check_for_updates,
             commands::monitoring::start_performance_benchmark,
             commands::monitoring::stop_performance_benchmark,
@@ -86,7 +90,7 @@ pub fn run() {
         .manage(monitoring::concurrency::RefreshCoordinator::new(
             monitoring::scheduler::MAX_CONCURRENT_REFRESHES,
         ))
-        .manage(monitoring::update_concurrency::UpdateCheckCoordinator::default())
+        .manage(monitoring::maintenance_coordinator::DeviceMaintenanceCoordinator::default())
         .manage(platform::pty::PtySessionManager::default())
         .manage(performance_diagnostics::PerformanceDiagnostics::default())
         .setup(|app| {

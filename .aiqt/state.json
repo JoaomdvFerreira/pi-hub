@@ -249,6 +249,20 @@
           "WU092",
           "WU093"
         ]
+      },
+      {
+        "id": "M020",
+        "title": "M16 — Controlled Device Software Updates",
+        "objective": "Add one explicit, controlled and recoverable APT standard-upgrade action for supported devices without broadening Pi-Hub into a generic remote-command or package-management surface.",
+        "status": "done",
+        "workUnitIds": [
+          "WU094",
+          "WU095",
+          "WU096",
+          "WU097",
+          "WU098",
+          "WU099"
+        ]
       }
     ],
     "workUnits": [
@@ -3462,6 +3476,216 @@
         ],
         "createdAt": "2026-08-12T13:31:32.521Z",
         "updatedAt": "2026-08-12T15:30:21.062Z"
+      },
+      {
+        "id": "WU094",
+        "milestoneId": "M020",
+        "title": "WU16-01 Execution Contract, Privilege & Recovery Architecture",
+        "objective": "Freeze the repository-specific M16 mutation, coordination, persistence, recovery, diagnostic and validation contracts without implementing package mutation.",
+        "scope": [
+          "Execution capability and fixed argv/environment",
+          "Shared per-device maintenance coordinator migration decision",
+          "Plan fingerprint, transient-unit, observation and recovery contracts",
+          "Activity/Alerts/diagnostics and deterministic/operator validation plan"
+        ],
+        "outOfScope": [
+          "Package mutation implementation",
+          "Live apt-get update or upgrade",
+          "M17",
+          "PR creation"
+        ],
+        "acceptanceCriteria": [
+          "The two reviewed M16 contracts are canonical and repository-specific decisions are frozen",
+          "M15 history remains complete and M16 WU mapping/dependencies are recorded",
+          "No mutating APT command is implemented or executed"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs/milestones/m16-controlled-device-software-updates.md",
+          "docs/design/m16-apt-execution-safety-contract.md",
+          "docs/roadmap/post-mvp-product-roadmap.md",
+          ".aiqt"
+        ],
+        "validationCommands": [
+          "aiqt status",
+          "git diff --check",
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-13T10:49:16.330Z"
+      },
+      {
+        "id": "WU095",
+        "milestoneId": "M020",
+        "title": "WU16-02 Maintenance State, Coordination & Persistence",
+        "objective": "Implement the typed operation model, authoritative conflict coordination, persistence/recovery state, Tauri/backend surfaces, expected-disruption integration, Activity skeleton, and deterministic transition/conflict tests.",
+        "scope": [
+          "Shared coordinator",
+          "Persisted operation state",
+          "Expected-disruption and Activity integration"
+        ],
+        "outOfScope": [
+          "Real package transaction"
+        ],
+        "acceptanceCriteria": [
+          "Same-device conflicts are rejected by one authority",
+          "Nonterminal operation state survives restart",
+          "No package mutation is dispatched"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-074"
+        ],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-13T11:04:31.422Z"
+      },
+      {
+        "id": "WU096",
+        "milestoneId": "M020",
+        "title": "WU16-03 Detached APT Execution & Verification",
+        "objective": "Implement fixed preflight, metadata refresh, plan revalidation, detached systemd transaction, bounded observation, verification and deterministic recovery tests.",
+        "scope": [
+          "Typed fixed operations",
+          "systemd-run dispatch and systemctl observation",
+          "Post-update verification and bounded diagnostics"
+        ],
+        "outOfScope": [
+          "Live device mutation without authorization"
+        ],
+        "acceptanceCriteria": [
+          "No changed plan is installed",
+          "No transport loss kills an active transaction",
+          "Success requires systemd, dpkg and M15 verification evidence"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-075"
+        ],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-13T11:38:56.506Z"
+      },
+      {
+        "id": "WU097",
+        "milestoneId": "M020",
+        "title": "WU16-04 System Updates Mutation UX",
+        "objective": "Add the constrained update confirmation, plan-change, progress, conflict, failure and restart-required UX with focused frontend coverage.",
+        "scope": [
+          "Update action and confirmation",
+          "Truthful operation stages",
+          "Conflict and recovery presentation"
+        ],
+        "outOfScope": [
+          "Raw APT output",
+          "Fake percentages"
+        ],
+        "acceptanceCriteria": [
+          "UI never exposes arbitrary command input",
+          "Changed plans require a new confirmation",
+          "Conflicting actions are disabled and backend remains authoritative"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src"
+        ],
+        "validationCommands": [
+          "npm test",
+          "npm run build"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-076"
+        ],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-13T11:53:32.433Z"
+      },
+      {
+        "id": "WU098",
+        "milestoneId": "M020",
+        "title": "WU16-05 Failure, Recovery, Performance & Operator Validation",
+        "objective": "Exercise deterministic failure/recovery/performance scenarios and record authorized operator validation or its explicit residual.",
+        "scope": [
+          "Deterministic harness",
+          "Performance Diagnostics evidence",
+          "Read-only and explicitly-authorized operator checks"
+        ],
+        "outOfScope": [
+          "Unapproved package mutation"
+        ],
+        "acceptanceCriteria": [
+          "Failure/recovery matrix is covered deterministically",
+          "Zero idle M16 polling is proven",
+          "Live mutation is performed only with explicit authorization or documented as residual"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "src-tauri/src",
+          "docs/reviews"
+        ],
+        "validationCommands": [
+          "cargo test --manifest-path src-tauri/Cargo.toml",
+          "npm test"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-077",
+          "DEP-078"
+        ],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-14T08:18:28.826Z"
+      },
+      {
+        "id": "WU099",
+        "milestoneId": "M020",
+        "title": "WU16-06 Regression Gates & Milestone Closure",
+        "objective": "Review M16 evidence and risk, reconcile documentation and AIQT, run canonical validation, and prepare but do not merge a PR.",
+        "scope": [
+          "Regression review",
+          "Canonical validation",
+          "AIQT/documentation reconciliation",
+          "PR preparation"
+        ],
+        "outOfScope": [
+          "M17",
+          "Merge or release"
+        ],
+        "acceptanceCriteria": [
+          "All M16 exit criteria have evidence or explicit residuals",
+          "Canonical validation passes",
+          "M17 remains unstarted"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [
+          "docs",
+          ".aiqt",
+          ".github"
+        ],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs",
+          "git diff --check",
+          "aiqt status"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-079"
+        ],
+        "createdAt": "2026-08-13T10:46:18.778Z",
+        "updatedAt": "2026-08-14T09:39:47.465Z"
       }
     ],
     "dependencies": [
@@ -3975,6 +4199,48 @@
         "toId": "WU093",
         "type": "blocks",
         "reason": "Closure requires performance and real-device evidence."
+      },
+      {
+        "id": "DEP-074",
+        "fromId": "WU094",
+        "toId": "WU095",
+        "type": "blocks",
+        "reason": "Implementation follows the frozen mutation and coordination contract."
+      },
+      {
+        "id": "DEP-075",
+        "fromId": "WU095",
+        "toId": "WU096",
+        "type": "blocks",
+        "reason": "Dispatch and recovery use the typed state and shared coordinator."
+      },
+      {
+        "id": "DEP-076",
+        "fromId": "WU095",
+        "toId": "WU097",
+        "type": "blocks",
+        "reason": "The UI consumes typed state and conflict results."
+      },
+      {
+        "id": "DEP-077",
+        "fromId": "WU096",
+        "toId": "WU098",
+        "type": "blocks",
+        "reason": "Validation exercises the implemented execution and recovery path."
+      },
+      {
+        "id": "DEP-078",
+        "fromId": "WU097",
+        "toId": "WU098",
+        "type": "blocks",
+        "reason": "Validation includes the mutation UX."
+      },
+      {
+        "id": "DEP-079",
+        "fromId": "WU098",
+        "toId": "WU099",
+        "type": "blocks",
+        "reason": "Closure follows deterministic and operator-validation evidence."
       }
     ]
   },
@@ -8585,17 +8851,427 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-12T15:30:21.062Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-12T15:30:21.062Z"
+    },
+    {
+      "id": "C083",
+      "workUnitId": "WU094",
+      "packetId": "PKT-084",
+      "summary": "Integrated the reviewed M16 contracts and froze the repository-specific execution, coordination, recovery, diagnostics, and validation architecture without implementing or executing package mutation.",
+      "completed": [
+        "Placed the reviewed M16 milestone and durable APT safety contract at canonical documentation paths.",
+        "Recorded M020/WU094-WU099 with serialized dependencies; selected and completed WU094 only.",
+        "Mapped M10 and M15's separate same-device claims to one future App-managed DeviceMaintenanceCoordinator, preventing nested lock acquisition.",
+        "Frozen fixed metadata, systemd-run, systemctl, persistence, bounds, diagnostics, Activity/alert, fingerprint, recovery, deterministic-harness, and staged operator-validation decisions.",
+        "Rejected a disk-space advisory because current evidence is not transaction-specific or reliable enough."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/design/m16-apt-execution-safety-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/inputs/m16-work-units.json",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "aiqt plan --extend --from-file .aiqt/inputs/m16-work-units.json --preview",
+          "result": "passed",
+          "summary": "Validated M16 graph append without changing workflow state."
+        },
+        {
+          "command": "aiqt status",
+          "result": "passed",
+          "summary": "M020/WU094 was selected; M15 remains completed history."
+        },
+        {
+          "command": "Markdown relative-link and UTF-8 validation for the three changed documents",
+          "result": "passed",
+          "summary": "All local links resolve and all documents are valid UTF-8."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "The two reviewed M16 contracts are canonical and repository-specific decisions are frozen",
+          "result": "passed",
+          "evidence": "Canonical milestone and safety-contract documents contain WU16-01 mapping section 17."
+        },
+        {
+          "criterion": "M15 history remains complete and M16 WU mapping/dependencies are recorded",
+          "result": "passed",
+          "evidence": "AIQT appended M020/WU094-WU099; roadmap marks only WU16-01 in progress."
+        },
+        {
+          "criterion": "No mutating APT command is implemented or executed",
+          "result": "passed",
+          "evidence": "Diff is documentation and AIQT planning only; validation was read-only."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T10:49:16.330Z"
+    },
+    {
+      "id": "C084",
+      "workUnitId": "WU095",
+      "packetId": "PKT-085",
+      "summary": "Replaced separate M10/M15 device claims with one App-managed maintenance coordinator and added M16 typed latest-operation persistence, recovery semantics, expected-disruption structure, and deterministic regression coverage without a package-execution path.",
+      "completed": [
+        "Migrated M10 administration and M15 update checks to DeviceMaintenanceCoordinator; M16 UpdateApply/recovery claim kinds are reserved in the same all-to-all per-device conflict matrix.",
+        "Added a bounded, atomic, latest-per-device MaintenanceOperation record to state.json with generated unit identity, plan fingerprint field, dispatch distinction, lifecycle/failure states, and backward-compatible defaults.",
+        "Added read-only typed get_maintenance_operation Tauri surface; no command creates or dispatches a maintenance operation yet.",
+        "Extended expected-disruption typing for M16 UpdateDevice with operation-scoped cleanup and expiry; Activity event construction is structural only and is not appended before execution exists.",
+        "Added deterministic coordination, lifecycle persistence/reload, legacy-state, raw-output exclusion, and bounded expected-disruption coverage."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/monitoring/maintenance_coordinator.rs",
+        "src-tauri/src/monitoring/update_concurrency.rs",
+        "src-tauri/src/commands/administration.rs",
+        "src-tauri/src/commands/updates.rs",
+        "src-tauri/src/domain/maintenance.rs",
+        "src-tauri/src/domain/administration.rs",
+        "src-tauri/src/storage/snapshot_repository.rs",
+        "src-tauri/src/storage/administration_repository.rs",
+        "src-tauri/src/lib.rs",
+        "src/types/administration.ts",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "245 passed, 1 ignored; includes M10/M15 regressions and all new deterministic state/coordinator tests."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 35 tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and Vite production build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Same-device conflicts are rejected by one authority",
+          "result": "passed",
+          "evidence": "DeviceMaintenanceCoordinator holds M10 administration, M15 checking, and reserved M16 apply/recovery kinds in one RAII all-to-all device claim map."
+        },
+        {
+          "criterion": "Nonterminal operation state survives restart",
+          "result": "passed",
+          "evidence": "Atomic state.json persistence reloads every frozen lifecycle state and distinguishes not-attempted, accepted, and uncertain dispatch."
+        },
+        {
+          "criterion": "No package mutation is dispatched",
+          "result": "passed",
+          "evidence": "No apt-get update/upgrade or systemd-run RemoteOperation, command, dispatch path, or live-device validation was added or run."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T11:04:31.422Z"
+    },
+    {
+      "id": "C085",
+      "workUnitId": "WU096",
+      "packetId": "PKT-086",
+      "summary": "Implemented the M16 two-phase controlled-update execution path with fixed APT/systemd commands, durable pre-dispatch identity, bounded reconciliation, verification, and deterministic fake-executor coverage; no configured device was changed.",
+      "completed": [
+        "Amended the canonical contract with the explicit PREPARE then consent-gated APPLY boundary; a plan fingerprint is an immediate pre-dispatch consent gate, not an atomic lock.",
+        "Added typed capability, dpkg audit, metadata-refresh, simulation, detached systemd-run, one-shot systemctl, journal-tail, and cleanup operations with fixed arguments, environment, output limits, and diagnostics labels.",
+        "Implemented fresh plan persistence and SHA-256 plan comparison; changed plans persist the refreshed M15 result and terminate as PlanChanged before dispatch.",
+        "Persisted Dispatching before dispatch, never retries uncertain dispatch, reconciles only the recorded transient unit, and leaves an unexpired active unit running without a kill/timeout path.",
+        "Added terminal dpkg and internal M15 verification, conservative reboot state, bounded/discarded journal diagnostics, terminal Activity, and operation-scoped expected-disruption cleanup.",
+        "Added deterministic fake-executor cases for phases, unsafe preflight, busy refresh, changed plan, systemctl classification, uncertain dispatch, recovery expiry, no redispatch, and no raw output persistence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/design/m16-apt-execution-safety-contract.md",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "src-tauri/src/commands/maintenance.rs",
+        "src-tauri/src/commands/mod.rs",
+        "src-tauri/src/commands/updates.rs",
+        "src-tauri/src/domain/maintenance.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/lib.rs",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "rustfmt --edition 2021 --check <touched Rust files>",
+          "result": "passed",
+          "summary": "All WU16-03 Rust files are formatted; repository-wide format check reports pre-existing unrelated formatting differences."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "254 passed, 1 ignored; includes M10/M15 regression and M16 deterministic execution tests."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 35 tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and Vite production build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "No changed plan is installed",
+          "result": "passed",
+          "evidence": "APPLY resimulates under the shared claim; a SHA-256 mismatch persists PlanChanged and returns before systemd-run."
+        },
+        {
+          "criterion": "No transport loss kills an active transaction",
+          "result": "passed",
+          "evidence": "Dispatch uncertainty persists the generated unit identity, performs only one bounded status observation, and has no remote kill/RuntimeMax path."
+        },
+        {
+          "criterion": "Success requires systemd, dpkg and M15 verification evidence",
+          "result": "passed",
+          "evidence": "Only active/exited with successful systemd result and main exit status enters verification; dpkg audit and internal M15 refresh must then confirm reviewed packages are gone."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T11:38:56.506Z"
+    },
+    {
+      "id": "C086",
+      "workUnitId": "WU097",
+      "packetId": "PKT-087",
+      "summary": "Exposed the existing M16 PREPARE, final confirmation, APPLY, and persisted reconciliation flow through System Updates without broadening backend execution authority or executing a live device action.",
+      "completed": [
+        "Added typed frontend bindings for the closed M16 prepare, apply, and one-shot reconciliation commands.",
+        "Added safe mutation eligibility, truthful preparation/starting/installing/verifying phases, bounded package review, and an explicit final destructive confirmation.",
+        "Treats PlanChanged as a refreshed review with no continue-anyway path and no dispatch before a renewed preparation/confirmation.",
+        "Resumes the same persisted nonterminal operation, polls only while the System Updates card is mounted, schedules each five-second observation after the previous request completes, and stops at the persisted deadline.",
+        "Added concise terminal, uncertain, and typed failure guidance without exposing fingerprints, transient unit IDs, raw diagnostics, or backend lifecycle labels.",
+        "Wired actual M16 dispatched-operation state into M10 action disabling while retaining backend coordinator authority."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src/lib/tauri/monitoring.ts",
+        "src/features/devices/SoftwareUpdates.tsx",
+        "src/features/devices/SoftwareUpdates.test.tsx",
+        "src/features/devices/DeviceAdministration.tsx",
+        "src/features/devices/DeviceAdministration.test.tsx",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/devices/DeviceDetailScreen.test.tsx",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/features/devices/SoftwareUpdates.test.tsx src/features/devices/DeviceAdministration.test.tsx src/features/devices/DeviceDetailScreen.test.tsx",
+          "result": "passed",
+          "summary": "3 files, 17 focused System Updates/M10 conflict tests passed."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 43 tests passed."
+        },
+        {
+          "command": "npm run build",
+          "result": "passed",
+          "summary": "TypeScript and Vite production build passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "UI never exposes arbitrary command input",
+          "result": "passed",
+          "evidence": "The card invokes only typed prepare_device_update, apply_prepared_device_update, reconcile_device_update, and existing M15 read commands."
+        },
+        {
+          "criterion": "Changed plans require a new confirmation",
+          "result": "passed",
+          "evidence": "PlanChanged replaces the review with persisted refreshed evidence and only offers Prepare updated plan; APPLY is not retried automatically."
+        },
+        {
+          "criterion": "Conflicting actions are disabled and backend remains authoritative",
+          "result": "passed",
+          "evidence": "A persisted dispatched nonterminal M16 operation disables System Updates actions and all M10 actions; no frontend lock is held during confirmation and backend coordinator enforcement remains unchanged."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-13T11:53:32.433Z"
+    },
+    {
+      "id": "C087",
+      "workUnitId": "WU098",
+      "packetId": "PKT-088",
+      "summary": "Completed deterministic recovery/performance validation and explicitly authorized real-device standard-upgrade validation on PI 2 and PI 5, recording correction history and non-destructive residuals.",
+      "completed": [
+        "Recorded PI 2 PREPARE/Cancel and one successful 34-package APPLY with exactly one dispatch, clean audit, zero pending/deferred packages, no reboot, healthy services/system, terminal state, Activity, and expected-disruption cleanup.",
+        "Recorded PI 5 successful 162-package APPLY, healthy persisted terminal state, and five conservative apt-get upgrade deferred packages presented as manual-review-only.",
+        "Corrected and regression-covered pre-dispatch transport classification, completed-unit recovery verification, stale verification/reconciliation behavior, systemd exit compatibility, check-request feedback, deferred-only presentation, and confirmation package-review usability.",
+        "Ran deterministic Rust/frontend suites and canonical repository validation."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/reviews/m16-wu098-operator-validation.md",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        "src/features/devices/SoftwareUpdates.tsx",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "258 passed, 1 ignored; includes deterministic M16 execution, recovery, persistence, coordination, expected-disruption, and diagnostics coverage."
+        },
+        {
+          "command": "npm test",
+          "result": "passed",
+          "summary": "12 files, 48 tests passed; includes System Updates confirmation, expiry/manual status, check-error, and deferred-only presentation coverage."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/test/build, frontend test/build/lint, AIQT status, and diff check passed. Lint reports four existing Fast Refresh warnings and no errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Failure/recovery matrix is covered deterministically",
+          "result": "passed",
+          "evidence": "Fake-executor and frontend suites cover pre-dispatch/non-dispatch distinction, uncertain known-unit recovery without redispatch, terminal verification, expiry/manual status, systemd exit forms, persistence, coordination, bounded cleanup, and the operator-discovered UI defects."
+        },
+        {
+          "criterion": "Zero idle M16 polling is proven",
+          "result": "passed",
+          "evidence": "System Updates reconciliation schedules only for a mounted dispatched nonterminal operation and stops at its persisted deadline; frontend regression covers expiry while preserving manual Check status."
+        },
+        {
+          "criterion": "Live mutation is performed only with explicit authorization or documented as residual",
+          "result": "passed",
+          "evidence": "The record contains explicitly authorized one-time APPLY results for PI 2 and PI 5. App-restart-during-active-APPLY and pre-started diagnostics are disclosed residuals; no further mutation was used to manufacture evidence."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T08:18:28.826Z"
+    },
+    {
+      "id": "C088",
+      "workUnitId": "WU099",
+      "packetId": "PKT-089",
+      "summary": "Closed M16 after adversarial safety/lifecycle/UX review, canonical validation, reconciled documentation, and a deterministic correction for recovered known failed-unit cleanup.",
+      "completed": [
+        "Reviewed the full M16 command, coordinator, dispatch, persistence, recovery, polling, UI, Activity, disruption, diagnostics, and output-bound paths against the canonical contracts.",
+        "Corrected recovered known failed-unit reconciliation so it reaches persisted terminal failure, clears expected disruption, and appends failure Activity instead of remaining verifying.",
+        "Recorded PI 2 and PI 5 authorized update evidence, correction history, final exit criteria, risk, and explicit non-destructive residuals in the M16 final closure review.",
+        "Ran canonical repository validation successfully."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/maintenance.rs",
+        "docs/reviews/m16-final-regression-closure.md",
+        "docs/milestones/m16-controlled-device-software-updates.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml recovered_known_failed_unit_is_terminal_and_cleans_up_once",
+          "result": "passed",
+          "summary": "Focused new recovery regression passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/test/build, frontend test/build/lint, AIQT status, and diff check passed; lint has four existing Fast Refresh warnings and no errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "All M16 exit criteria have evidence or explicit residuals",
+          "result": "passed",
+          "evidence": "The final closure review classifies every M16 exit criterion and retains live restart-during-APPLY and pre-started diagnostics capture as explicit residuals."
+        },
+        {
+          "criterion": "Canonical validation passes",
+          "result": "passed",
+          "evidence": "node scripts/validate-agent.mjs passed after the final recovery correction and documentation reconciliation."
+        },
+        {
+          "criterion": "M17 remains unstarted",
+          "result": "passed",
+          "evidence": "No M17 work unit was selected or changed; roadmap and final review retain M17 as unstarted."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T09:39:47.465Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-083",
-    "workUnitId": "WU093",
-    "milestoneId": "M019",
-    "createdAt": "2026-08-12T15:27:16.362Z",
+    "id": "PKT-089",
+    "workUnitId": "WU099",
+    "milestoneId": "M020",
+    "createdAt": "2026-08-14T09:33:00.447Z",
     "format": "markdown",
-    "contentHash": "sha256:de8d7e183a27c7e75248d60f54d223c07e7e2617a6b223ba7195c4fe07d6317c",
+    "contentHash": "sha256:84eb310fbde953f886615edd6652fa09a3caf45f7bcd58e932ec21aaaf969f4e",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -8614,7 +9290,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-12T15:30:21.062Z",
+  "lastUpdatedAt": "2026-08-14T09:39:47.465Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -11073,6 +11749,186 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-12T15:30:21.062Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C083",
+      "current": {
+        "observationId": "sha256:cbaae54f1a28cb003c25c767b6fcb35ae792311683ae41ec870347501a76b55d",
+        "checkpointId": "C083",
+        "workUnitId": "WU094",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-13T10:49:16.330Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-13T10:49:16.330Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:cbaae54f1a28cb003c25c767b6fcb35ae792311683ae41ec870347501a76b55d",
+          "checkpointId": "C083",
+          "workUnitId": "WU094",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-13T10:49:16.330Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-13T10:49:16.330Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C084",
+      "current": {
+        "observationId": "sha256:4e03c40ed4fedf5f60704c8dbb1ccc3bdaf06603f38762c1c9476e755d584551",
+        "checkpointId": "C084",
+        "workUnitId": "WU095",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-13T11:04:31.422Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-13T11:04:31.422Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:4e03c40ed4fedf5f60704c8dbb1ccc3bdaf06603f38762c1c9476e755d584551",
+          "checkpointId": "C084",
+          "workUnitId": "WU095",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-13T11:04:31.422Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-13T11:04:31.422Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C085",
+      "current": {
+        "observationId": "sha256:14151c9b53d5163e553d038c640d4476d99a2d2372942e04828977fce36530e9",
+        "checkpointId": "C085",
+        "workUnitId": "WU096",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-13T11:38:56.506Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-13T11:38:56.506Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:14151c9b53d5163e553d038c640d4476d99a2d2372942e04828977fce36530e9",
+          "checkpointId": "C085",
+          "workUnitId": "WU096",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-13T11:38:56.506Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-13T11:38:56.506Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C086",
+      "current": {
+        "observationId": "sha256:98f9af830d2d12bb3b91bfa135edce731e93a35053a72006de52f8851efa8c28",
+        "checkpointId": "C086",
+        "workUnitId": "WU097",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-13T11:53:32.433Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-13T11:53:32.433Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:98f9af830d2d12bb3b91bfa135edce731e93a35053a72006de52f8851efa8c28",
+          "checkpointId": "C086",
+          "workUnitId": "WU097",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-13T11:53:32.433Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-13T11:53:32.433Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C087",
+      "current": {
+        "observationId": "sha256:41f86354c067e469ae0df577739175629039805e3f0c55f336542b96002c8f63",
+        "checkpointId": "C087",
+        "workUnitId": "WU098",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T08:18:28.826Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T08:18:28.826Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:41f86354c067e469ae0df577739175629039805e3f0c55f336542b96002c8f63",
+          "checkpointId": "C087",
+          "workUnitId": "WU098",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T08:18:28.826Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T08:18:28.826Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C088",
+      "current": {
+        "observationId": "sha256:210983ced9c98570555bd68576e92f3ab2ace776aff135a987636260b197fcc9",
+        "checkpointId": "C088",
+        "workUnitId": "WU099",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T09:39:47.465Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T09:39:47.465Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:210983ced9c98570555bd68576e92f3ab2ace776aff135a987636260b197fcc9",
+          "checkpointId": "C088",
+          "workUnitId": "WU099",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T09:39:47.465Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T09:39:47.465Z"
         }
       ]
     }

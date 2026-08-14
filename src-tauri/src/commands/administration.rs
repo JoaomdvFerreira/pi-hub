@@ -1,8 +1,4 @@
-use std::{
-    collections::HashSet,
-    sync::{Mutex, OnceLock},
-    time::Duration,
-};
+use std::time::Duration;
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::{
@@ -27,19 +23,6 @@ const DISPATCH_TIMEOUT: Duration = Duration::from_secs(15);
 const PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 const VERIFY_ATTEMPTS: usize = 18;
 const VERIFY_INTERVAL: Duration = Duration::from_secs(2);
-static ACTIVE_OPERATIONS: OnceLock<Mutex<HashSet<String>>> = OnceLock::new();
-struct OperationGuard {
-    device_id: String,
-}
-impl Drop for OperationGuard {
-    fn drop(&mut self) {
-        if let Some(active) = ACTIVE_OPERATIONS.get() {
-            if let Ok(mut active) = active.lock() {
-                active.remove(&self.device_id);
-            }
-        }
-    }
-}
 
 fn config_dir(app: &AppHandle) -> Result<std::path::PathBuf, ApplicationError> {
     app.path().app_config_dir().map_err(|err| ApplicationError {
@@ -159,27 +142,23 @@ pub async fn perform_administration_operation(
             remediation: None,
             retryable: false,
         })?;
-    let active = ACTIVE_OPERATIONS.get_or_init(|| Mutex::new(HashSet::new()));
-    {
-        let mut active = active.lock().map_err(|_| ApplicationError {
+    let coordinator =
+        app.state::<crate::monitoring::maintenance_coordinator::DeviceMaintenanceCoordinator>();
+    let _claim = coordinator
+        .try_claim(
+            &device_id,
+            crate::monitoring::maintenance_coordinator::MaintenanceOperationKind::Administration(
+                operation_type,
+            ),
+        )
+        .ok_or_else(|| ApplicationError {
+            // Preserve M10's established frontend contract even though the
+            // conflicting owner may now be M15 or M16.
             code: "ActionConflict".into(),
-            message: "administration operation state is unavailable".into(),
-            remediation: Some("Try again.".into()),
+            message: "another maintenance operation is already in progress for this device".into(),
+            remediation: Some("Wait for it to finish before trying another action.".into()),
             retryable: true,
         })?;
-        if !active.insert(device_id.clone()) {
-            return Err(ApplicationError {
-                code: "ActionConflict".into(),
-                message: "another administration operation is already in progress for this device"
-                    .into(),
-                remediation: Some("Wait for it to finish before trying another action.".into()),
-                retryable: true,
-            });
-        }
-    }
-    let _guard = OperationGuard {
-        device_id: device_id.clone(),
-    };
     let target = SshTarget {
         host: device.host.clone(),
         port: device.ssh_port,

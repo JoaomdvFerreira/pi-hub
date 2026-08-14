@@ -4,6 +4,7 @@ use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
 
+use crate::domain::maintenance::MaintenanceOperation;
 use crate::domain::snapshot::DeviceSnapshot;
 use crate::domain::update_intelligence::UpdateCheckResult;
 use crate::storage::atomic::write_atomic;
@@ -36,6 +37,14 @@ pub trait SnapshotRepository: Send + Sync {
     fn mark_notified(&self, dedup_key: &str) -> Result<(), StorageError>;
     fn get_update_result(&self, device_id: &str) -> Option<UpdateCheckResult>;
     fn upsert_update_result(&self, result: &UpdateCheckResult) -> Result<(), StorageError>;
+    fn get_maintenance_operation(&self, device_id: &str) -> Option<MaintenanceOperation>;
+    #[allow(dead_code)]
+    fn load_maintenance_operations(&self) -> HashMap<String, MaintenanceOperation>;
+    #[allow(dead_code)]
+    fn upsert_maintenance_operation(
+        &self,
+        operation: &MaintenanceOperation,
+    ) -> Result<(), StorageError>;
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -46,7 +55,12 @@ struct StateFile {
     snapshots: HashMap<String, DeviceSnapshot>,
     #[serde(default)]
     notified_transitions: HashSet<String>,
-    #[serde(default)] update_results: HashMap<String, UpdateCheckResult>,
+    #[serde(default)]
+    update_results: HashMap<String, UpdateCheckResult>,
+    /// M16 adds only the most recent operation per device. Older state.json
+    /// files omit this field and deserialize to an empty map.
+    #[serde(default)]
+    maintenance_operations: HashMap<String, MaintenanceOperation>,
 }
 
 pub struct JsonSnapshotRepository {
@@ -124,8 +138,34 @@ impl SnapshotRepository for JsonSnapshotRepository {
         state.notified_transitions.insert(dedup_key.to_string());
         self.save_state(&state)
     }
-    fn get_update_result(&self, device_id: &str) -> Option<UpdateCheckResult> { self.load_state().update_results.remove(device_id) }
-    fn upsert_update_result(&self, result: &UpdateCheckResult) -> Result<(), StorageError> { let mut state=self.load_state(); state.schema_version=STATE_SCHEMA_VERSION; state.update_results.insert(result.device_id.clone(), result.clone()); self.save_state(&state) }
+    fn get_update_result(&self, device_id: &str) -> Option<UpdateCheckResult> {
+        self.load_state().update_results.remove(device_id)
+    }
+    fn upsert_update_result(&self, result: &UpdateCheckResult) -> Result<(), StorageError> {
+        let mut state = self.load_state();
+        state.schema_version = STATE_SCHEMA_VERSION;
+        state
+            .update_results
+            .insert(result.device_id.clone(), result.clone());
+        self.save_state(&state)
+    }
+    fn get_maintenance_operation(&self, device_id: &str) -> Option<MaintenanceOperation> {
+        self.load_state().maintenance_operations.remove(device_id)
+    }
+    fn load_maintenance_operations(&self) -> HashMap<String, MaintenanceOperation> {
+        self.load_state().maintenance_operations
+    }
+    fn upsert_maintenance_operation(
+        &self,
+        operation: &MaintenanceOperation,
+    ) -> Result<(), StorageError> {
+        let mut state = self.load_state();
+        state.schema_version = STATE_SCHEMA_VERSION;
+        state
+            .maintenance_operations
+            .insert(operation.device_id.clone(), operation.clone());
+        self.save_state(&state)
+    }
 }
 
 #[cfg(test)]
@@ -250,5 +290,105 @@ mod tests {
         // simulates the app restarting.
         let repo_after_restart = JsonSnapshotRepository::new(dir.path());
         assert!(repo_after_restart.has_notified("pi5|pi5|online|offline"));
+    }
+
+    #[test]
+    fn m16_latest_operations_round_trip_all_recovery_relevant_lifecycle_states() {
+        use crate::domain::maintenance::{
+            MaintenanceDispatchState, MaintenanceOperation, MaintenanceOperationState,
+        };
+        let dir = tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        let states = [
+            MaintenanceOperationState::Requested,
+            MaintenanceOperationState::Preflight,
+            MaintenanceOperationState::RefreshingMetadata,
+            MaintenanceOperationState::VerifyingPlan,
+            MaintenanceOperationState::PreDispatchFailed,
+            MaintenanceOperationState::Dispatching,
+            MaintenanceOperationState::Installing,
+            MaintenanceOperationState::Verifying,
+            MaintenanceOperationState::StillRunning,
+            MaintenanceOperationState::OutcomeUncertain,
+            MaintenanceOperationState::PlanChanged,
+            MaintenanceOperationState::Completed,
+            MaintenanceOperationState::CompletedRebootRequired,
+            MaintenanceOperationState::PackageManagerBusy,
+            MaintenanceOperationState::Failed,
+        ];
+        for (index, state) in states.into_iter().enumerate() {
+            let mut operation = MaintenanceOperation::requested(format!("pi{index}"));
+            operation.state = state;
+            operation.dispatch_state = match state {
+                MaintenanceOperationState::Dispatching => MaintenanceDispatchState::Uncertain,
+                MaintenanceOperationState::PreDispatchFailed => {
+                    MaintenanceDispatchState::NotAttempted
+                }
+                _ => MaintenanceDispatchState::Accepted,
+            };
+            repo.upsert_maintenance_operation(&operation).unwrap();
+        }
+        let after_restart = JsonSnapshotRepository::new(dir.path());
+        assert_eq!(
+            after_restart.load_maintenance_operations().len(),
+            states.len()
+        );
+        assert_eq!(
+            after_restart
+                .get_maintenance_operation("pi5")
+                .unwrap()
+                .dispatch_state,
+            MaintenanceDispatchState::Uncertain
+        );
+        assert!(after_restart
+            .get_maintenance_operation("pi7")
+            .unwrap()
+            .requires_recovery());
+        assert!(after_restart
+            .get_maintenance_operation("pi4")
+            .unwrap()
+            .requires_fresh_confirmation_after_restart());
+        assert!(!after_restart
+            .get_maintenance_operation("pi10")
+            .unwrap()
+            .requires_recovery());
+    }
+
+    #[test]
+    fn legacy_pre_m16_state_loads_without_losing_existing_data() {
+        let dir = tempdir().unwrap();
+        fs::write(
+            dir.path().join("state.json"),
+            br#"{"schemaVersion":1,"snapshots":{},"notifiedTransitions":["a"],"updateResults":{}}"#,
+        )
+        .unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        assert!(repo.load_maintenance_operations().is_empty());
+        assert!(repo.has_notified("a"));
+    }
+
+    #[test]
+    fn maintenance_state_is_bounded_and_never_serializes_raw_remote_output() {
+        use crate::domain::maintenance::MaintenanceOperation;
+        let dir = tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        let operation = MaintenanceOperation::requested("pi5".into());
+        repo.upsert_maintenance_operation(&operation).unwrap();
+        let serialized = fs::read_to_string(dir.path().join("state.json")).unwrap();
+        assert!(serialized.contains("maintenanceOperations"));
+        for forbidden in ["stdout", "stderr", "journal", "apt-get", "password"] {
+            assert!(
+                !serialized.contains(forbidden),
+                "unexpected raw field: {forbidden}"
+            );
+        }
+        let mut newer = MaintenanceOperation::requested("pi5".into());
+        newer.id = "replacement".into();
+        repo.upsert_maintenance_operation(&newer).unwrap();
+        assert_eq!(repo.load_maintenance_operations().len(), 1);
+        assert_eq!(
+            repo.get_maintenance_operation("pi5").unwrap().id,
+            "replacement"
+        );
     }
 }
