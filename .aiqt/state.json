@@ -3799,12 +3799,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "ready",
+        "status": "done",
         "dependencies": [
           "DEP-082"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T13:48:19.940Z"
+        "updatedAt": "2026-08-14T14:34:19.999Z"
       },
       {
         "id": "WU104",
@@ -3825,12 +3825,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-083"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:30:48.454Z"
+        "updatedAt": "2026-08-14T14:34:19.999Z"
       },
       {
         "id": "WU105",
@@ -9665,17 +9665,86 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-14T13:48:19.940Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T13:48:19.940Z"
+    },
+    {
+      "id": "C092",
+      "workUnitId": "WU103",
+      "packetId": "PKT-093",
+      "summary": "Completed the bounded M17 post-dispatch verification chain: exact trusted action revision verification, fixed read-only Compose runtime verification, fresh Service Health verification, terminal completion/failure Activity, and no broad disruption suppression.",
+      "completed": [
+        "Persisted AwaitingVerification operations revalidate the fixed-root trusted action and prove the exact persisted consented target through the bounded typed VERIFY protocol.",
+        "RevisionVerified operations use only the fixed read-only Compose-label collector and fail closed on unavailable, missing, stopped, unhealthy, or ambiguous runtime identity.",
+        "WorkloadRuntimeVerified operations resolve only registered Service Health IDs and require fresh sequential M7 checks for up to 120 seconds before final completion.",
+        "Completed is reached only after all configured verification gates pass; unresolved verification transitions to terminal VerificationFailed with no APPLY, rollback, redispatch, or Docker mutation.",
+        "Completion and failure Activity are static, sanitized, and deduplicated; device-wide alert suppression remains absent."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/managed_workload_verify.rs",
+        "src-tauri/src/domain/managed_workload_operation.rs",
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "src-tauri/src/application/managed_workload_revision_verification_tests.rs",
+        "src-tauri/src/application/managed_workload_runtime_verification_tests.rs",
+        "src-tauri/src/application/managed_workload_final_verification_tests.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/infrastructure/parsers/docker.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload",
+          "result": "passed",
+          "summary": "45 deterministic M17 registry, trust, persistence, PREPARE, consent, dispatch, recovery, revision, runtime, Service Health, and Activity tests passed."
+        },
+        {
+          "command": "cargo test service_health; cargo test detached_operation; cargo test maintenance",
+          "result": "passed",
+          "summary": "3 M7 Service Health, 2 detached-unit substrate, and 18 M16 maintenance/coordinator regression tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build; frontend tests/build/lint; AIQT status; and diff check passed. Frontend lint retains four existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Verification accepts only persisted lifecycle transitions and proves the exact already-consented deployed revision after fresh trusted-action validation.",
+          "result": "passed",
+          "evidence": "Revision tests cover the AwaitingVerification gate, fixed verify command, exact-match parser, trust failure, bounded transport failures, and caller inability to replace the target."
+        },
+        {
+          "criterion": "Runtime verification derives stable Compose project/service identity only from typed configuration, observes read-only Docker state, and fails closed on unresolved evidence.",
+          "result": "passed",
+          "evidence": "Runtime tests cover fixed collector-only command construction, required services, running and native-health state, missing/ambiguous identities, unavailable Docker, and bounded transport failures."
+        },
+        {
+          "criterion": "Completion requires fresh required Service Health evidence in a bounded sequential window and cannot trigger deployment mutation.",
+          "result": "passed",
+          "evidence": "Final-gate tests cover all-required success, retry then success, expiry, HTTP/transport/timeout failures, missing targets, invalid independent configuration, and no raw-value persistence."
+        },
+        {
+          "criterion": "Terminal states, Activity, persistence, M7, M16, WU102 recovery, and the shared detached substrate retain bounded and compatible behavior.",
+          "result": "passed",
+          "evidence": "Managed-workload, Service Health, detached-operation, and M16 maintenance regression suites pass; lifecycle markers deduplicate static Activity and terminal states require no recovery."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-08-14T14:34:19.999Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-092",
-    "workUnitId": "WU102",
+    "id": "PKT-093",
+    "workUnitId": "WU103",
     "milestoneId": "M021",
-    "createdAt": "2026-08-14T10:57:36.474Z",
+    "createdAt": "2026-08-14T13:58:42.137Z",
     "format": "markdown",
-    "contentHash": "sha256:6e8eecccdd32e0209d56117da876c98b52f2dae3cd2edffd5a999bae1024cd00",
+    "contentHash": "sha256:834619bf0e9e41c74419bdc4fec0e648ee454aa148df3605be1083780ee70faf",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9694,7 +9763,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-14T13:48:19.940Z",
+  "lastUpdatedAt": "2026-08-14T14:34:19.999Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -12423,6 +12492,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T13:48:19.940Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C092",
+      "current": {
+        "observationId": "sha256:6b0b8a76855633d64a592e59bfc63fb7891ffc78fa298deef336b148d4a9e664",
+        "checkpointId": "C092",
+        "workUnitId": "WU103",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T14:34:19.999Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T14:34:19.999Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:6b0b8a76855633d64a592e59bfc63fb7891ffc78fa298deef336b148d4a9e664",
+          "checkpointId": "C092",
+          "workUnitId": "WU103",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T14:34:19.999Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T14:34:19.999Z"
         }
       ]
     }
