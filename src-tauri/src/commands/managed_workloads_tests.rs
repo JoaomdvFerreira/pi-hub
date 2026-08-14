@@ -118,10 +118,12 @@ fn workload_cards_are_read_only_and_keep_active_deployments_ineligible() {
     operation.state = ManagedWorkloadOperationState::Deploying;
     operation.started_at = Some("x".into());
     operation.dispatch_state = ManagedWorkloadDispatchState::Accepted;
+    operation.observation_deadline = Some("2099-01-01T00:00:00Z".into());
     repo.save(&operation).unwrap();
     let card = list_managed_workloads_with(dir.path(), "pi5").pop().unwrap();
     assert!(!card.eligible_to_prepare);
     let raw = serde_json::to_string(&card).unwrap();
     for forbidden in ["targetRevision", "transientUnitId", "trustedActionDigest", "deploymentFingerprint", "command", "path", "secret.example"] { assert!(!raw.contains(forbidden), "serialized {forbidden}"); }
+    assert!(raw.contains("observationDeadline"));
     assert_eq!(card.deployment.unwrap().operation.operation_id, prepared.operation.operation.operation_id);
 }

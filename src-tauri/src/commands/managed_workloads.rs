@@ -95,6 +95,8 @@ pub struct ManagedWorkloadDeploymentDto {
     pub state: ManagedWorkloadDeploymentStateDto,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub problem: Option<ManagedWorkloadProblemDto>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub observation_deadline: Option<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
@@ -211,6 +213,7 @@ fn deployment_dto(operation: &ManagedWorkloadOperation) -> ManagedWorkloadDeploy
         operation: ManagedWorkloadOperationRef { workload_id: operation.workload_id.clone(), operation_id: operation.id.clone() },
         state: dto_state(operation.state),
         problem: dto_problem(operation.failure),
+        observation_deadline: operation.observation_deadline.clone(),
     }
 }
 
