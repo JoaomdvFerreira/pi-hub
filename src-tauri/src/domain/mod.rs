@@ -12,6 +12,7 @@ pub mod historical;
 pub mod maintenance;
 #[allow(dead_code)]
 pub mod managed_workload;
+pub mod managed_workload_operation;
 pub mod notification_rule;
 pub mod service_health;
 pub mod settings;

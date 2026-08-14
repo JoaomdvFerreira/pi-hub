@@ -7,6 +7,7 @@ pub mod device_repository;
 pub mod historical_repository;
 #[allow(dead_code)]
 pub mod managed_workload_repository;
+pub mod managed_workload_operation_repository;
 pub mod snapshot_repository;
 
 use std::fmt;
