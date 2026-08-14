@@ -419,6 +419,41 @@ fn verify_completed_unit_with(
     );
     Ok(operation)
 }
+fn finalize_failed_unit_with(
+    device: &Device,
+    executor: &dyn RemoteExecutor,
+    repo: &dyn SnapshotRepository,
+    disruption: &JsonAdministrationRepository,
+    activity: &JsonActivityRepository,
+    mut operation: MaintenanceOperation,
+) -> Result<MaintenanceOperation, MaintenanceFailure> {
+    operation.failure = Some(MaintenanceFailure::PackageOperationFailed);
+    operation.transition(MaintenanceOperationState::Failed);
+    repo.upsert_maintenance_operation(&operation)
+        .map_err(|_| MaintenanceFailure::VerificationFailed)?;
+    let target = target(device);
+    let _ = run(
+        executor,
+        &target,
+        &maintenance_journal_command(&operation.transient_unit_id).unwrap(),
+        SHORT,
+        "device_updates.apply.verify",
+        STATUS_OUTPUT,
+    );
+    let _ = disruption.clear_if_operation(&device.id, &operation.id);
+    if let Some(event) = operation.activity_event() {
+        let _ = activity.append(event);
+    }
+    let _ = run(
+        executor,
+        &target,
+        &maintenance_cleanup_command(&operation.transient_unit_id).unwrap(),
+        SHORT,
+        "device_updates.apply.verify",
+        STATUS_OUTPUT,
+    );
+    Ok(operation)
+}
 pub(crate) fn reconcile_persisted_with(
     device: &Device,
     executor: &dyn RemoteExecutor,
@@ -440,6 +475,11 @@ pub(crate) fn reconcile_persisted_with(
     match reconcile_with(&mut operation, executor, &target(device)) {
         Ok(UnitState::Success) => {
             return verify_completed_unit_with(
+                device, executor, repo, disruption, activity, operation,
+            )
+        }
+        Ok(UnitState::Failed) => {
+            return finalize_failed_unit_with(
                 device, executor, repo, disruption, activity, operation,
             )
         }
@@ -595,27 +635,9 @@ pub(crate) fn apply_with(
             return Ok(operation);
         }
         Ok(UnitState::Failed) => {
-            operation.failure = Some(MaintenanceFailure::PackageOperationFailed);
-            operation.transition(MaintenanceOperationState::Failed);
-            let _ = repo.upsert_maintenance_operation(&operation);
-            let _ = run(
-                executor,
-                &target,
-                &maintenance_journal_command(&operation.transient_unit_id).unwrap(),
-                SHORT,
-                "device_updates.apply.verify",
-                STATUS_OUTPUT,
-            );
-            let _ = disruption.clear_if_operation(&device.id, &operation.id);
-            let _ = run(
-                executor,
-                &target,
-                &maintenance_cleanup_command(&operation.transient_unit_id).unwrap(),
-                SHORT,
-                "device_updates.apply.verify",
-                STATUS_OUTPUT,
-            );
-            return Ok(operation);
+            return finalize_failed_unit_with(
+                device, executor, repo, disruption, activity, operation,
+            )
         }
         Ok(UnitState::Success) => {}
     }
@@ -966,6 +988,50 @@ mod tests {
             recovered.failure,
             Some(MaintenanceFailure::TransportUnavailableDuringObservation)
         );
+        assert_eq!(
+            JsonSnapshotRepository::new(dir.path())
+                .get_maintenance_operation("d")
+                .unwrap(),
+            recovered
+        );
+    }
+    #[test]
+    fn recovered_known_failed_unit_is_terminal_and_cleans_up_once() {
+        let dir = tempfile::tempdir().unwrap();
+        let repo = JsonSnapshotRepository::new(dir.path());
+        let mut operation = MaintenanceOperation::requested("d".into());
+        operation.dispatch_state = MaintenanceDispatchState::Accepted;
+        operation.observation_deadline =
+            Some((Utc::now() + ChronoDuration::minutes(60)).to_rfc3339());
+        operation.transition(MaintenanceOperationState::Installing);
+        repo.upsert_maintenance_operation(&operation).unwrap();
+        let disruptions = JsonAdministrationRepository::new(dir.path());
+        disruptions
+            .save(
+                crate::domain::administration::ExpectedDisruption::for_update(&operation).unwrap(),
+            )
+            .unwrap();
+        let activity = JsonActivityRepository::new(dir.path());
+        let recovered = reconcile_persisted_with(
+            &device(),
+            &Script(Mutex::new(VecDeque::from(vec![
+                ok("LoadState=loaded\nActiveState=failed\nSubState=failed\n"),
+                ok("bounded journal"),
+                ok(""),
+            ]))),
+            &repo,
+            &disruptions,
+            &activity,
+        )
+        .unwrap();
+        assert_eq!(recovered.state, MaintenanceOperationState::Failed);
+        assert_eq!(
+            recovered.failure,
+            Some(MaintenanceFailure::PackageOperationFailed)
+        );
+        assert!(recovered.state.is_terminal());
+        assert!(disruptions.get_valid("d").is_none());
+        assert_eq!(activity.load_for_device("d")[0].code, "updates.failed");
         assert_eq!(
             JsonSnapshotRepository::new(dir.path())
                 .get_maintenance_operation("d")

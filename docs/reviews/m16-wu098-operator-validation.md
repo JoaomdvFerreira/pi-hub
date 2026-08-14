@@ -1,7 +1,7 @@
 # M16 WU16-05 — Operator Validation and Recovery Review
 
-Date: 2026-08-14  
-AIQT work unit: WU098  
+Date: 2026-08-14
+AIQT work unit: WU098
 Scope: deterministic recovery/performance regression evidence and explicitly authorized real-device validation only.
 
 ## Authorized real-device evidence

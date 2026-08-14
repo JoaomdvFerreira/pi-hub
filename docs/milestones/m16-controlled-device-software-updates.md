@@ -1,6 +1,6 @@
 # Pi-Hub — M16 Controlled Device Software Updates
 
-Status: In progress — WU16-05 operator validation complete; WU16-06 remains unstarted
+Status: Complete — WU16-06 closure review complete
 Target release: v0.4.0 (paired with merged M15, subject to release review)
 Predecessor: M15 — Device Update Intelligence & Maintenance Readiness
 Risk class: High
@@ -557,6 +557,8 @@ Completed with deterministic failure/recovery coverage and two explicitly author
 Review the full M16 diff, establish deterministic gates, perform canonical validation, reconcile documentation/AIQT, calculate final risk, and prepare the PR.
 
 Do not start M17 automatically.
+
+Completed with the adversarial closure review, canonical validation, and AIQT closure. The review corrected the recovered-known-failed-unit path so it reaches persisted terminal failure, clears its operation-scoped disruption, and records failure Activity rather than remaining in `verifying` after restart. [The final M16 closure review](../reviews/m16-final-regression-closure.md) records all exit criteria, the operator evidence, correction history, risk, and explicit residuals. M17 remains unstarted.
 
 ## 19. Deterministic acceptance scenarios
 
