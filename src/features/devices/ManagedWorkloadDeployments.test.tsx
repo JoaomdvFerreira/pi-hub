@@ -1,15 +1,17 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { listManagedWorkloadDeployments, prepareManagedWorkloadDeployment, continueManagedWorkloadDeployment } = vi.hoisted(() => ({ listManagedWorkloadDeployments: vi.fn(), prepareManagedWorkloadDeployment: vi.fn(), continueManagedWorkloadDeployment: vi.fn() }));
-vi.mock("@/lib/tauri/managedWorkloads", () => ({ listManagedWorkloadDeployments, prepareManagedWorkloadDeployment, continueManagedWorkloadDeployment }));
+const { listManagedWorkloadDeployments, prepareManagedWorkloadDeployment, continueManagedWorkloadDeployment, reconcileManagedWorkloadDeployment } = vi.hoisted(() => ({ listManagedWorkloadDeployments: vi.fn(), prepareManagedWorkloadDeployment: vi.fn(), continueManagedWorkloadDeployment: vi.fn(), reconcileManagedWorkloadDeployment: vi.fn() }));
+vi.mock("@/lib/tauri/managedWorkloads", () => ({ listManagedWorkloadDeployments, prepareManagedWorkloadDeployment, continueManagedWorkloadDeployment, reconcileManagedWorkloadDeployment }));
 import { ManagedWorkloadDeployments } from "./ManagedWorkloadDeployments";
 
 const card = { workloadId: "finance", name: "Personal Finance", enabled: true, eligibleToPrepare: true };
 const prepared = { operation: { operation: { workloadId: "finance", operationId: "opaque-operation" }, state: "prepared" }, reviewTargetRevision: "a".repeat(40), changeCount: 2 };
+const operation = { workloadId: "finance", operationId: "opaque-operation" };
+function persisted(state: string) { return { ...card, eligibleToPrepare: !["dispatching", "dispatchUncertain", "deploying", "stillRunning", "awaitingVerification", "revisionVerified", "workloadRuntimeVerified"].includes(state), deployment: { operation, state } }; }
 
 describe("ManagedWorkloadDeployments", () => {
-  beforeEach(() => { listManagedWorkloadDeployments.mockReset().mockResolvedValue([card]); prepareManagedWorkloadDeployment.mockReset().mockResolvedValue(prepared); continueManagedWorkloadDeployment.mockReset(); });
+  beforeEach(() => { listManagedWorkloadDeployments.mockReset().mockResolvedValue([card]); prepareManagedWorkloadDeployment.mockReset().mockResolvedValue(prepared); continueManagedWorkloadDeployment.mockReset(); reconcileManagedWorkloadDeployment.mockReset(); });
   afterEach(cleanup);
   async function openReview() { render(<ManagedWorkloadDeployments deviceId="pi5"/>); fireEvent.click(await screen.findByRole("button", { name: "Prepare update" })); await screen.findByRole("alertdialog"); }
 
@@ -50,5 +52,42 @@ describe("ManagedWorkloadDeployments", () => {
     continueManagedWorkloadDeployment.mockRejectedValue({ message: "The action was unavailable.", remediation: "Prepare again after fixing it." });
     await openReview(); fireEvent.click(screen.getByRole("button", { name: "Confirm and start update" }));
     await screen.findByText(/deployment did not start/i); expect(screen.queryByText(/deployment completed/i)).not.toBeInTheDocument();
+  });
+
+  it("renders persisted active state after reopen without preparing or continuing", async () => {
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("deploying")]);
+    const { rerender } = render(<ManagedWorkloadDeployments deviceId="pi5"/>);
+    await screen.findByText("Deployment in progress."); rerender(<ManagedWorkloadDeployments deviceId="pi5"/>);
+    expect(prepareManagedWorkloadDeployment).not.toHaveBeenCalled(); expect(continueManagedWorkloadDeployment).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: "Check status" })).toBeInTheDocument(); expect(screen.queryByRole("button", { name: "Prepare update" })).toBeDisabled();
+  });
+
+  it("keeps uncertain dispatch safe and reconciles exactly once", async () => {
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("dispatchUncertain")]); let resolve!: (value: ReturnType<typeof persisted>["deployment"]) => void;
+    reconcileManagedWorkloadDeployment.mockReturnValue(new Promise(value => { resolve = value; }));
+    render(<ManagedWorkloadDeployments deviceId="pi5"/>); const check = await screen.findByRole("button", { name: "Check status" });
+    expect(screen.getByText(/could not be confirmed/i)).toBeInTheDocument(); expect(screen.queryByRole("button", { name: /retry/i })).not.toBeInTheDocument();
+    fireEvent.click(check); fireEvent.click(check); expect(reconcileManagedWorkloadDeployment).toHaveBeenCalledTimes(1); expect(reconcileManagedWorkloadDeployment).toHaveBeenCalledWith("finance");
+    resolve({ operation, state: "deploying" }); await screen.findByText("Deployment in progress.");
+  });
+
+  it("renders still-running and verification states without locally claiming completion", async () => {
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("stillRunning")]); const { rerender } = render(<ManagedWorkloadDeployments deviceId="pi5"/>);
+    await screen.findByText(/Automatic observation has ended/i); expect(screen.getByRole("button", { name: "Check status" })).toBeInTheDocument();
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("revisionVerified")]); rerender(<ManagedWorkloadDeployments deviceId="next"/>);
+    await screen.findByText("Verifying deployment…"); expect(screen.queryByText("Deployment complete.")).not.toBeInTheDocument();
+  });
+
+  it("shows completion and terminal failures only when backend persists them", async () => {
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("completed")]); const { rerender } = render(<ManagedWorkloadDeployments deviceId="pi5"/>);
+    await screen.findByText("Deployment complete.");
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("verificationFailed")]); rerender(<ManagedWorkloadDeployments deviceId="next"/>); await screen.findByText(/verification failed/i);
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("deploymentFailed")]); rerender(<ManagedWorkloadDeployments deviceId="again"/>); await screen.findByText(/^Deployment failed\./);
+  });
+
+  it("preserves the last known lifecycle after temporary reconciliation errors", async () => {
+    listManagedWorkloadDeployments.mockResolvedValue([persisted("deploying")]); reconcileManagedWorkloadDeployment.mockRejectedValue({ message: "Connection timed out.", remediation: "Try later." });
+    render(<ManagedWorkloadDeployments deviceId="pi5"/>); fireEvent.click(await screen.findByRole("button", { name: "Check status" }));
+    await screen.findByText(/last known deployment state is still shown/i); expect(screen.getByText("Deployment in progress.")).toBeInTheDocument();
   });
 });
