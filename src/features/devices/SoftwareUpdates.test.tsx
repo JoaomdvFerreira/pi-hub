@@ -77,9 +77,24 @@ describe("SoftwareUpdates", () => {
     render(<SoftwareUpdates deviceId="d" />);
     const button = await screen.findByRole("button", { name: "Check again" });
     fireEvent.click(button);
-    await waitFor(() => expect(screen.getByRole("button", { name: "Check for Updates" })).not.toBeDisabled());
-    expect(screen.getByRole("button", { name: "Check for Updates" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Check again" })).not.toBeDisabled());
+    expect(screen.getByText(/last known update information is still shown/i)).toBeInTheDocument();
     expect(checkForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("invokes Tauri for a terminal M16 device and preserves cached M15 evidence when the coordinator rejects the check", async () => {
+    const deferred = { ...result, updates: { totalCount: 0, packages: [], truncated: false }, keptBackPackages: { totalCount: 5, packages: ["linux-image"], truncated: false }, failure: undefined, heldPackages: { ...result.heldPackages, status: "known" as const } };
+    getUpdateResult.mockResolvedValue(deferred);
+    getMaintenanceOperation.mockResolvedValue({ id: "complete", deviceId: "d", transientUnitId: "hidden", state: "completed", dispatchState: "accepted", requestedAt: "x", completedAt: "x" });
+    checkForUpdates.mockRejectedValue({ code: "AlreadyChecking" });
+    render(<SoftwareUpdates deviceId="d" />);
+    const action = await screen.findByRole("button", { name: "Check again" });
+    expect(action).not.toBeDisabled();
+    fireEvent.click(action);
+    await screen.findByText(/already in progress/i);
+    expect(checkForUpdates).toHaveBeenCalledWith("d");
+    expect(screen.getByText("5 packages deferred")).toBeInTheDocument();
+    expect(screen.queryByText(/System updates have not been checked/i)).not.toBeInTheDocument();
   });
 
   it("only exposes Update device for complete safe evidence and does not mutate before final confirmation", async () => {
