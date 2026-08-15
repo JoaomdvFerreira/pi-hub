@@ -40,4 +40,29 @@ Results:
 
 No `prepare`/`apply`/`verify` action was invoked, no Docker mutation occurred, and no sudoers change was made. Post-registration, the running Personal Finance container remained the same instance throughout (ID `a3f710774b48…`, image `sha256:c8706708…`, `RestartCount: 0`, unchanged `StartedAt`), bound at `100.116.232.83:3010 → 3000`, and reachable (`HTTP 200`).
 
-WU105 remains active; this is registration and validation evidence only, not a checkpoint.
+## Stage C: real PREPARE/Cancel, operator-discovered defect, remediation, and live re-validation
+
+The first real Stage C PREPARE attempt (through the actual Tauri UI, `Prepare update`) failed with the generic `PrepareProtocolInvalid`-backed message ("Pi-Hub could not prepare the managed workload safely… No deployment was started."). Diagnosis (read-only; the trusted action's `prepare` subcommand is contractually non-mutating) found the true cause: the action's v1 PREPARE contract legitimately defines three outcomes — `ready`, `upToDate`, `blocked` — but WU102's parser (`domain::managed_workload_prepare::parse_prepare`) only ever accepted `status: "ready"`, rejecting the other two as malformed. Since PI 5's repository was already synchronized to `origin/main` at `e16a31d1…` (both `currentRevision`/`targetRevision` equal, `changeCount: 0`), the action correctly emitted `upToDate`, which the parser had no way to represent. Running the action directly, read-only, as the same non-root deploy user confirmed the exact well-formed `upToDate` response the app was rejecting. PI 5, the trusted action, and the device's SSH/trust path all behaved correctly throughout — this was purely a Pi-Hub-side contract gap, classified as **an operator-validation-discovered Pi-Hub contract defect** (not a PI 5, transport, or trust failure), now remediated.
+
+**Remediation** — `8db551a369b8d8d796281acc9d503f0f3301b084` ("fix(WU105): support complete workload prepare outcomes"). The parser now returns a strict `PreparedOutcome::{Ready, UpToDate, Blocked}` discriminated union (contradictory `upToDate` evidence and unknown `blocked` reasons still fail closed as malformed); orchestration only persists a deployable `ManagedWorkloadOperation` for `Ready`; the Tauri API returns a typed `{"outcome":"prepared"|"upToDate"|"blocked"}` response with no arbitrary action text; the UI opens the confirmation dialog only for `prepared`, and shows fixed, non-error copy for `upToDate`/`blocked`. Deterministic validation: `cargo test --lib` 327/327 passed, `cargo check` clean, `npx tsc --noEmit` clean, `npx vitest run` 66/66 passed, `npm run build` succeeded, `git diff --check` clean (LF/CRLF notices only).
+
+**Real corrected retry** — performed manually by the operator through the live Tauri UI against PI 5. Performance Diagnostics was started first and kept running through the attempt:
+
+| Diagnostics metric | Value |
+| --- | --- |
+| Session duration | ~19.8 s |
+| `ssh.execute` | 2 calls, 660 ms total, 346 ms max, 0 failures |
+| `tauri.get_latest_snapshot` | 3 calls, 3 ms total, 1 ms max, 0 failures |
+| Resident memory | ~35.8–36.0 MB |
+| Process CPU | negligible |
+| Diagnostics warnings | none |
+
+`Prepare update` was clicked once. The corrected backend returned `UpToDate`; the UI showed "Personal Finance is up to date." with no error and no confirmation dialog; Performance Diagnostics was stopped and exported cleanly afterward.
+
+**Post-attempt persistence proof** — `managed-workload-operations.json` does not exist at all (no operation, for this or any prior PREPARE attempt, has ever been persisted for this workload) — consistent with the code path: `UpToDate` returns before any `ManagedWorkloadOperation` is constructed. No `operationId` requiring confirmation and no continuation/APPLY eligibility exists. `managed-workloads.json` registration is unchanged and still valid.
+
+**Post-attempt zero-mutation proof (PI 5, read-only)** — repo `HEAD` unchanged at `e16a31d11dc5097086529a1ccd5bae84b1dc1630`, `main == origin/main`, worktree clean; no `pihub-workload-*` transient unit exists; trust action (owner `root:root`, mode `755`, digest `0cc3110b…`) and override (owner `root:root`, mode `644`, digest `c96e1365…`) both unchanged, no symlink substitution; container identical (ID `a3f710774b48…`, image `sha256:c8706708…`, `RestartCount: 0`, unchanged `StartedAt`), bound `100.116.232.83:3010 → 3000`, `HTTP 200`; local `activity.json` has no new deployment-related event (latest entry remains from 2026-08-13, predating this session).
+
+**Compiler-warning finding (non-blocking, unmodified this turn)** — `npm run tauri dev` surfaced two pre-existing unused-variant warnings unrelated to this fix: `RuntimeVerificationError::Internal` and `FinalVerificationError::Internal` are never constructed. Recorded as a small future cleanup/closure candidate (remove the variant if genuinely unreachable, or wire a call site if the architecture intends it to be reachable) — not suppressed with `#[allow(dead_code)]`, and out of scope for WU105.
+
+WU105 remains active; this is registration, remediation, and Stage C validation evidence only, not a checkpoint.
