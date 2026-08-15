@@ -5,8 +5,10 @@ use crate::{
         dispatch_prepared_with, finalize_workload_verification, prepare_detached_dispatch,
         prepare_with, reconcile_detached_workload_with, revalidate_dispatch_consent_with,
         verify_deployed_revision_with, verify_workload_runtime_with, DispatchConsent,
-        FinalVerificationError, PrepareError, RuntimeVerificationError, VerificationError,
+        FinalVerificationError, PrepareError, PrepareOutcome, RuntimeVerificationError,
+        VerificationError,
     },
+    domain::managed_workload_prepare::BlockedReason,
     domain::managed_workload_operation::{
         ManagedWorkloadFailure, ManagedWorkloadOperation, ManagedWorkloadOperationState,
     },
@@ -105,6 +107,39 @@ pub struct PreparedManagedWorkloadDto {
     pub operation: ManagedWorkloadDeploymentDto,
     pub review_target_revision: String,
     pub change_count: u32,
+}
+
+/// The fixed set of `blocked` reasons a trusted action's PREPARE contract can
+/// report. No arbitrary action-provided text is ever surfaced.
+#[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub enum ManagedWorkloadBlockedReasonDto {
+    DirtyWorktree,
+    UpstreamPolicy,
+    DivergedHistory,
+    ChangeCountExceeded,
+    RepositoryUnavailable,
+}
+
+fn dto_blocked_reason(reason: BlockedReason) -> ManagedWorkloadBlockedReasonDto {
+    match reason {
+        BlockedReason::DirtyWorktree => ManagedWorkloadBlockedReasonDto::DirtyWorktree,
+        BlockedReason::UpstreamPolicy => ManagedWorkloadBlockedReasonDto::UpstreamPolicy,
+        BlockedReason::DivergedHistory => ManagedWorkloadBlockedReasonDto::DivergedHistory,
+        BlockedReason::ChangeCountExceeded => ManagedWorkloadBlockedReasonDto::ChangeCountExceeded,
+        BlockedReason::RepositoryUnavailable => ManagedWorkloadBlockedReasonDto::RepositoryUnavailable,
+    }
+}
+
+/// The typed PREPARE response. Only `Prepared` carries the opaque operation
+/// reference needed for confirmation; `UpToDate` and `Blocked` are legitimate,
+/// non-deployable outcomes, not errors.
+#[derive(Debug, Clone, serde::Serialize, PartialEq, Eq)]
+#[serde(tag = "outcome", rename_all = "camelCase")]
+pub enum PrepareManagedWorkloadResponse {
+    Prepared(PreparedManagedWorkloadDto),
+    UpToDate,
+    Blocked { reason: ManagedWorkloadBlockedReasonDto },
 }
 
 #[derive(Debug, Clone, Copy, serde::Serialize, PartialEq, Eq)]
@@ -260,9 +295,12 @@ fn persisted_operation(dir: &std::path::Path, reference: &ManagedWorkloadOperati
         .ok_or_else(|| api_error("OperationUnavailable", "The requested managed workload operation is unavailable.", "Prepare the workload again.", false))
 }
 
-pub(crate) fn prepare_managed_workload_with(dir: &std::path::Path, request: ManagedWorkloadPrepareRequest, executor: &dyn RemoteExecutor, coordinator: &DeviceMaintenanceCoordinator) -> Result<PreparedManagedWorkloadDto, ApplicationError> {
-    let prepared = prepare_with(dir, &request.workload_id, executor, coordinator).map_err(map_prepare_error)?;
-    Ok(PreparedManagedWorkloadDto { operation: deployment_dto(&prepared.operation), review_target_revision: prepared.operation.target_revision, change_count: prepared.change_count })
+pub(crate) fn prepare_managed_workload_with(dir: &std::path::Path, request: ManagedWorkloadPrepareRequest, executor: &dyn RemoteExecutor, coordinator: &DeviceMaintenanceCoordinator) -> Result<PrepareManagedWorkloadResponse, ApplicationError> {
+    match prepare_with(dir, &request.workload_id, executor, coordinator).map_err(map_prepare_error)? {
+        PrepareOutcome::Prepared(prepared) => Ok(PrepareManagedWorkloadResponse::Prepared(PreparedManagedWorkloadDto { operation: deployment_dto(&prepared.operation), review_target_revision: prepared.operation.target_revision, change_count: prepared.change_count })),
+        PrepareOutcome::UpToDate => Ok(PrepareManagedWorkloadResponse::UpToDate),
+        PrepareOutcome::Blocked(reason) => Ok(PrepareManagedWorkloadResponse::Blocked { reason: dto_blocked_reason(reason) }),
+    }
 }
 
 pub(crate) fn continue_managed_workload_with(dir: &std::path::Path, reference: ManagedWorkloadOperationRef, executor: &dyn RemoteExecutor, coordinator: &DeviceMaintenanceCoordinator) -> Result<ManagedWorkloadContinueResponse, ApplicationError> {
@@ -294,7 +332,7 @@ pub(crate) fn reconcile_managed_workload_with(dir: &std::path::Path, request: Ma
 }
 
 #[tauri::command]
-pub async fn prepare_managed_workload_deployment(app: AppHandle, request: ManagedWorkloadPrepareRequest) -> Result<PreparedManagedWorkloadDto, ApplicationError> {
+pub async fn prepare_managed_workload_deployment(app: AppHandle, request: ManagedWorkloadPrepareRequest) -> Result<PrepareManagedWorkloadResponse, ApplicationError> {
     let dir = config_dir(&app)?;
     prepare_managed_workload_with(&dir, request, &OpenSshExecutor::default(), app.state::<DeviceMaintenanceCoordinator>().inner())
 }

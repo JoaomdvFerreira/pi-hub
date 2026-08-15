@@ -26,14 +26,22 @@ fn setup() -> tempfile::TempDir {
 }
 fn prepared(dir: &std::path::Path) -> PreparedManagedWorkloadDto {
     let script = Script { replies: Mutex::new(VecDeque::from(vec![trust(), prepare(&"c".repeat(40))])), commands: Mutex::new(vec![]) };
-    prepare_managed_workload_with(dir, ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap()
+    match prepare_managed_workload_with(dir, ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap() {
+        PrepareManagedWorkloadResponse::Prepared(dto) => dto,
+        other => panic!("expected Prepared, got {other:?}"),
+    }
 }
+fn up_to_date(rev: &str) -> Result<RemoteExecutionResult, SshError> { reply(&format!(r#"{{"protocolVersion":1,"status":"upToDate","currentRevision":"{rev}","targetRevision":"{rev}","changeCount":0}}"#)) }
+fn blocked(reason: &str) -> Result<RemoteExecutionResult, SshError> { reply(&format!(r#"{{"protocolVersion":1,"status":"blocked","reason":"{reason}"}}"#)) }
 
 #[test]
 fn prepare_delegates_to_existing_typed_service_and_returns_bounded_review_data() {
     let dir = setup();
     let script = Script { replies: Mutex::new(VecDeque::from(vec![trust(), prepare(&"c".repeat(40))])), commands: Mutex::new(vec![]) };
     let response = prepare_managed_workload_with(dir.path(), ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap();
+    let raw = serde_json::to_string(&response).unwrap();
+    assert!(raw.starts_with(r#"{"outcome":"prepared""#));
+    let PrepareManagedWorkloadResponse::Prepared(response) = response else { panic!("expected Prepared") };
     assert_eq!(response.operation.state, ManagedWorkloadDeploymentStateDto::Prepared);
     assert_eq!(response.review_target_revision, "c".repeat(40));
     assert_eq!(response.change_count, 2);
@@ -41,8 +49,38 @@ fn prepare_delegates_to_existing_typed_service_and_returns_bounded_review_data()
     assert_eq!(commands.len(), 2);
     assert!(commands[1].ends_with("personal-finance' prepare"));
     assert!(!commands.iter().any(|command| command.contains(" apply") || command.contains("systemd-run")));
-    let raw = serde_json::to_string(&response).unwrap();
     for forbidden in ["trustedActionDigest", "deploymentFingerprint", "transientUnitId", "/usr/local", "FAKE_STDERR_SECRET", "secret.example"] { assert!(!raw.contains(forbidden), "serialized {forbidden}"); }
+}
+
+#[test]
+fn up_to_date_renders_as_typed_success_not_an_error() {
+    let dir = setup();
+    let script = Script { replies: Mutex::new(VecDeque::from(vec![trust(), up_to_date(&"a".repeat(40))])), commands: Mutex::new(vec![]) };
+    let response = prepare_managed_workload_with(dir.path(), ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap();
+    assert_eq!(response, PrepareManagedWorkloadResponse::UpToDate);
+    let raw = serde_json::to_string(&response).unwrap();
+    assert_eq!(raw, r#"{"outcome":"upToDate"}"#);
+    assert!(JsonManagedWorkloadOperationRepository::new(dir.path()).get("pi5", "finance").is_none());
+}
+
+#[test]
+fn blocked_renders_as_typed_fixed_reason_not_an_error() {
+    let dir = setup();
+    let script = Script { replies: Mutex::new(VecDeque::from(vec![trust(), blocked("dirtyWorktree")])), commands: Mutex::new(vec![]) };
+    let response = prepare_managed_workload_with(dir.path(), ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap();
+    assert_eq!(response, PrepareManagedWorkloadResponse::Blocked { reason: ManagedWorkloadBlockedReasonDto::DirtyWorktree });
+    let raw = serde_json::to_string(&response).unwrap();
+    assert_eq!(raw, r#"{"outcome":"blocked","reason":"dirtyWorktree"}"#);
+    assert!(JsonManagedWorkloadOperationRepository::new(dir.path()).get("pi5", "finance").is_none());
+}
+
+#[test]
+fn genuinely_malformed_prepare_response_still_maps_to_generic_protocol_error() {
+    let dir = setup();
+    let script = Script { replies: Mutex::new(VecDeque::from(vec![trust(), reply("not json")])), commands: Mutex::new(vec![]) };
+    let error = prepare_managed_workload_with(dir.path(), ManagedWorkloadPrepareRequest { workload_id: "finance".into() }, &script, &DeviceMaintenanceCoordinator::new()).unwrap_err();
+    assert_eq!(error.code, "ManagedWorkloadPreparationFailed");
+    assert!(JsonManagedWorkloadOperationRepository::new(dir.path()).get("pi5", "finance").is_none());
 }
 
 #[test]

@@ -6,7 +6,7 @@ vi.mock("@/lib/tauri/managedWorkloads", () => ({ listManagedWorkloadDeployments,
 import { ManagedWorkloadDeployments } from "./ManagedWorkloadDeployments";
 
 const card = { workloadId: "finance", name: "Personal Finance", enabled: true, eligibleToPrepare: true };
-const prepared = { operation: { operation: { workloadId: "finance", operationId: "opaque-operation" }, state: "prepared" }, reviewTargetRevision: "a".repeat(40), changeCount: 2 };
+const prepared = { outcome: "prepared" as const, operation: { operation: { workloadId: "finance", operationId: "opaque-operation" }, state: "prepared" }, reviewTargetRevision: "a".repeat(40), changeCount: 2 };
 const operation = { workloadId: "finance", operationId: "opaque-operation" };
 function persisted(state: string, observationDeadline?: string) { return { ...card, eligibleToPrepare: !["dispatching", "dispatchUncertain", "deploying", "stillRunning", "awaitingVerification", "revisionVerified", "workloadRuntimeVerified"].includes(state), deployment: { operation, state, observationDeadline } }; }
 
@@ -27,6 +27,30 @@ describe("ManagedWorkloadDeployments", () => {
     expect(continueManagedWorkloadDeployment).not.toHaveBeenCalled();
     for (const hidden of ["opaque-operation", "fingerprint", "digest", "systemd", "docker", "secret", "command"]) expect(screen.queryByText(new RegExp(hidden, "i"))).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("renders up-to-date as a normal state with no confirmation dialog", async () => {
+    prepareManagedWorkloadDeployment.mockResolvedValue({ outcome: "upToDate" });
+    render(<ManagedWorkloadDeployments deviceId="pi5"/>); fireEvent.click(await screen.findByRole("button", { name: "Prepare update" }));
+    await screen.findByText("Personal Finance is up to date.");
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(continueManagedWorkloadDeployment).not.toHaveBeenCalled();
+  });
+
+  it("renders blocked as a typed actionable state with no confirmation dialog", async () => {
+    prepareManagedWorkloadDeployment.mockResolvedValue({ outcome: "blocked", reason: "dirtyWorktree" });
+    render(<ManagedWorkloadDeployments deviceId="pi5"/>); fireEvent.click(await screen.findByRole("button", { name: "Prepare update" }));
+    await screen.findByText(/uncommitted changes on the device/i);
+    expect(screen.getByText(/No deployment was started/i)).toBeInTheDocument();
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
+    expect(continueManagedWorkloadDeployment).not.toHaveBeenCalled();
+  });
+
+  it("still shows the generic protocol-invalid copy for a genuine PREPARE failure", async () => {
+    prepareManagedWorkloadDeployment.mockRejectedValue({ message: "Pi-Hub could not prepare the managed workload safely.", remediation: "Prepare the workload again after resolving its configuration." });
+    render(<ManagedWorkloadDeployments deviceId="pi5"/>); fireEvent.click(await screen.findByRole("button", { name: "Prepare update" }));
+    await screen.findByText(/could not prepare the managed workload safely/i);
+    expect(screen.queryByRole("alertdialog")).not.toBeInTheDocument();
   });
 
   it("continues with only the opaque operation identity", async () => {
