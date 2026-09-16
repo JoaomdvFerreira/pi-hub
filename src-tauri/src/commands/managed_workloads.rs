@@ -346,7 +346,17 @@ pub async fn continue_managed_workload_deployment(app: AppHandle, operation: Man
 #[tauri::command]
 pub async fn reconcile_managed_workload_deployment(app: AppHandle, request: ManagedWorkloadStatusRequest) -> Result<ManagedWorkloadDeploymentDto, ApplicationError> {
     let dir = config_dir(&app)?;
-    reconcile_managed_workload_with(&dir, request, &OpenSshExecutor::default())
+    // Final Service Health verification uses the established synchronous
+    // reqwest client.  Reconciliation can reach that stage for a persisted
+    // operation, so it must not run on Tokio's async worker thread: dropping
+    // reqwest::blocking::Client there panics.  This does not dispatch or
+    // prepare anything; it only resumes the persisted operation's state
+    // machine on Tauri's blocking pool.
+    tauri::async_runtime::spawn_blocking(move || {
+        reconcile_managed_workload_with(&dir, request, &OpenSshExecutor::default())
+    })
+    .await
+    .map_err(|_| api_error("ReconciliationFailed", "Pi-Hub could not complete managed workload reconciliation.", "Request status again to resume the persisted deployment verification.", true))?
 }
 
 #[tauri::command]
