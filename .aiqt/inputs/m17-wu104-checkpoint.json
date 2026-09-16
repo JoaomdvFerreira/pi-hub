@@ -1,0 +1,70 @@
+{
+  "summary": "Completed M17 managed-workload UX: bounded cards, backend PREPARE review and explicit confirmation, safe lifecycle recovery, and UI-mounted bounded automatic observation.",
+  "completed": [
+    "Device-detail managed-workload cards use only bounded read-only workload and deployment DTOs, and disable new preparation when backend state or same-device maintenance makes it ineligible.",
+    "PREPARE renders backend-provided review evidence, requires explicit confirmation with opaque workload/operation identity only, and handles PlanChanged, accepted, uncertain, and definite pre-dispatch outcomes without retry authority.",
+    "Persisted lifecycle rendering, manual Check status, and mounted automatic observation delegate only to the typed reconciliation command; the UI never infers transitions, dispatches, or verifies directly.",
+    "Automatic observation is per workload, non-overlapping, roughly five-second cadence, uses the original persisted deadline, stops on terminal/StillRunning/expiry/unmount, and preserves state across temporary observation failures.",
+    "API DTOs exclude execution material and configuration internals; the only additional observation datum is the persisted deadline needed to bound the UI timer."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/commands/managed_workloads.rs",
+    "src-tauri/src/commands/managed_workloads_tests.rs",
+    "src-tauri/src/lib.rs",
+    "src/features/devices/DeviceDetailScreen.tsx",
+    "src/features/devices/DeviceDetailScreen.test.tsx",
+    "src/features/devices/ManagedWorkloadDeployments.tsx",
+    "src/features/devices/ManagedWorkloadDeployments.test.tsx",
+    "src/lib/tauri/managedWorkloads.ts",
+    "src/types/managedWorkloads.ts"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {
+      "command": "npm test -- --run src/features/devices/ManagedWorkloadDeployments.test.tsx src/features/devices/DeviceDetailScreen.test.tsx",
+      "result": "passed",
+      "summary": "16 deterministic managed-workload card, review, confirmation, recovery, manual status, automatic observation, deadline, terminal-state, and duplicate-action tests passed."
+    },
+    {
+      "command": "cargo test managed_workload",
+      "result": "passed",
+      "summary": "51 deterministic M17 registry, trust, persistence, PREPARE, consent, exactly-once dispatch, recovery, Activity, and verification tests passed."
+    },
+    {
+      "command": "node scripts/validate-agent.mjs",
+      "result": "passed",
+      "summary": "Rust check/tests/build; frontend tests/build/lint; AIQT status; and diff check passed. Frontend lint retains four existing Fast Refresh warnings."
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "criterion": "The frontend offers only typed workload preparation, opaque confirmation continuation, and same-workload reconciliation; it exposes no generic remote, Docker, systemd, revision, or Service Health authority.",
+      "result": "passed",
+      "evidence": "Request DTO serialization tests and frontend tests cover opaque continuation input, absence of sensitive controls, PlanChanged fresh-review behavior, and no retry path for uncertain dispatch."
+    },
+    {
+      "criterion": "Lifecycle, recovery, and completion presentation remain backend-authoritative and safe across restart/reopen.",
+      "result": "passed",
+      "evidence": "Frontend tests cover persisted active/recoverable display, manual reconciliation, terminal states, no automatic PREPARE/continuation, and no local completion inference; backend lifecycle tests cover the corresponding persisted transitions."
+    },
+    {
+      "criterion": "Mounted automatic observation is bounded by the original persisted deadline and cannot overlap, redispatch, or survive terminal/expired/unmounted state.",
+      "result": "passed",
+      "evidence": "Fake-timer frontend tests cover cadence, non-overlap, DispatchUncertain observation, deadline expiry, unmount cancellation, terminal stopping, and temporary-failure state preservation."
+    },
+    {
+      "criterion": "WU104 consumes WU102/WU103 execution and verification services without weakening trust, consent, exactly-once dispatch, recovery, verification, completion, or Activity boundaries.",
+      "result": "passed",
+      "evidence": "The command layer delegates to existing prepare, consent, dispatch, reconciliation, revision/runtime, and final-verification services; 51 managed-workload regressions passed."
+    }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "No PI 5 or other real device was contacted, inspected, changed, or dispatched.",
+    "WU105 deterministic and real-workload operator validation and WU106 regression gates/milestone closure remain future planned work, not WU104 residual work.",
+    "Risk at this boundary: 48/100 (Yellow, medium). User-facing deployment authority is sensitive, mitigated by typed fixed backend commands, opaque confirmation, fresh trust/consent gates, exactly-once persistence, same-unit reconciliation, bounded observation, and no generic command surface."
+  ]
+}

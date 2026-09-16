@@ -1,0 +1,109 @@
+#!/bin/sh
+# Root-owned Personal Finance managed-workload adapter. Install with LF line
+# endings, no BOM, root:root, mode 0755 at the fixed M17 action path.
+set -eu
+PATH=/usr/bin:/bin
+G=/usr/bin/git
+D=/usr/bin/docker
+R=/home/joaoadmin/projects/financas-pessoais
+B=/home/joaoadmin/projects/financas-pessoais/docker-compose.yml
+O=/etc/pi-hub/personal-finance.compose.yml
+P=financas-pessoais
+S=financas-pessoais
+C=financas-pessoais
+I=pihub-personal-finance
+
+valid(){ case "$1" in *[!0-9a-f]*|'') return 1;; esac; [ ${#1} -eq 40 ]; }
+blocked(){ printf '{"protocolVersion":1,"status":"blocked","reason":"%s"}\n' "$1"; }
+
+# This checks only the fixed local repository policy.  It deliberately does
+# not read refs/remotes/origin/main: that ref is a cache, not remote authority.
+base_state(){
+  [ -d "$R/.git" ] || return 10
+  [ "$("$G" -C "$R" config --get branch.main.remote 2>/dev/null || true)" = origin ] || return 11
+  [ "$("$G" -C "$R" config --get branch.main.merge 2>/dev/null || true)" = refs/heads/main ] || return 11
+  [ -z "$("$G" -C "$R" status --porcelain --untracked-files=all)" ] || return 12
+  cur=$("$G" -C "$R" rev-parse --verify HEAD^{commit}) || return 13
+}
+
+# Fixed, read-only remote discovery.  The enclosing M17 executor bounds the
+# action at 15 seconds and its output at 32 KiB/16 KiB; git diagnostics are
+# discarded so they cannot enter the typed protocol output.
+discover_target(){
+  out=$("$G" -C "$R" ls-remote origin refs/heads/main 2>/dev/null) || return 20
+  case "$out" in *'
+'*) return 21;; esac
+  tab=$(printf '\t'); old_ifs=$IFS; IFS=$tab; set -- $out; IFS=$old_ifs
+  [ "$#" -eq 2 ] && valid "$1" && [ "$2" = refs/heads/main ] || return 21
+  tar=$1
+}
+
+# The only PREPARE metadata effect: populate the object database with the
+# already validated, exact remote commit.  It does not write FETCH_HEAD,
+# remote-tracking refs, the current branch, or the worktree.
+obtain_target(){
+  "$G" -C "$R" fetch --no-tags --no-write-fetch-head origin "$tar" 2>/dev/null || return 22
+  got=$("$G" -C "$R" rev-parse --verify "$tar^{commit}" 2>/dev/null) || return 22
+  [ "$got" = "$tar" ] || return 22
+}
+
+prepare_state(){
+  base_state || return $?
+  discover_target || return $?
+  [ "$cur" = "$tar" ] && return 0
+  obtain_target || return $?
+  "$G" -C "$R" merge-base --is-ancestor "$cur" "$tar" || return 15
+  cnt=$("$G" -C "$R" rev-list --count "$cur..$tar") || return 16
+  case "$cnt" in *[!0-9]*|'') return 16;; esac
+  [ "$cnt" -le 10000 ] || return 17
+}
+
+prep(){
+  [ "$#" -eq 0 ] || exit 64
+  if prepare_state; then :; else
+    x=$?; case "$x" in
+      12) blocked dirtyWorktree;; 11) blocked upstreamPolicy;; 15) blocked divergedHistory;;
+      17) blocked changeCountExceeded;; *) blocked repositoryUnavailable;;
+    esac
+    return
+  fi
+  if [ "$cur" = "$tar" ]; then
+    printf '{"protocolVersion":1,"status":"upToDate","currentRevision":"%s","targetRevision":"%s","changeCount":0}\n' "$cur" "$tar"
+  else
+    printf '{"protocolVersion":1,"status":"ready","currentRevision":"%s","targetRevision":"%s","changeCount":%s}\n' "$cur" "$tar" "$cnt"
+  fi
+}
+
+app(){
+  [ "$#" -eq 1 ] && valid "$1" || exit 64
+  t=$1
+  # Fresh authority check at dispatch time.  A changed remote must cause the
+  # backend's fresh PREPARE/fingerprint comparison to return PlanChanged;
+  # direct action invocation also stops before switch/build/compose.
+  base_state || exit 1
+  discover_target || exit 1
+  [ "$tar" = "$t" ] || exit 1
+  [ "$cur" = "$t" ] || obtain_target || exit 1
+  "$G" -C "$R" merge-base --is-ancestor "$cur" "$t" || exit 1
+  "$G" -C "$R" switch --detach -- "$t"
+  im="$I:$t"
+  "$D" build --file "$R/Dockerfile" --label "org.opencontainers.image.revision=$t" --tag "$im" "$R"
+  PIHUB_PERSONAL_FINANCE_IMAGE="$im" "$D" compose --project-name "$P" -f "$B" -f "$O" up -d --no-build --no-deps "$S"
+  printf '{"protocolVersion":1,"status":"applied","deployedRevision":"%s"}\n' "$t"
+}
+
+ver(){
+  [ "$#" -eq 1 ] && valid "$1" || exit 64
+  t=$1; im="$I:$t"
+  [ "$("$D" inspect -f '{{.State.Running}}' "$C")" = true ] || exit 1
+  [ "$("$D" inspect -f '{{index .Config.Labels "com.docker.compose.project"}}' "$C")" = "$P" ] || exit 1
+  [ "$("$D" inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$C")" = "$S" ] || exit 1
+  [ "$("$D" inspect -f '{{.Config.Image}}' "$C")" = "$im" ] || exit 1
+  ci=$("$D" inspect -f '{{.Image}}' "$C"); ii=$("$D" image inspect -f '{{.Id}}' "$im"); [ "$ci" = "$ii" ] || exit 1
+  [ "$("$D" image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "$im")" = "$t" ] || exit 1
+  printf '{"protocolVersion":1,"status":"ok","deployedRevision":"%s"}\n' "$t"
+}
+
+[ "$#" -ge 1 ] || exit 64
+x=$1; shift
+case "$x" in prepare) prep "$@";; apply) app "$@";; verify) ver "$@";; *) exit 64;; esac

@@ -1,8 +1,8 @@
 # Pi-Hub post-MVP product roadmap
 
 Version: 0.4 planning
-Status: M1-M16 implemented
-Date: 2026-08-14
+Status: M1-M17 implemented; M17 closure review complete
+Date: 2026-09-16
 
 ## Authority
 
@@ -24,6 +24,7 @@ This document is the roadmap-level source for milestone history and sequencing. 
 | M14 | Implemented | Performance benchmarking, runtime hardening, and Device Detail tab UX. |
 | M15 | Implemented — operator validation recorded | Device Update Intelligence & Maintenance Readiness; read-only, manual-check-first. |
 | M16 | Implemented — closure review complete | Controlled Device Software Updates; explicit, safety-governed APT standard upgrades. |
+| M17 | Implemented — closure review complete | Typed, review-and-confirm managed workload deployment actions for explicitly registered workloads. |
 
 The approved scope for M6-M14 is recorded in [milestone documents](../milestones/). M10's shutdown-specific requirement remains [the controlled shutdown requirement](../requirements/controlled-device-shutdown-requirement.md).
 
@@ -37,4 +38,4 @@ It will not become a general SSH client, file manager, Docker Compose editor, ar
 
 Human-readable product, requirement, and milestone documentation belongs under `docs/`. AIQT is the canonical structured execution/workflow state in `.aiqt/`. They must agree on materially represented milestone identity, scope, and status without duplicating complete Markdown documents into the workflow state.
 
-M13 was the final milestone in the prior roadmap. M14, M15, and M16 are implemented. M15 operator validation completed successfully on both available Pi-Hub devices; separate plain-Debian coverage remains optional and is documented in its final closure review. M16 completed its architecture, coordination/persistence, detached execution/verification, constrained mutation UX, deterministic/operator validation, and adversarial closure review. One explicitly authorized standard upgrade completed on each available Pi-Hub device: PI 2 updated 34 packages with no pending/deferred packages, while PI 5 updated 162 packages and conservatively retained five deferred packages for manual review. The [WU16-05 review](../reviews/m16-wu098-operator-validation.md) records the live evidence, and the [final M16 review](../reviews/m16-final-regression-closure.md) records all exit criteria, corrections, risk, and residuals. M17 has not started.
+M13 was the final milestone in the prior roadmap. M14, M15, M16, and M17 are implemented. M15 operator validation completed successfully on both available Pi-Hub devices; separate plain-Debian coverage remains optional and is documented in its final closure review. M16 completed its architecture, coordination/persistence, detached execution/verification, constrained mutation UX, deterministic/operator validation, and adversarial closure review. One explicitly authorized standard upgrade completed on each available Pi-Hub device: PI 2 updated 34 packages with no pending/deferred packages, while PI 5 updated 162 packages and conservatively retained five deferred packages for manual review. The [WU16-05 review](../reviews/m16-wu098-operator-validation.md) records the live evidence, and the [final M16 review](../reviews/m16-final-regression-closure.md) records all exit criteria, corrections, risk, and residuals. M17 completed its typed registry/trust, PREPARE/consent/exactly-once deployment, verification/recovery, constrained UX, and Personal Finance dogfood work; the [final M17 review](../reviews/m17-final-review-release-readiness.md) records validation, residuals, and the post-merge Windows-release procedure. No M18 work has started.

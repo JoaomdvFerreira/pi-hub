@@ -118,6 +118,7 @@ pub fn check_service(raw_url: &str) -> ServiceCheckResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{io::{Read, Write}, net::TcpListener};
     #[test]
     fn state_machine_degrades_unavailable_and_recovers() {
         let failed = ServiceCheckResult::failure(Some(500), Some(4), ServiceFailureReason::HttpStatus);
@@ -136,4 +137,24 @@ mod tests {
     fn invalid_urls_are_typed_failures() { assert_eq!(check_service("file:///secret").failure_reason, Some(ServiceFailureReason::InvalidUrl)); }
     #[test]
     fn configured_threshold_controls_unavailable_transition() { let failed = ServiceCheckResult::failure(None, None, ServiceFailureReason::Connection); let one = apply_check_with_threshold(None, "svc", failed.clone(), "2026-01-01T00:00:00Z".into(), 5); let four = (0..3).fold(one, |record, _| apply_check_with_threshold(Some(&record), "svc", failed.clone(), "2026-01-01T00:00:00Z".into(), 5)); assert_eq!(four.state, ServiceHealthState::Degraded); }
+
+    #[tokio::test]
+    async fn fresh_service_check_runs_without_a_blocking_runtime_panic_when_offloaded_from_tokio() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let server = std::thread::spawn(move || {
+            let (mut stream, _) = listener.accept().unwrap();
+            let mut request = [0; 512];
+            let _ = stream.read(&mut request).unwrap();
+            stream.write_all(b"HTTP/1.1 204 No Content\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").unwrap();
+        });
+
+        let result = tauri::async_runtime::spawn_blocking(move || check_service(&format!("http://{address}/health")))
+            .await
+            .expect("blocking Service Health task must complete");
+        server.join().unwrap();
+
+        assert_eq!(result.http_status, Some(204));
+        assert!(result.is_success());
+    }
 }

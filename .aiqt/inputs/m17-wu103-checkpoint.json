@@ -1,0 +1,69 @@
+{
+  "summary": "Completed the bounded M17 post-dispatch verification chain: exact trusted action revision verification, fixed read-only Compose runtime verification, fresh Service Health verification, terminal completion/failure Activity, and no broad disruption suppression.",
+  "completed": [
+    "Persisted AwaitingVerification operations revalidate the fixed-root trusted action and prove the exact persisted consented target through the bounded typed VERIFY protocol.",
+    "RevisionVerified operations use only the fixed read-only Compose-label collector and fail closed on unavailable, missing, stopped, unhealthy, or ambiguous runtime identity.",
+    "WorkloadRuntimeVerified operations resolve only registered Service Health IDs and require fresh sequential M7 checks for up to 120 seconds before final completion.",
+    "Completed is reached only after all configured verification gates pass; unresolved verification transitions to terminal VerificationFailed with no APPLY, rollback, redispatch, or Docker mutation.",
+    "Completion and failure Activity are static, sanitized, and deduplicated; device-wide alert suppression remains absent."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "src-tauri/src/domain/managed_workload_verify.rs",
+    "src-tauri/src/domain/managed_workload_operation.rs",
+    "src-tauri/src/application/managed_workload_prepare.rs",
+    "src-tauri/src/application/managed_workload_revision_verification_tests.rs",
+    "src-tauri/src/application/managed_workload_runtime_verification_tests.rs",
+    "src-tauri/src/application/managed_workload_final_verification_tests.rs",
+    "src-tauri/src/infrastructure/ssh/operation.rs",
+    "src-tauri/src/infrastructure/parsers/docker.rs"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {
+      "command": "cargo test managed_workload",
+      "result": "passed",
+      "summary": "45 deterministic M17 registry, trust, persistence, PREPARE, consent, dispatch, recovery, revision, runtime, Service Health, and Activity tests passed."
+    },
+    {
+      "command": "cargo test service_health; cargo test detached_operation; cargo test maintenance",
+      "result": "passed",
+      "summary": "3 M7 Service Health, 2 detached-unit substrate, and 18 M16 maintenance/coordinator regression tests passed."
+    },
+    {
+      "command": "node scripts/validate-agent.mjs",
+      "result": "passed",
+      "summary": "Rust check/tests/build; frontend tests/build/lint; AIQT status; and diff check passed. Frontend lint retains four existing warnings."
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "criterion": "Verification accepts only persisted lifecycle transitions and proves the exact already-consented deployed revision after fresh trusted-action validation.",
+      "result": "passed",
+      "evidence": "Revision tests cover the AwaitingVerification gate, fixed verify command, exact-match parser, trust failure, bounded transport failures, and caller inability to replace the target."
+    },
+    {
+      "criterion": "Runtime verification derives stable Compose project/service identity only from typed configuration, observes read-only Docker state, and fails closed on unresolved evidence.",
+      "result": "passed",
+      "evidence": "Runtime tests cover fixed collector-only command construction, required services, running and native-health state, missing/ambiguous identities, unavailable Docker, and bounded transport failures."
+    },
+    {
+      "criterion": "Completion requires fresh required Service Health evidence in a bounded sequential window and cannot trigger deployment mutation.",
+      "result": "passed",
+      "evidence": "Final-gate tests cover all-required success, retry then success, expiry, HTTP/transport/timeout failures, missing targets, invalid independent configuration, and no raw-value persistence."
+    },
+    {
+      "criterion": "Terminal states, Activity, persistence, M7, M16, WU102 recovery, and the shared detached substrate retain bounded and compatible behavior.",
+      "result": "passed",
+      "evidence": "Managed-workload, Service Health, detached-operation, and M16 maintenance regression suites pass; lifecycle markers deduplicate static Activity and terminal states require no recovery."
+    }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "No PI 5 or other real device was contacted, inspected, changed, or dispatched.",
+    "WU104 UX, WU105 deterministic and real-workload operator validation, and WU106 regression gates and milestone closure remain planned work, not WU103 residual work.",
+    "Risk at this boundary: 48/100 (Yellow, medium). The live typed deployment authority remains inherently sensitive, mitigated by fixed execution surfaces, trust and consent gates, exactly-once persistence, bounded verification, fail-closed identity checks, and no generic command API."
+  ]
+}

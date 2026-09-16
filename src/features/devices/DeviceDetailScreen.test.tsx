@@ -19,6 +19,7 @@ vi.mock("@/features/services/ServiceHealth", () => ({ ServiceHealthBadge: () => 
 vi.mock("@/features/devices/ContainerActionsCell", () => ({ ContainerActionsCell: () => <div /> }));
 vi.mock("@/features/containers/ContainerDetailDialog", () => ({ ContainerDetailDialog: () => <div /> }));
 vi.mock("@/features/devices/DeviceVisibility", () => ({ DeviceVisibility: () => <div /> }));
+vi.mock("@/features/devices/ManagedWorkloadDeployments", () => ({ ManagedWorkloadDeployments: () => <div /> }));
 
 import { DeviceDetailScreen } from "./DeviceDetailScreen";
 

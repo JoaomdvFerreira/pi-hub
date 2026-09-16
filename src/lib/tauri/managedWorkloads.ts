@@ -1,0 +1,7 @@
+import { invoke } from "@tauri-apps/api/core";
+import type { ManagedWorkloadCard, ManagedWorkloadContinuation, ManagedWorkloadDeployment, ManagedWorkloadOperationRef, PrepareManagedWorkloadResponse } from "@/types/managedWorkloads";
+
+export function listManagedWorkloadDeployments(deviceId: string): Promise<ManagedWorkloadCard[]> { return invoke("list_managed_workload_deployments", { deviceId }); }
+export function prepareManagedWorkloadDeployment(workloadId: string): Promise<PrepareManagedWorkloadResponse> { return invoke("prepare_managed_workload_deployment", { request: { workloadId } }); }
+export function continueManagedWorkloadDeployment(operation: ManagedWorkloadOperationRef): Promise<ManagedWorkloadContinuation> { return invoke("continue_managed_workload_deployment", { operation }); }
+export function reconcileManagedWorkloadDeployment(workloadId: string): Promise<ManagedWorkloadDeployment> { return invoke("reconcile_managed_workload_deployment", { request: { workloadId } }); }

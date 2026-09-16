@@ -4,8 +4,11 @@ pub mod alert_repository;
 pub mod atomic;
 pub mod config_repository;
 pub mod device_repository;
-pub mod snapshot_repository;
 pub mod historical_repository;
+#[allow(dead_code)]
+pub mod managed_workload_repository;
+pub mod managed_workload_operation_repository;
+pub mod snapshot_repository;
 
 use std::fmt;
 
@@ -13,6 +16,8 @@ use std::fmt;
 pub enum StorageError {
     Io(std::io::Error),
     Serialization(serde_json::Error),
+    #[allow(dead_code)]
+    Validation(String),
 }
 
 impl fmt::Display for StorageError {
@@ -20,6 +25,7 @@ impl fmt::Display for StorageError {
         match self {
             StorageError::Io(err) => write!(f, "I/O error: {err}"),
             StorageError::Serialization(err) => write!(f, "serialization error: {err}"),
+            StorageError::Validation(err) => write!(f, "validation error: {err}"),
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, time::Duration};
+use std::time::Duration;
 
 use chrono::{Duration as ChronoDuration, Utc};
 use tauri::{AppHandle, Manager};
@@ -7,7 +7,7 @@ use crate::{
     commands::updates::{check_with, kept_back, package},
     domain::{
         device::Device,
-        maintenance::{
+        detached_operation::{classify_systemd_show, DetachedUnitState}, maintenance::{
             MaintenanceDispatchState, MaintenanceFailure, MaintenanceOperation,
             MaintenanceOperationState, PlanFingerprint, PreDispatchFailureStage,
             PLAN_FINGERPRINT_VERSION,
@@ -303,36 +303,7 @@ pub async fn prepare_device_update(
     })
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum UnitState {
-    Missing,
-    Running,
-    Success,
-    Failed,
-}
-fn unit_state(raw: &str) -> Option<UnitState> {
-    let fields: BTreeMap<_, _> = raw
-        .lines()
-        .filter_map(|line| line.split_once('='))
-        .collect();
-    if fields.get("LoadState") == Some(&"not-found") {
-        return Some(UnitState::Missing);
-    }
-    let active = *fields.get("ActiveState")?;
-    let sub = *fields.get("SubState")?;
-    if active == "active" && sub != "exited" || active == "activating" {
-        return Some(UnitState::Running);
-    }
-    if active == "active"
-        && sub == "exited"
-        && fields.get("Result") == Some(&"success")
-        && matches!(fields.get("ExecMainCode"), Some(&"exited") | Some(&"1"))
-        && fields.get("ExecMainStatus") == Some(&"0")
-    {
-        return Some(UnitState::Success);
-    }
-    Some(UnitState::Failed)
-}
+pub(crate) type UnitState = DetachedUnitState;
 pub(crate) fn reconcile_with(
     operation: &mut MaintenanceOperation,
     executor: &dyn RemoteExecutor,
@@ -349,7 +320,7 @@ pub(crate) fn reconcile_with(
         STATUS_OUTPUT,
     )
     .map_err(maintenance_failure)?;
-    let state = unit_state(&result.stdout).ok_or(MaintenanceFailure::OutcomeUncertain)?;
+    let state = classify_systemd_show(&result.stdout).ok_or(MaintenanceFailure::OutcomeUncertain)?;
     match state {
         UnitState::Running => operation.transition(MaintenanceOperationState::Installing),
         UnitState::Missing => operation.transition(MaintenanceOperationState::OutcomeUncertain),
@@ -678,7 +649,7 @@ pub async fn apply_prepared_device_update(
 }
 
 // Small self-contained SHA-256 implementation keeps the consent digest deterministic without introducing a new remote or frontend dependency.
-fn sha256_hex(input: &[u8]) -> String {
+pub(crate) fn sha256_hex(input: &[u8]) -> String {
     let mut h: [u32; 8] = [
         0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
         0x5be0cd19,
@@ -852,17 +823,17 @@ mod tests {
     #[test]
     fn parser_distinguishes_running_active_exited_success_and_failure() {
         assert_eq!(
-            unit_state("LoadState=loaded\nActiveState=active\nSubState=running\n"),
+            classify_systemd_show("LoadState=loaded\nActiveState=active\nSubState=running\n"),
             Some(UnitState::Running)
         );
-        assert_eq!(unit_state("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=exited\nExecMainStatus=0\n"),Some(UnitState::Success));
-        assert_eq!(unit_state("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=1\nExecMainStatus=0\n"),Some(UnitState::Success));
+        assert_eq!(classify_systemd_show("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=exited\nExecMainStatus=0\n"),Some(UnitState::Success));
+        assert_eq!(classify_systemd_show("LoadState=loaded\nActiveState=active\nSubState=exited\nResult=success\nExecMainCode=1\nExecMainStatus=0\n"),Some(UnitState::Success));
         assert_eq!(
-            unit_state("LoadState=not-found\n"),
+            classify_systemd_show("LoadState=not-found\n"),
             Some(UnitState::Missing)
         );
         assert_eq!(
-            unit_state("LoadState=loaded\nActiveState=failed\nSubState=failed\n"),
+            classify_systemd_show("LoadState=loaded\nActiveState=failed\nSubState=failed\n"),
             Some(UnitState::Failed)
         );
     }

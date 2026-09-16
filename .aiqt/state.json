@@ -263,6 +263,21 @@
           "WU098",
           "WU099"
         ]
+      },
+      {
+        "id": "M021",
+        "title": "M17 — Managed Workload Deployment Actions",
+        "objective": "Safely deploy explicitly registered workloads without generic remote execution.",
+        "status": "done",
+        "workUnitIds": [
+          "WU100",
+          "WU101",
+          "WU102",
+          "WU103",
+          "WU104",
+          "WU105",
+          "WU106"
+        ]
       }
     ],
     "workUnits": [
@@ -1274,7 +1289,7 @@
         "status": "ready",
         "dependencies": [],
         "createdAt": "2026-08-03T16:54:41.010Z",
-        "updatedAt": "2026-08-03T16:54:41.010Z"
+        "updatedAt": "2026-08-14T15:18:54.759Z"
       },
       {
         "id": "WU028",
@@ -3686,6 +3701,188 @@
         ],
         "createdAt": "2026-08-13T10:46:18.778Z",
         "updatedAt": "2026-08-14T09:39:47.465Z"
+      },
+      {
+        "id": "WU100",
+        "milestoneId": "M021",
+        "title": "Managed Action Contract & Personal-Finance Adapter Design",
+        "objective": "Freeze the M17 contract and adapter requirements.",
+        "scope": [
+          "Canonical contracts",
+          "Repository mapping"
+        ],
+        "outOfScope": [
+          "Deployment execution",
+          "M18"
+        ],
+        "acceptanceCriteria": [
+          "Contract is canonical"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:36:03.140Z"
+      },
+      {
+        "id": "WU101",
+        "milestoneId": "M021",
+        "title": "Managed Workload Registry, Persistence & Trust Validation",
+        "objective": "Implement trusted registry.",
+        "scope": [
+          "Registry"
+        ],
+        "outOfScope": [
+          "Dispatch"
+        ],
+        "acceptanceCriteria": [
+          "Typed registry"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-080"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T10:48:04.438Z"
+      },
+      {
+        "id": "WU102",
+        "milestoneId": "M021",
+        "title": "PREPARE, Fingerprint & Detached Deployment Execution",
+        "objective": "Implement typed dispatch.",
+        "scope": [
+          "Dispatch"
+        ],
+        "outOfScope": [
+          "Rollback"
+        ],
+        "acceptanceCriteria": [
+          "One dispatch"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-081"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T13:48:19.940Z"
+      },
+      {
+        "id": "WU103",
+        "milestoneId": "M021",
+        "title": "Verification, Recovery, Activity & Scoped Disruption",
+        "objective": "Implement verification.",
+        "scope": [
+          "Verification"
+        ],
+        "outOfScope": [
+          "Broad suppression"
+        ],
+        "acceptanceCriteria": [
+          "Health gates"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-082"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T14:34:19.999Z"
+      },
+      {
+        "id": "WU104",
+        "milestoneId": "M021",
+        "title": "Managed Workload UX",
+        "objective": "Implement UI.",
+        "scope": [
+          "UI"
+        ],
+        "outOfScope": [
+          "Console"
+        ],
+        "acceptanceCriteria": [
+          "Review UI"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-083"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-08-14T15:15:12.862Z"
+      },
+      {
+        "id": "WU105",
+        "milestoneId": "M021",
+        "title": "Deterministic & Real-Workload Operator Validation",
+        "objective": "Validate staged deployment.",
+        "scope": [
+          "Validation"
+        ],
+        "outOfScope": [
+          "Fault injection"
+        ],
+        "acceptanceCriteria": [
+          "Evidence"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-084"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-09-16T08:37:31.775Z"
+      },
+      {
+        "id": "WU106",
+        "milestoneId": "M021",
+        "title": "Regression Gates & Milestone Closure",
+        "objective": "Close M17.",
+        "scope": [
+          "Closure"
+        ],
+        "outOfScope": [
+          "M18"
+        ],
+        "acceptanceCriteria": [
+          "Validation"
+        ],
+        "agentContextRefs": [],
+        "suggestedFiles": [],
+        "validationCommands": [
+          "node scripts/validate-agent.mjs"
+        ],
+        "status": "done",
+        "dependencies": [
+          "DEP-085"
+        ],
+        "createdAt": "2026-08-14T10:30:48.454Z",
+        "updatedAt": "2026-09-16T08:49:00.392Z"
       }
     ],
     "dependencies": [
@@ -4241,6 +4438,48 @@
         "toId": "WU099",
         "type": "blocks",
         "reason": "Closure follows deterministic and operator-validation evidence."
+      },
+      {
+        "id": "DEP-080",
+        "fromId": "WU100",
+        "toId": "WU101",
+        "type": "blocks",
+        "reason": "Contract first"
+      },
+      {
+        "id": "DEP-081",
+        "fromId": "WU101",
+        "toId": "WU102",
+        "type": "blocks",
+        "reason": "Registry first"
+      },
+      {
+        "id": "DEP-082",
+        "fromId": "WU102",
+        "toId": "WU103",
+        "type": "blocks",
+        "reason": "Execution first"
+      },
+      {
+        "id": "DEP-083",
+        "fromId": "WU103",
+        "toId": "WU104",
+        "type": "blocks",
+        "reason": "State first"
+      },
+      {
+        "id": "DEP-084",
+        "fromId": "WU104",
+        "toId": "WU105",
+        "type": "blocks",
+        "reason": "UI first"
+      },
+      {
+        "id": "DEP-085",
+        "fromId": "WU105",
+        "toId": "WU106",
+        "type": "blocks",
+        "reason": "Evidence first"
       }
     ]
   },
@@ -9261,17 +9500,438 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-08-14T09:39:47.465Z",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T09:39:47.465Z"
+    },
+    {
+      "id": "C089",
+      "workUnitId": "WU100",
+      "packetId": "PKT-090",
+      "summary": "Integrated the reviewed M17 deployment and action-safety contracts, froze the repository-specific M16 reuse and Personal Finance adapter boundary, and made no workload mutation.",
+      "completed": [
+        "Canonical M17 milestone and safety-contract documents added",
+        "Roadmap and M17 AIQT mapping reconciled",
+        "M16 coordinator/transient persistence/reconciliation, protocol, trust, sudo, verification, telemetry, recovery, and staged validation decisions frozen",
+        "Personal Finance updater unavailable; adapter requirements documented without inference"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/milestones/m17-managed-workload-deployment-actions.md",
+        "docs/design/m17-managed-workload-action-safety-contract.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/inputs/m17-plan.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build, frontend tests/build/lint, AIQT status and diff check passed; lint retains four existing warnings."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Contract is canonical",
+          "result": "passed",
+          "evidence": "Reviewed deployment/action-safety requirements are integrated with exact repository mapping and roadmap/AIQT state."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T10:36:03.140Z"
+    },
+    {
+      "id": "C090",
+      "workUnitId": "WU101",
+      "packetId": "PKT-091",
+      "summary": "Implemented the bounded managed-workload registry and fixed-root action-trust enforcement without creating any workload execution path.",
+      "completed": [
+        "Versioned bounded managed-workload configuration and JSON persistence",
+        "Strict backend action-ID grammar with no path/command/ref fields",
+        "Fixed-root typed trust probe and conservative trust result parser",
+        "M17 coordinator operation kind reserved for later typed lifecycle",
+        "Deterministic registry and trust regression coverage"
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/managed_workload.rs",
+        "src-tauri/src/infrastructure/managed_workload_trust.rs",
+        "src-tauri/src/storage/managed_workload_repository.rs",
+        "src-tauri/src/monitoring/maintenance_coordinator.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml managed_workload --lib",
+          "result": "passed",
+          "summary": "Five registry/action-ID/trust/digest/persistence tests passed."
+        },
+        {
+          "command": "cargo check --manifest-path src-tauri/Cargo.toml",
+          "result": "passed",
+          "summary": "Focused Rust type check passed."
+        },
+        {
+          "command": "git diff --check",
+          "result": "passed",
+          "summary": "No whitespace errors."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Typed registry",
+          "result": "passed",
+          "evidence": "Only typed bounded workload metadata persists; action resolution derives solely from validated action IDs and fixed root."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T10:48:04.438Z"
+    },
+    {
+      "id": "C091",
+      "workUnitId": "WU102",
+      "packetId": "PKT-092",
+      "summary": "Completed the bounded M17 managed-workload PREPARE, consent, exactly-once detached dispatch, reconciliation, and Activity lifecycle without verification or live-device execution.",
+      "completed": [
+        "Typed non-mutating PREPARE with bounded protocol parsing, trusted action validation, and a human-confirmable consent fingerprint.",
+        "Fresh consent revalidation rejects configuration, action digest, target revision, and verification-identity drift as PlanChanged before dispatch.",
+        "Persisted-before-dispatch backend-generated transient-unit identity, fixed non-root systemd-run command, and persisted attempt boundary.",
+        "Exactly-once dispatch with Accepted or recoverable DispatchUncertain outcomes, followed only by same-unit bounded reconciliation.",
+        "Conservative lifecycle translation to Deploying, DeploymentFailed, StillRunning, or AwaitingVerification, with deduplicated sanitized Activity and no workload alert suppression."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "src-tauri/src/domain/managed_workload_operation.rs",
+        "src-tauri/src/domain/detached_operation.rs",
+        "src-tauri/src/storage/managed_workload_operation_repository.rs",
+        "src-tauri/src/application/managed_workload_*_tests.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload",
+          "result": "passed",
+          "summary": "31 deterministic registry, trust, persistence, PREPARE, consent, dispatch, reconciliation, and Activity tests passed."
+        },
+        {
+          "command": "cargo test detached_operation; cargo test maintenance; cargo test coordinator",
+          "result": "passed",
+          "summary": "2 detached-unit substrate, 18 M16 maintenance, and 4 coordinator regression tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build; frontend test/build/lint; AIQT status; and diff check passed. Frontend lint reports four existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "PREPARE is non-mutating and derives action execution only from fixed-root trusted action resolution.",
+          "result": "passed",
+          "evidence": "Fixed scripted tests cover no APPLY/systemd-run during PREPARE and strict action-ID/trust validation."
+        },
+        {
+          "criterion": "Consent drift returns PlanChanged with zero dispatch and no caller-controlled target, command, unit, argv, flags, environment, or path surface.",
+          "result": "passed",
+          "evidence": "Deterministic consent and dispatch-construction tests cover config, digest, target, and verification drift plus exact fixed command construction."
+        },
+        {
+          "criterion": "A dispatch is persisted and attempted at most once, while uncertainty, restart, expiry, and reconciliation only observe the persisted unit and never kill or redispatch.",
+          "result": "passed",
+          "evidence": "One-shot dispatch and reconciliation tests cover persisted attempt boundaries, uncertain outcomes, recovery identity/deadline, expiry, and no redispatch."
+        },
+        {
+          "criterion": "Systemd success stops at AwaitingVerification; failure and initiation Activity are deduplicated and sanitized; device-wide alert suppression is absent.",
+          "result": "passed",
+          "evidence": "Activity and reconciliation tests assert AwaitingVerification only, one static Activity event per outcome, no sensitive data, and no administration disruption record."
+        },
+        {
+          "criterion": "The M16 detached-operation extraction preserves maintenance persistence and typed fixed-command semantics.",
+          "result": "passed",
+          "evidence": "M16 maintenance, coordinator, and shared-substrate regression suites passed; shared code has no command construction or persistence model."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T13:48:19.940Z"
+    },
+    {
+      "id": "C092",
+      "workUnitId": "WU103",
+      "packetId": "PKT-093",
+      "summary": "Completed the bounded M17 post-dispatch verification chain: exact trusted action revision verification, fixed read-only Compose runtime verification, fresh Service Health verification, terminal completion/failure Activity, and no broad disruption suppression.",
+      "completed": [
+        "Persisted AwaitingVerification operations revalidate the fixed-root trusted action and prove the exact persisted consented target through the bounded typed VERIFY protocol.",
+        "RevisionVerified operations use only the fixed read-only Compose-label collector and fail closed on unavailable, missing, stopped, unhealthy, or ambiguous runtime identity.",
+        "WorkloadRuntimeVerified operations resolve only registered Service Health IDs and require fresh sequential M7 checks for up to 120 seconds before final completion.",
+        "Completed is reached only after all configured verification gates pass; unresolved verification transitions to terminal VerificationFailed with no APPLY, rollback, redispatch, or Docker mutation.",
+        "Completion and failure Activity are static, sanitized, and deduplicated; device-wide alert suppression remains absent."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/domain/managed_workload_verify.rs",
+        "src-tauri/src/domain/managed_workload_operation.rs",
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "src-tauri/src/application/managed_workload_revision_verification_tests.rs",
+        "src-tauri/src/application/managed_workload_runtime_verification_tests.rs",
+        "src-tauri/src/application/managed_workload_final_verification_tests.rs",
+        "src-tauri/src/infrastructure/ssh/operation.rs",
+        "src-tauri/src/infrastructure/parsers/docker.rs"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload",
+          "result": "passed",
+          "summary": "45 deterministic M17 registry, trust, persistence, PREPARE, consent, dispatch, recovery, revision, runtime, Service Health, and Activity tests passed."
+        },
+        {
+          "command": "cargo test service_health; cargo test detached_operation; cargo test maintenance",
+          "result": "passed",
+          "summary": "3 M7 Service Health, 2 detached-unit substrate, and 18 M16 maintenance/coordinator regression tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build; frontend tests/build/lint; AIQT status; and diff check passed. Frontend lint retains four existing warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Verification accepts only persisted lifecycle transitions and proves the exact already-consented deployed revision after fresh trusted-action validation.",
+          "result": "passed",
+          "evidence": "Revision tests cover the AwaitingVerification gate, fixed verify command, exact-match parser, trust failure, bounded transport failures, and caller inability to replace the target."
+        },
+        {
+          "criterion": "Runtime verification derives stable Compose project/service identity only from typed configuration, observes read-only Docker state, and fails closed on unresolved evidence.",
+          "result": "passed",
+          "evidence": "Runtime tests cover fixed collector-only command construction, required services, running and native-health state, missing/ambiguous identities, unavailable Docker, and bounded transport failures."
+        },
+        {
+          "criterion": "Completion requires fresh required Service Health evidence in a bounded sequential window and cannot trigger deployment mutation.",
+          "result": "passed",
+          "evidence": "Final-gate tests cover all-required success, retry then success, expiry, HTTP/transport/timeout failures, missing targets, invalid independent configuration, and no raw-value persistence."
+        },
+        {
+          "criterion": "Terminal states, Activity, persistence, M7, M16, WU102 recovery, and the shared detached substrate retain bounded and compatible behavior.",
+          "result": "passed",
+          "evidence": "Managed-workload, Service Health, detached-operation, and M16 maintenance regression suites pass; lifecycle markers deduplicate static Activity and terminal states require no recovery."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T14:34:19.999Z"
+    },
+    {
+      "id": "C093",
+      "workUnitId": "WU104",
+      "packetId": "PKT-094",
+      "summary": "Completed M17 managed-workload UX: bounded cards, backend PREPARE review and explicit confirmation, safe lifecycle recovery, and UI-mounted bounded automatic observation.",
+      "completed": [
+        "Device-detail managed-workload cards use only bounded read-only workload and deployment DTOs, and disable new preparation when backend state or same-device maintenance makes it ineligible.",
+        "PREPARE renders backend-provided review evidence, requires explicit confirmation with opaque workload/operation identity only, and handles PlanChanged, accepted, uncertain, and definite pre-dispatch outcomes without retry authority.",
+        "Persisted lifecycle rendering, manual Check status, and mounted automatic observation delegate only to the typed reconciliation command; the UI never infers transitions, dispatches, or verifies directly.",
+        "Automatic observation is per workload, non-overlapping, roughly five-second cadence, uses the original persisted deadline, stops on terminal/StillRunning/expiry/unmount, and preserves state across temporary observation failures.",
+        "API DTOs exclude execution material and configuration internals; the only additional observation datum is the persisted deadline needed to bound the UI timer."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/commands/managed_workloads.rs",
+        "src-tauri/src/commands/managed_workloads_tests.rs",
+        "src-tauri/src/lib.rs",
+        "src/features/devices/DeviceDetailScreen.tsx",
+        "src/features/devices/DeviceDetailScreen.test.tsx",
+        "src/features/devices/ManagedWorkloadDeployments.tsx",
+        "src/features/devices/ManagedWorkloadDeployments.test.tsx",
+        "src/lib/tauri/managedWorkloads.ts",
+        "src/types/managedWorkloads.ts"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "npm test -- --run src/features/devices/ManagedWorkloadDeployments.test.tsx src/features/devices/DeviceDetailScreen.test.tsx",
+          "result": "passed",
+          "summary": "16 deterministic managed-workload card, review, confirmation, recovery, manual status, automatic observation, deadline, terminal-state, and duplicate-action tests passed."
+        },
+        {
+          "command": "cargo test managed_workload",
+          "result": "passed",
+          "summary": "51 deterministic M17 registry, trust, persistence, PREPARE, consent, exactly-once dispatch, recovery, Activity, and verification tests passed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Rust check/tests/build; frontend tests/build/lint; AIQT status; and diff check passed. Frontend lint retains four existing Fast Refresh warnings."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "The frontend offers only typed workload preparation, opaque confirmation continuation, and same-workload reconciliation; it exposes no generic remote, Docker, systemd, revision, or Service Health authority.",
+          "result": "passed",
+          "evidence": "Request DTO serialization tests and frontend tests cover opaque continuation input, absence of sensitive controls, PlanChanged fresh-review behavior, and no retry path for uncertain dispatch."
+        },
+        {
+          "criterion": "Lifecycle, recovery, and completion presentation remain backend-authoritative and safe across restart/reopen.",
+          "result": "passed",
+          "evidence": "Frontend tests cover persisted active/recoverable display, manual reconciliation, terminal states, no automatic PREPARE/continuation, and no local completion inference; backend lifecycle tests cover the corresponding persisted transitions."
+        },
+        {
+          "criterion": "Mounted automatic observation is bounded by the original persisted deadline and cannot overlap, redispatch, or survive terminal/expired/unmounted state.",
+          "result": "passed",
+          "evidence": "Fake-timer frontend tests cover cadence, non-overlap, DispatchUncertain observation, deadline expiry, unmount cancellation, terminal stopping, and temporary-failure state preservation."
+        },
+        {
+          "criterion": "WU104 consumes WU102/WU103 execution and verification services without weakening trust, consent, exactly-once dispatch, recovery, verification, completion, or Activity boundaries.",
+          "result": "passed",
+          "evidence": "The command layer delegates to existing prepare, consent, dispatch, reconciliation, revision/runtime, and final-verification services; 51 managed-workload regressions passed."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-08-14T15:15:12.862Z"
+    },
+    {
+      "id": "C094",
+      "workUnitId": "WU105",
+      "packetId": "PKT-096",
+      "summary": "Closed WU105 with canonical real-workload evidence for the successful one-time Personal Finance Stage D deployment and same-operation post-fix reconciliation.",
+      "completed": [
+        "Consolidated Stage A through D operator evidence: offline fail-closed baseline, trusted-action and host-neutral Compose provisioning, read-only Deploy Key, typed registration/trust, Stage C UpToDate behavior, Stage D review/confirmation, and the approved deployment target.",
+        "Recorded the three operator-discovered Pi-Hub defects and their remediations: complete PREPARE outcomes (8db551a), authoritative stale-remote discovery (2e96e13), and blocking-runtime verification panic (de9832f).",
+        "Proved the single authorized APPLY completed through the persisted systemd unit with Result=success and exact Git, image, OCI revision, container, and Service Health identity evidence.",
+        "Proved post-fix hot-reload recovery reused the same persisted operation and unit, completed final verification, and made no PREPARE, redispatch, new operation, or new unit.",
+        "Recorded sanitized Performance Diagnostics summary and the bounded final validation evidence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/reviews/m21-wu105-personal-finance-registration-evidence.md",
+        ".aiqt/inputs/m17-wu105-checkpoint.json",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload --lib",
+          "result": "passed",
+          "summary": "66 managed-workload tests passed, including exact revision/runtime identity, fresh final Service Health, persisted-unit reconciliation, and no-redispatch coverage."
+        },
+        {
+          "command": "cargo check; npx tsc --noEmit; npm test; npm run build; git diff --check",
+          "result": "passed",
+          "summary": "Rust check and TypeScript passed; frontend tests passed 13 files/66 tests; production build and diff check passed. Rust check retains only two pre-existing unused Internal enum-variant warnings."
+        },
+        {
+          "command": "cargo test --lib",
+          "result": "partial",
+          "summary": "Reached only the three dated 2026-08-10 activity-retention fixtures: 325 passed, 3 failed, 1 ignored. These pre-existing failures are not caused by WU105 and are explicitly carried to WU106 remediation/closure; they were not suppressed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Accepted for this scoped WU105 checkpoint: the required wrapper was run once and its Rust check passed; the only non-green result was the separately recorded, pre-existing dated-fixture debt in activity retention. All three failing fixtures are named in the canonical evidence and explicitly carried to WU106 remediation rather than suppressed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Evidence",
+          "result": "passed",
+          "evidence": "The canonical WU105 evidence report records all stages, one APPLY, successful same-operation reconciliation, exact deployment/runtime identity, Service Health success, and residuals without raw sensitive data."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-09-16T08:37:31.775Z"
+    },
+    {
+      "id": "C095",
+      "workUnitId": "WU106",
+      "packetId": "PKT-097",
+      "summary": "Closed M17 after deterministic retention-fixture remediation, removal of unreachable M17 warning variants, final architecture/security review, canonical validation, and documented post-merge Windows release readiness.",
+      "completed": [
+        "Replaced the three dated activity-retention fixtures with runtime-relative retained timestamps while preserving the production 30-day and 2,000-event pruning behavior.",
+        "Removed the genuinely unreachable RuntimeVerificationError::Internal and FinalVerificationError::Internal variants without dead-code suppression.",
+        "Reviewed exactly-once dispatch, persisted recovery, PlanChanged, fixed trust boundaries, exact revision/Docker gates, and fresh Service Health against the canonical M17 contract.",
+        "Recorded WU100-WU106, real Personal Finance dogfood, discovered defects/remediations, residuals, validation, and release procedure in canonical final evidence.",
+        "Assessed manual Windows packaging/updater readiness without publishing a release or starting another milestone."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/storage/activity_repository.rs",
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "docs/reviews/m17-final-review-release-readiness.md",
+        "docs/milestones/m17-managed-workload-deployment-actions.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/inputs/m17-wu106-checkpoint.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml activity_repository",
+          "result": "passed",
+          "summary": "All three formerly dated activity-retention tests passed deterministically."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml managed_workload --lib",
+          "result": "passed",
+          "summary": "66 M17 managed-workload tests passed, including exactly-once dispatch, recovery, PlanChanged, trust, exact revision/runtime, and fresh Service Health coverage."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "The canonical wrapper's Rust check/tests/build and frontend tests/build stages passed. Its lint/status/diff tail did not print in this execution environment, so those remaining canonical commands were immediately run directly and passed."
+        },
+        {
+          "command": "npm run lint; aiqt status; git diff --check",
+          "result": "passed",
+          "summary": "The remaining canonical stages passed directly. Lint retains four pre-existing Fast Refresh warnings only; no M17 warnings remain."
+        },
+        {
+          "command": "aiqt review --mode release",
+          "result": "passed",
+          "summary": "The only finding before checkpoint was the expected in-progress WU106 awaiting checkpoint capture."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Validation",
+          "result": "passed",
+          "evidence": "No test failures, M17-related compiler warnings, whitespace errors, or unresolved architecture/security contract deviations remain."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-09-16T08:49:00.392Z",
       "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-089",
-    "workUnitId": "WU099",
-    "milestoneId": "M020",
-    "createdAt": "2026-08-14T09:33:00.447Z",
+    "id": "PKT-097",
+    "workUnitId": "WU106",
+    "milestoneId": "M021",
+    "createdAt": "2026-09-16T08:40:57.564Z",
     "format": "markdown",
-    "contentHash": "sha256:84eb310fbde953f886615edd6652fa09a3caf45f7bcd58e932ec21aaaf969f4e",
+    "contentHash": "sha256:1823e5ced1e9f5419dcaeee9cb4e1d79d57148da109103ecbaf1a4f084a94baa",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9290,7 +9950,7 @@
     }
   },
   "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-08-14T09:39:47.465Z",
+  "lastUpdatedAt": "2026-09-16T08:49:00.392Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -11929,6 +12589,216 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T09:39:47.465Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C089",
+      "current": {
+        "observationId": "sha256:cf839d83a05b18935b32917967da6fb6b755eabb87773f421eb85e71fdda50ef",
+        "checkpointId": "C089",
+        "workUnitId": "WU100",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T10:36:03.140Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T10:36:03.140Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:cf839d83a05b18935b32917967da6fb6b755eabb87773f421eb85e71fdda50ef",
+          "checkpointId": "C089",
+          "workUnitId": "WU100",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T10:36:03.140Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T10:36:03.140Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C090",
+      "current": {
+        "observationId": "sha256:f6920d91c0b1e62c3f1b77bef8b0e066fdfce8dd7bd71d65a8e766598bbc2b9a",
+        "checkpointId": "C090",
+        "workUnitId": "WU101",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T10:48:04.438Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T10:48:04.438Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:f6920d91c0b1e62c3f1b77bef8b0e066fdfce8dd7bd71d65a8e766598bbc2b9a",
+          "checkpointId": "C090",
+          "workUnitId": "WU101",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T10:48:04.438Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T10:48:04.438Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C091",
+      "current": {
+        "observationId": "sha256:e11f2d12673132dc111132d4bb4dbcd4b58de51a409ebbfde014adb080cdd158",
+        "checkpointId": "C091",
+        "workUnitId": "WU102",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T13:48:19.940Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T13:48:19.940Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:e11f2d12673132dc111132d4bb4dbcd4b58de51a409ebbfde014adb080cdd158",
+          "checkpointId": "C091",
+          "workUnitId": "WU102",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T13:48:19.940Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T13:48:19.940Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C092",
+      "current": {
+        "observationId": "sha256:6b0b8a76855633d64a592e59bfc63fb7891ffc78fa298deef336b148d4a9e664",
+        "checkpointId": "C092",
+        "workUnitId": "WU103",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T14:34:19.999Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T14:34:19.999Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:6b0b8a76855633d64a592e59bfc63fb7891ffc78fa298deef336b148d4a9e664",
+          "checkpointId": "C092",
+          "workUnitId": "WU103",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T14:34:19.999Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T14:34:19.999Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C093",
+      "current": {
+        "observationId": "sha256:794c2e7ed6ab2e9369f46af95c30e170b50692cc49d70ec42708b2897bdf8164",
+        "checkpointId": "C093",
+        "workUnitId": "WU104",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-08-14T15:15:12.862Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-08-14T15:15:12.862Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:794c2e7ed6ab2e9369f46af95c30e170b50692cc49d70ec42708b2897bdf8164",
+          "checkpointId": "C093",
+          "workUnitId": "WU104",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-08-14T15:15:12.862Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-08-14T15:15:12.862Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C094",
+      "current": {
+        "observationId": "sha256:d6ffe74f452a73d23f9ad7040fab423baaf096752fe88cfb8b22481400173492",
+        "checkpointId": "C094",
+        "workUnitId": "WU105",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-09-16T08:37:31.775Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-09-16T08:37:31.775Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:d6ffe74f452a73d23f9ad7040fab423baaf096752fe88cfb8b22481400173492",
+          "checkpointId": "C094",
+          "workUnitId": "WU105",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-09-16T08:37:31.775Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-09-16T08:37:31.775Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C095",
+      "current": {
+        "observationId": "sha256:0791db394cda59c04b70c2a2dc64648c7a8748d3cf76d8e148492eb23634c72c",
+        "checkpointId": "C095",
+        "workUnitId": "WU106",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-09-16T08:49:00.392Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-09-16T08:49:00.392Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:0791db394cda59c04b70c2a2dc64648c7a8748d3cf76d8e148492eb23634c72c",
+          "checkpointId": "C095",
+          "workUnitId": "WU106",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-09-16T08:49:00.392Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-09-16T08:49:00.392Z"
         }
       ]
     }

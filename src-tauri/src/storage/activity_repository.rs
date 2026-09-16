@@ -62,15 +62,17 @@ mod tests {
     #[test]
     fn append_round_trips_newest_first() {
         let dir = tempdir().unwrap(); let repo = JsonActivityRepository::new(dir.path());
-        repo.append(event("2026-08-10T00:00:00Z", "old")).unwrap();
-        repo.append(event("2026-08-10T01:00:00Z", "new")).unwrap();
+        let now = Utc::now();
+        repo.append(event(&(now - Duration::hours(1)).to_rfc3339(), "old")).unwrap();
+        repo.append(event(&now.to_rfc3339(), "new")).unwrap();
         assert_eq!(repo.load_all().iter().map(|item| item.id.as_str()).collect::<Vec<_>>(), vec!["new", "old"]);
     }
 
     #[test]
     fn pruning_removes_expired_and_excess_events() {
         let mut events = vec![event("2000-01-01T00:00:00Z", "expired")];
-        events.extend((0..(MAX_ACTIVITY_EVENTS + 2)).map(|index| event("2026-08-10T00:00:00Z", &format!("{index:04}"))));
+        let retained_timestamp = Utc::now().to_rfc3339();
+        events.extend((0..(MAX_ACTIVITY_EVENTS + 2)).map(|index| event(&retained_timestamp, &format!("{index:04}"))));
         JsonActivityRepository::prune(&mut events);
         assert_eq!(events.len(), MAX_ACTIVITY_EVENTS);
         assert!(!events.iter().any(|item| item.id == "expired"));
@@ -79,9 +81,10 @@ mod tests {
     #[test]
     fn device_query_preserves_global_history_and_isolates_device_identity() {
         let dir = tempdir().unwrap(); let repo = JsonActivityRepository::new(dir.path());
-        let mut device_a = event("2026-08-10T01:00:00Z", "device-a"); device_a.device_id = Some("device-a-id".into());
-        let mut device_b = event("2026-08-10T02:00:00Z", "device-b"); device_b.device_id = Some("device-b-id".into());
-        let mut global = event("2026-08-10T03:00:00Z", "global"); global.device_id = None;
+        let now = Utc::now();
+        let mut device_a = event(&(now - Duration::hours(2)).to_rfc3339(), "device-a"); device_a.device_id = Some("device-a-id".into());
+        let mut device_b = event(&(now - Duration::hours(1)).to_rfc3339(), "device-b"); device_b.device_id = Some("device-b-id".into());
+        let mut global = event(&now.to_rfc3339(), "global"); global.device_id = None;
         repo.append(device_a).unwrap(); repo.append(device_b).unwrap(); repo.append(global).unwrap();
         assert_eq!(repo.load_all().len(), 3);
         assert_eq!(repo.load_for_device("device-a-id").iter().map(|event| event.id.as_str()).collect::<Vec<_>>(), vec!["device-a"]);

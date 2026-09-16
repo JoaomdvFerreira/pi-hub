@@ -11,6 +11,10 @@ pub enum MaintenanceOperationKind {
     UpdateCheck,
     #[allow(dead_code)]
     UpdateApply,
+    /// M17 reserves the existing coordinator slot now; WU17-03 will acquire
+    /// this around its typed prepare/apply lifecycle rather than add a lock.
+    #[allow(dead_code)]
+    WorkloadDeploy,
 }
 
 pub struct DeviceMaintenanceCoordinator {
@@ -98,6 +102,9 @@ mod tests {
             .is_none());
         assert!(coordinator
             .try_claim("pi5", MaintenanceOperationKind::UpdateApply)
+            .is_none());
+        assert!(coordinator
+            .try_claim("pi5", MaintenanceOperationKind::WorkloadDeploy)
             .is_none());
         drop(m10);
 

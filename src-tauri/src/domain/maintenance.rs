@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::domain::activity::{ActivityCategory, ActivityEvent};
+use crate::domain::detached_operation::requires_recovery;
 
 #[allow(dead_code)]
 pub const MAINTENANCE_OPERATION_SCHEMA_VERSION: u32 = 1;
@@ -151,7 +152,7 @@ impl MaintenanceOperation {
     }
 
     pub fn requires_recovery(&self) -> bool {
-        self.dispatch_state != MaintenanceDispatchState::NotAttempted && !self.state.is_terminal()
+        requires_recovery(self.dispatch_state != MaintenanceDispatchState::NotAttempted, self.state.is_terminal())
     }
 
     pub fn requires_fresh_confirmation_after_restart(&self) -> bool {
