@@ -1,6 +1,6 @@
 # M17 — Managed Workload Deployment Actions
 
-Status: In progress — WU17-01 complete; no workload execution is implemented.
+Status: Complete — WU17-01 through WU17-07 closed; final evidence: [M17 final review and release readiness](../reviews/m17-final-review-release-readiness.md).
 
 M17 deploys only explicitly registered workloads through a typed, review-and-confirm flow. It is not a generic SSH, shell, Docker, Git, secret, retry, rollback, scheduler, fleet, OS-update, or root-execution surface. The initial dogfood target is Personal Finance on PI 5.
 
@@ -27,9 +27,9 @@ WU17-02–06 require deterministic coverage for grammar/trust/digest drift, prot
 ## Work units
 
 1. WU17-01 — Managed Action Contract & Personal-Finance Adapter Design — complete.
-2. WU17-02 — Managed Workload Registry, Persistence & Trust Validation.
-3. WU17-03 — PREPARE, Fingerprint & Detached Deployment Execution.
-4. WU17-04 — Verification, Recovery, Activity & Scoped Disruption.
-5. WU17-05 — Managed Workload UX.
-6. WU17-06 — Deterministic & Real-Workload Operator Validation.
-7. WU17-07 — Regression Gates & Milestone Closure.
+2. WU17-02 — Managed Workload Registry, Persistence & Trust Validation — complete.
+3. WU17-03 — PREPARE, Fingerprint & Detached Deployment Execution — complete.
+4. WU17-04 — Verification, Recovery, Activity & Scoped Disruption — complete.
+5. WU17-05 — Managed Workload UX — complete.
+6. WU17-06 — Deterministic & Real-Workload Operator Validation — complete.
+7. WU17-07 — Regression Gates & Milestone Closure — complete.

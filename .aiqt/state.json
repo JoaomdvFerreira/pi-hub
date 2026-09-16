@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "projectStatus": "in_progress",
-  "currentMilestoneId": "M005",
-  "currentWorkUnitId": null,
+  "currentMilestoneId": "M021",
+  "currentWorkUnitId": "WU106",
   "workGraph": {
     "milestones": [
       {
@@ -268,7 +268,7 @@
         "id": "M021",
         "title": "M17 — Managed Workload Deployment Actions",
         "objective": "Safely deploy explicitly registered workloads without generic remote execution.",
-        "status": "ready",
+        "status": "in_progress",
         "workUnitIds": [
           "WU100",
           "WU101",
@@ -3877,12 +3877,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "ready",
+        "status": "in_progress",
         "dependencies": [
           "DEP-085"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-09-16T08:37:31.775Z"
+        "updatedAt": "2026-09-16T08:40:57.564Z"
       }
     ],
     "dependencies": [
@@ -9859,17 +9859,17 @@
         }
       ],
       "finalWorkUnitStatus": "done",
-      "createdAt": "2026-09-16T08:37:31.775Z",
-      "nextRecommendation": "aiqt next"
+      "nextRecommendation": "aiqt next",
+      "createdAt": "2026-09-16T08:37:31.775Z"
     }
   ],
   "lastAgentPacket": {
-    "id": "PKT-096",
-    "workUnitId": "WU105",
+    "id": "PKT-097",
+    "workUnitId": "WU106",
     "milestoneId": "M021",
-    "createdAt": "2026-08-14T15:18:55.406Z",
+    "createdAt": "2026-09-16T08:40:57.564Z",
     "format": "markdown",
-    "contentHash": "sha256:02817da4010301df062568fd44e9304778f47172699b515d674e6ad490ba1e14",
+    "contentHash": "sha256:1823e5ced1e9f5419dcaeee9cb4e1d79d57148da109103ecbaf1a4f084a94baa",
     "sourceCommand": "aiqt next",
     "renderedSections": [
       "scope",
@@ -9887,8 +9887,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt next",
-  "lastUpdatedAt": "2026-09-16T08:37:31.775Z",
+  "nextRecommendedCommand": "aiqt checkpoint",
+  "lastUpdatedAt": "2026-09-16T08:40:57.564Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
