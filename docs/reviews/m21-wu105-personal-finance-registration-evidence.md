@@ -104,3 +104,48 @@ No canonical expected-digest trust metadata exists in the typed managed-workload
 **Deterministic evidence** — a local-listener Tokio regression test executes a real fresh `reqwest::blocking` Service Health request through Tauri's blocking pool and passes without a runtime-drop panic. The managed-workload library suite also covers fresh Service Health completion, health failure and bounded timeout, mandatory exact-revision/Docker gates, and persisted-unit reconciliation without redispatch. `cargo check` passed. `cargo test --lib` completed 325 passing, 1 ignored, and the three known independent activity-retention fixture failures caused by dated `2026-08-10` records. Frontend tests passed 66/66 and the production frontend build passed. `git diff --check` passed (only existing LF/CRLF notices). Repository-wide `cargo fmt --check` reports unrelated pre-existing formatting drift and was not used to rewrite unrelated files.
 
 No second APPLY, PREPARE, new operation, new transient unit, auto-retry, or live reconciliation was performed during this remediation. WU105 remains active and is not checkpointed; WU106 has not started. Before an owner invokes Check status, repeat the read-only PI 5 checks for the exact detached clean HEAD, successful exited known unit, exact running/tagged image and OCI revision, and an independent successful Service Health endpoint response; stop on any drift.
+
+## WU105 closure: final Stage D reconciliation
+
+The authorized Stage D deployment and the post-fix reconciliation have now completed successfully. This section consolidates the canonical operator evidence; it intentionally records identifiers and outcomes needed for audit, but does not retain raw SSH, diagnostic, credential, or service-response payloads.
+
+| Closure item | Canonical evidence |
+| --- | --- |
+| Approved/deployed target | `4c1c90d3a20b7696b0210d932329ac4b8f97498b` |
+| Persisted systemd unit | `pihub-workload-8ebaa31bcf0148eeb2d63121e84ee865.service` |
+| Final unit state | `Result=success`, `ExecMainStatus=0`, `ActiveState=active`, `SubState=exited`, `MainPID=0` |
+| Action result | `status=applied`, with `deployedRevision` exactly equal to the approved target |
+| Repository identity | `HEAD` exactly target, detached HEAD, clean worktree |
+| Runtime identity | The running container uses the exact target-tag image; its ImageID equals the separately inspected target-image ID; OCI `org.opencontainers.image.revision` equals the exact target; `RestartCount=0`; `Running=true` |
+| Service Health | HTTP 200 was observed before reconciliation and final Pi-Hub Service Health reconciliation completed successfully |
+
+The Stage D review/confirmation preceded the one authorized APPLY. The persisted operation is the sole deployment record and the unit above is the sole transient unit used for it. The action completed successfully, then Pi-Hub was restarted/hot-reloaded after the verification-panic remediation (`de9832fca1901e6821cf7f97f83c42fd468cc9e1`, `fix(WU105): avoid blocking runtime panic during deployment verification`). Pi-Hub recovered the existing persisted operation, queried the same unit, and completed final verification successfully.
+
+**No-second-dispatch proof** — recovery performed no PREPARE, no consent revalidation, no APPLY, no new operation creation, and no new systemd-unit creation. It reused the same persisted operation and `pihub-workload-8ebaa31bcf0148eeb2d63121e84ee865.service`; the final action/repository/image/OCI and Service Health evidence above all reconcile to the original approved target. Therefore exactly one APPLY was dispatched for Stage D.
+
+**Operator-discovered defects remediated in WU105**
+
+1. Incomplete PREPARE outcome handling: valid `upToDate`/`blocked` outcomes were treated as malformed. Remediated in `8db551a369b8d8d796281acc9d503f0f3301b084`.
+2. Stale remote update discovery: PREPARE trusted a cached remote-tracking ref and could falsely report up to date. Remediated in `2e96e13` by using bounded authoritative remote discovery and exact-target preparation.
+3. Blocking reqwest/Tokio verification panic: final Service Health verification dropped a blocking client on an async worker. Remediated in `de9832fca1901e6821cf7f97f83c42fd468cc9e1` by using the blocking pool for persisted-operation reconciliation.
+
+**Performance Diagnostics** — the available Stage C export showed a short (~19.8-second) session, two SSH executions (660 ms total; 346 ms maximum), three snapshot reads (3 ms total), ~35.8–36.0 MB resident memory, negligible CPU, and no diagnostics warnings. No sensitive raw export data is stored here.
+
+### Closure residuals carried forward
+
+- A user in the Docker group can spoof local Docker/image metadata within the present device privilege boundary; the exact Git, systemd, action, and OCI checks reduce but do not eliminate that local-privilege limitation.
+- PI 5 has a pre-existing broad `NOPASSWD` sudo capability. It was not widened or changed by WU105; device-hardening review is outside this work unit.
+- Three activity-retention tests with dated `2026-08-10` fixtures remain independent test debt. They are not caused by WU105 and must be carried into WU106 closure/remediation rather than silently ignored.
+- `RuntimeVerificationError::Internal` and `FinalVerificationError::Internal` remain unused Internal enum variants if the final compiler output still reports them. They are existing warnings, were not suppressed, and are out of WU105 scope.
+
+WU105 is accepted for closure: discovery and baseline, trusted-action provisioning, host-neutral Compose prerequisite, read-only Deploy Key, Stage B registration/trust, Stage C UpToDate validation, all three remediations, Stage D review/confirmation and one APPLY, exact deployment/runtime identity, Service Health, and same-operation final recovery are evidenced above. WU106 has not started.
+
+### Final closure validation (2026-09-16)
+
+- `cargo test managed_workload --lib`: passed, 66/66 managed-workload tests; this includes final Service Health, exact revision/runtime identity, persisted-unit reconciliation, and no-redispatch coverage.
+- `cargo check`: passed. The only warnings are the two carried-forward unused `Internal` enum variants named above.
+- `npx tsc --noEmit`: passed.
+- `npm test`: passed, 13 files / 66 tests.
+- `npm run build`: passed.
+- `git diff --check`: passed; Git emitted only the repository's LF-to-CRLF notice for this evidence file.
+- `cargo test --lib` and the one required `node scripts/validate-agent.mjs` run: not fully green solely because `storage::activity_repository::{append_round_trips_newest_first,device_query_preserves_global_history_and_isolates_device_identity,pruning_removes_expired_and_excess_events}` use dated `2026-08-10` fixtures. Result: 325 passed, 3 failed, 1 ignored. The failures are pre-existing activity-retention fixture debt, outside WU105's managed-workload changes, and are explicitly assigned as WU106 carry-forward remediation rather than waived or suppressed.
