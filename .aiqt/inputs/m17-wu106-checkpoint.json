@@ -30,9 +30,14 @@
       "summary": "66 M17 managed-workload tests passed, including exactly-once dispatch, recovery, PlanChanged, trust, exact revision/runtime, and fresh Service Health coverage."
     },
     {
-      "command": "node scripts/validate-agent.mjs; npm run lint; aiqt status; git diff --check",
+      "command": "node scripts/validate-agent.mjs",
       "result": "passed",
-      "summary": "The canonical wrapper's Rust check/tests/build and frontend tests/build stages passed. Its lint/status/diff tail did not print in this execution environment, so those remaining canonical commands were immediately run directly and passed. Lint retains four pre-existing Fast Refresh warnings only; no M17 warnings remain."
+      "summary": "The canonical wrapper's Rust check/tests/build and frontend tests/build stages passed. Its lint/status/diff tail did not print in this execution environment, so those remaining canonical commands were immediately run directly and passed."
+    },
+    {
+      "command": "npm run lint; aiqt status; git diff --check",
+      "result": "passed",
+      "summary": "The remaining canonical stages passed directly. Lint retains four pre-existing Fast Refresh warnings only; no M17 warnings remain."
     },
     {
       "command": "aiqt review --mode release",

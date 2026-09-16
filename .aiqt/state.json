@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "projectStatus": "in_progress",
-  "currentMilestoneId": "M021",
-  "currentWorkUnitId": "WU106",
+  "currentMilestoneId": "M005",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -268,7 +268,7 @@
         "id": "M021",
         "title": "M17 — Managed Workload Deployment Actions",
         "objective": "Safely deploy explicitly registered workloads without generic remote execution.",
-        "status": "in_progress",
+        "status": "done",
         "workUnitIds": [
           "WU100",
           "WU101",
@@ -3877,12 +3877,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-085"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-09-16T08:40:57.564Z"
+        "updatedAt": "2026-09-16T08:49:00.392Z"
       }
     ],
     "dependencies": [
@@ -9861,6 +9861,68 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-09-16T08:37:31.775Z"
+    },
+    {
+      "id": "C095",
+      "workUnitId": "WU106",
+      "packetId": "PKT-097",
+      "summary": "Closed M17 after deterministic retention-fixture remediation, removal of unreachable M17 warning variants, final architecture/security review, canonical validation, and documented post-merge Windows release readiness.",
+      "completed": [
+        "Replaced the three dated activity-retention fixtures with runtime-relative retained timestamps while preserving the production 30-day and 2,000-event pruning behavior.",
+        "Removed the genuinely unreachable RuntimeVerificationError::Internal and FinalVerificationError::Internal variants without dead-code suppression.",
+        "Reviewed exactly-once dispatch, persisted recovery, PlanChanged, fixed trust boundaries, exact revision/Docker gates, and fresh Service Health against the canonical M17 contract.",
+        "Recorded WU100-WU106, real Personal Finance dogfood, discovered defects/remediations, residuals, validation, and release procedure in canonical final evidence.",
+        "Assessed manual Windows packaging/updater readiness without publishing a release or starting another milestone."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "src-tauri/src/storage/activity_repository.rs",
+        "src-tauri/src/application/managed_workload_prepare.rs",
+        "docs/reviews/m17-final-review-release-readiness.md",
+        "docs/milestones/m17-managed-workload-deployment-actions.md",
+        "docs/roadmap/post-mvp-product-roadmap.md",
+        ".aiqt/inputs/m17-wu106-checkpoint.json"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml activity_repository",
+          "result": "passed",
+          "summary": "All three formerly dated activity-retention tests passed deterministically."
+        },
+        {
+          "command": "cargo test --manifest-path src-tauri/Cargo.toml managed_workload --lib",
+          "result": "passed",
+          "summary": "66 M17 managed-workload tests passed, including exactly-once dispatch, recovery, PlanChanged, trust, exact revision/runtime, and fresh Service Health coverage."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "The canonical wrapper's Rust check/tests/build and frontend tests/build stages passed. Its lint/status/diff tail did not print in this execution environment, so those remaining canonical commands were immediately run directly and passed."
+        },
+        {
+          "command": "npm run lint; aiqt status; git diff --check",
+          "result": "passed",
+          "summary": "The remaining canonical stages passed directly. Lint retains four pre-existing Fast Refresh warnings only; no M17 warnings remain."
+        },
+        {
+          "command": "aiqt review --mode release",
+          "result": "passed",
+          "summary": "The only finding before checkpoint was the expected in-progress WU106 awaiting checkpoint capture."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Validation",
+          "result": "passed",
+          "evidence": "No test failures, M17-related compiler warnings, whitespace errors, or unresolved architecture/security contract deviations remain."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-09-16T08:49:00.392Z",
+      "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
@@ -9887,8 +9949,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-09-16T08:40:57.564Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-09-16T08:49:00.392Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -12707,6 +12769,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-09-16T08:37:31.775Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C095",
+      "current": {
+        "observationId": "sha256:0791db394cda59c04b70c2a2dc64648c7a8748d3cf76d8e148492eb23634c72c",
+        "checkpointId": "C095",
+        "workUnitId": "WU106",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-09-16T08:49:00.392Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-09-16T08:49:00.392Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:0791db394cda59c04b70c2a2dc64648c7a8748d3cf76d8e148492eb23634c72c",
+          "checkpointId": "C095",
+          "workUnitId": "WU106",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-09-16T08:49:00.392Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-09-16T08:49:00.392Z"
         }
       ]
     }
