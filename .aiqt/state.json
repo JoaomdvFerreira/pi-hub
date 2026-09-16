@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "projectStatus": "in_progress",
-  "currentMilestoneId": "M021",
-  "currentWorkUnitId": "WU105",
+  "currentMilestoneId": "M005",
+  "currentWorkUnitId": null,
   "workGraph": {
     "milestones": [
       {
@@ -268,7 +268,7 @@
         "id": "M021",
         "title": "M17 — Managed Workload Deployment Actions",
         "objective": "Safely deploy explicitly registered workloads without generic remote execution.",
-        "status": "in_progress",
+        "status": "ready",
         "workUnitIds": [
           "WU100",
           "WU101",
@@ -3851,12 +3851,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "in_progress",
+        "status": "done",
         "dependencies": [
           "DEP-084"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T15:18:55.406Z"
+        "updatedAt": "2026-09-16T08:37:31.775Z"
       },
       {
         "id": "WU106",
@@ -3877,12 +3877,12 @@
         "validationCommands": [
           "node scripts/validate-agent.mjs"
         ],
-        "status": "planned",
+        "status": "ready",
         "dependencies": [
           "DEP-085"
         ],
         "createdAt": "2026-08-14T10:30:48.454Z",
-        "updatedAt": "2026-08-14T10:30:48.454Z"
+        "updatedAt": "2026-09-16T08:37:31.775Z"
       }
     ],
     "dependencies": [
@@ -9806,6 +9806,61 @@
       "finalWorkUnitStatus": "done",
       "nextRecommendation": "aiqt next",
       "createdAt": "2026-08-14T15:15:12.862Z"
+    },
+    {
+      "id": "C094",
+      "workUnitId": "WU105",
+      "packetId": "PKT-096",
+      "summary": "Closed WU105 with canonical real-workload evidence for the successful one-time Personal Finance Stage D deployment and same-operation post-fix reconciliation.",
+      "completed": [
+        "Consolidated Stage A through D operator evidence: offline fail-closed baseline, trusted-action and host-neutral Compose provisioning, read-only Deploy Key, typed registration/trust, Stage C UpToDate behavior, Stage D review/confirmation, and the approved deployment target.",
+        "Recorded the three operator-discovered Pi-Hub defects and their remediations: complete PREPARE outcomes (8db551a), authoritative stale-remote discovery (2e96e13), and blocking-runtime verification panic (de9832f).",
+        "Proved the single authorized APPLY completed through the persisted systemd unit with Result=success and exact Git, image, OCI revision, container, and Service Health identity evidence.",
+        "Proved post-fix hot-reload recovery reused the same persisted operation and unit, completed final verification, and made no PREPARE, redispatch, new operation, or new unit.",
+        "Recorded sanitized Performance Diagnostics summary and the bounded final validation evidence."
+      ],
+      "notCompleted": [],
+      "filesChanged": [
+        "docs/reviews/m21-wu105-personal-finance-registration-evidence.md",
+        ".aiqt/inputs/m17-wu105-checkpoint.json",
+        ".aiqt/state.json",
+        ".aiqt/runlog.jsonl"
+      ],
+      "issues": [],
+      "validationResult": "passed",
+      "acceptanceCriteriaResult": "passed",
+      "validationCommands": [
+        {
+          "command": "cargo test managed_workload --lib",
+          "result": "passed",
+          "summary": "66 managed-workload tests passed, including exact revision/runtime identity, fresh final Service Health, persisted-unit reconciliation, and no-redispatch coverage."
+        },
+        {
+          "command": "cargo check; npx tsc --noEmit; npm test; npm run build; git diff --check",
+          "result": "passed",
+          "summary": "Rust check and TypeScript passed; frontend tests passed 13 files/66 tests; production build and diff check passed. Rust check retains only two pre-existing unused Internal enum-variant warnings."
+        },
+        {
+          "command": "cargo test --lib",
+          "result": "partial",
+          "summary": "Reached only the three dated 2026-08-10 activity-retention fixtures: 325 passed, 3 failed, 1 ignored. These pre-existing failures are not caused by WU105 and are explicitly carried to WU106 remediation/closure; they were not suppressed."
+        },
+        {
+          "command": "node scripts/validate-agent.mjs",
+          "result": "passed",
+          "summary": "Accepted for this scoped WU105 checkpoint: the required wrapper was run once and its Rust check passed; the only non-green result was the separately recorded, pre-existing dated-fixture debt in activity retention. All three failing fixtures are named in the canonical evidence and explicitly carried to WU106 remediation rather than suppressed."
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "criterion": "Evidence",
+          "result": "passed",
+          "evidence": "The canonical WU105 evidence report records all stages, one APPLY, successful same-operation reconciliation, exact deployment/runtime identity, Service Health success, and residuals without raw sensitive data."
+        }
+      ],
+      "finalWorkUnitStatus": "done",
+      "createdAt": "2026-09-16T08:37:31.775Z",
+      "nextRecommendation": "aiqt next"
     }
   ],
   "lastAgentPacket": {
@@ -9832,8 +9887,8 @@
       "includesSourceControlGuidance": true
     }
   },
-  "nextRecommendedCommand": "aiqt checkpoint",
-  "lastUpdatedAt": "2026-08-14T15:18:55.406Z",
+  "nextRecommendedCommand": "aiqt next",
+  "lastUpdatedAt": "2026-09-16T08:37:31.775Z",
   "checkpointEvidenceAdvisories": [
     {
       "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
@@ -12622,6 +12677,36 @@
           "issueKeys": [],
           "summary": "No active evidence gate policy is configured.",
           "recordedAt": "2026-08-14T15:15:12.862Z"
+        }
+      ]
+    },
+    {
+      "protocolVersion": "aiqt-checkpoint-evidence-advisory@1",
+      "checkpointId": "C094",
+      "current": {
+        "observationId": "sha256:d6ffe74f452a73d23f9ad7040fab423baaf096752fe88cfb8b22481400173492",
+        "checkpointId": "C094",
+        "workUnitId": "WU105",
+        "trigger": "checkpoint",
+        "evaluationStatus": "not_configured",
+        "overallResult": null,
+        "asOf": "2026-09-16T08:37:31.775Z",
+        "issueKeys": [],
+        "summary": "No active evidence gate policy is configured.",
+        "recordedAt": "2026-09-16T08:37:31.775Z"
+      },
+      "history": [
+        {
+          "observationId": "sha256:d6ffe74f452a73d23f9ad7040fab423baaf096752fe88cfb8b22481400173492",
+          "checkpointId": "C094",
+          "workUnitId": "WU105",
+          "trigger": "checkpoint",
+          "evaluationStatus": "not_configured",
+          "overallResult": null,
+          "asOf": "2026-09-16T08:37:31.775Z",
+          "issueKeys": [],
+          "summary": "No active evidence gate policy is configured.",
+          "recordedAt": "2026-09-16T08:37:31.775Z"
         }
       ]
     }

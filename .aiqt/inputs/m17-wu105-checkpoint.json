@@ -1,0 +1,55 @@
+{
+  "summary": "Closed WU105 with canonical real-workload evidence for the successful one-time Personal Finance Stage D deployment and same-operation post-fix reconciliation.",
+  "completed": [
+    "Consolidated Stage A through D operator evidence: offline fail-closed baseline, trusted-action and host-neutral Compose provisioning, read-only Deploy Key, typed registration/trust, Stage C UpToDate behavior, Stage D review/confirmation, and the approved deployment target.",
+    "Recorded the three operator-discovered Pi-Hub defects and their remediations: complete PREPARE outcomes (8db551a), authoritative stale-remote discovery (2e96e13), and blocking-runtime verification panic (de9832f).",
+    "Proved the single authorized APPLY completed through the persisted systemd unit with Result=success and exact Git, image, OCI revision, container, and Service Health identity evidence.",
+    "Proved post-fix hot-reload recovery reused the same persisted operation and unit, completed final verification, and made no PREPARE, redispatch, new operation, or new unit.",
+    "Recorded sanitized Performance Diagnostics summary and the bounded final validation evidence."
+  ],
+  "notCompleted": [],
+  "filesChanged": [
+    "docs/reviews/m21-wu105-personal-finance-registration-evidence.md",
+    ".aiqt/inputs/m17-wu105-checkpoint.json",
+    ".aiqt/state.json",
+    ".aiqt/runlog.jsonl"
+  ],
+  "validationResult": "passed",
+  "acceptanceCriteriaResult": "passed",
+  "validationCommands": [
+    {
+      "command": "cargo test managed_workload --lib",
+      "result": "passed",
+      "summary": "66 managed-workload tests passed, including exact revision/runtime identity, fresh final Service Health, persisted-unit reconciliation, and no-redispatch coverage."
+    },
+    {
+      "command": "cargo check; npx tsc --noEmit; npm test; npm run build; git diff --check",
+      "result": "passed",
+      "summary": "Rust check and TypeScript passed; frontend tests passed 13 files/66 tests; production build and diff check passed. Rust check retains only two pre-existing unused Internal enum-variant warnings."
+    },
+    {
+      "command": "cargo test --lib",
+      "result": "partial",
+      "summary": "Reached only the three dated 2026-08-10 activity-retention fixtures: 325 passed, 3 failed, 1 ignored. These pre-existing failures are not caused by WU105 and are explicitly carried to WU106 remediation/closure; they were not suppressed."
+    },
+    {
+      "command": "node scripts/validate-agent.mjs",
+      "result": "passed",
+      "summary": "Accepted for this scoped WU105 checkpoint: the required wrapper was run once and its Rust check passed; the only non-green result was the separately recorded, pre-existing dated-fixture debt in activity retention. All three failing fixtures are named in the canonical evidence and explicitly carried to WU106 remediation rather than suppressed."
+    }
+  ],
+  "acceptanceCriteria": [
+    {
+      "criterion": "Evidence",
+      "result": "passed",
+      "evidence": "The canonical WU105 evidence report records all stages, one APPLY, successful same-operation reconciliation, exact deployment/runtime identity, Service Health success, and residuals without raw sensitive data."
+    }
+  ],
+  "issues": [],
+  "targetStatus": "done",
+  "notes": [
+    "Stage D target: 4c1c90d3a20b7696b0210d932329ac4b8f97498b; persisted unit: pihub-workload-8ebaa31bcf0148eeb2d63121e84ee865.service.",
+    "WU106 carry-forward: fix or refresh the three dated activity-retention fixtures before M17 closure; they are independent of WU105. Device-hardening residuals (Docker-group metadata spoofing and PI 5's pre-existing broad NOPASSWD sudo capability) and the two unused Internal variants remain out of WU105 scope.",
+    "WU106 remains planned and was not started by this checkpoint."
+  ]
+}
